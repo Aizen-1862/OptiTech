@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OPITECH — Find Tech That Fits You</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="nav">
+    <a class="logo" href="#">OPI<span>TECH</span></a>
+    <nav>
+      <a href="#how">How it works</a>
+      <a href="#categories">Categories</a>
+      <button class="nav-btn" onclick="start()">Find My Device</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="badge">⚡ Personalized tech recommendations</div>
+      <h1>Find the tech<br><span>that fits you.</span></h1>
+      <p>Tell OPITECH your budget, uses, priorities and preferences. We'll help you discover devices that actually match your needs.</p>
+      <div class="hero-actions">
+        <button class="primary" onclick="start()">Find My Device <span>→</span></button>
+        <a class="secondary" href="#how">See how it works</a>
+      </div>
+      <div class="trust">
+        <span>✓ Budget-aware</span>
+        <span>✓ Use-case focused</span>
+        <span>✓ Personalized</span>
+      </div>
+    </section>
+
+    <section id="categories" class="section">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">WHAT ARE YOU BUYING?</div>
+          <h2>One place for all your tech.</h2>
+        </div>
+        <p>Phones, laptops, TVs, audio, gaming and more.</p>
+      </div>
+      <div class="categories">
+        <button onclick="selectCategory('Phone')">📱<b>Phones</b><small>Smartphones & accessories</small></button>
+        <button onclick="selectCategory('Laptop')">💻<b>Laptops</b><small>Work, study & gaming</small></button>
+        <button onclick="selectCategory('TV')">📺<b>TVs</b><small>Movies, sports & gaming</small></button>
+        <button onclick="selectCategory('Audio')">🎧<b>Audio</b><small>Headphones & speakers</small></button>
+        <button onclick="selectCategory('Gaming')">🎮<b>Gaming</b><small>Consoles & gear</small></button>
+        <button onclick="selectCategory('Other')">✨<b>More</b><small>Smart electronics</small></button>
+      </div>
+    </section>
+
+    <section id="how" class="how section">
+      <div class="eyebrow">HOW OPITECH WORKS</div>
+      <h2>From your needs to a smarter shortlist.</h2>
+      <div class="steps">
+        <article><span>01</span><h3>Tell us</h3><p>Share your budget, uses, preferences and what matters most to you.</p></article>
+        <article><span>02</span><h3>We match</h3><p>OPITECH turns your answers into a personalized recommendation profile.</p></article>
+        <article><span>03</span><h3>You choose</h3><p>See matched devices, trade-offs and alternatives in one clear view.</p></article>
+      </div>
+    </section>
+
+    <section id="finder" class="finder section">
+      <div class="eyebrow">OPITECH FINDER</div>
+      <h2>Build your recommendation.</h2>
+      <form id="finderForm">
+        <label>What are you looking for?
+          <select id="category">
+            <option>Phone</option><option>Laptop</option><option>TV</option><option>Audio</option><option>Gaming</option><option>Other</option>
+          </select>
+        </label>
+        <label>Budget (₹)
+          <input id="budget" type="number" min="1" placeholder="e.g. 50000" required>
+        </label>
+        <label>What will you mainly use it for?
+          <input id="uses" placeholder="e.g. gaming, coding, editing, movies" required>
+        </label>
+        <label>What matters most?
+          <input id="priorities" placeholder="e.g. performance, camera, battery, display" required>
+        </label>
+        <label>Anything else?
+          <textarea id="preferences" placeholder="Brands, size, portability, storage, games, software, etc."></textarea>
+        </label>
+        <button class="primary full" type="submit">Generate My OPITECH Profile →</button>
+      </form>
+      <div id="result" class="result hidden"></div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="logo">OPI<span>TECH</span></div>
+    <p>Your needs. Your budget. Your tech.</p>
+  </footer>
+  <script src="script.js"></script>
+</body>
+</html>
