@@ -2,6 +2,25 @@ const BACKEND_URL = "https://opitech-backend.onrender.com";
 
 let selectedType = "Phone";
 
+const currencySymbols = {
+    INR: "₹",
+    USD: "$",
+    GBP: "£",
+    CAD: "C$",
+    AUD: "A$",
+    EUR: "€",
+    AED: "د.إ",
+    SGD: "S$"
+};
+
+const currencySelect = document.getElementById("currency");
+const currencySymbol = document.getElementById("currencySymbol");
+
+currencySelect.addEventListener("change", () => {
+    currencySymbol.textContent =
+        currencySymbols[currencySelect.value] || "";
+});
+
 // Product type selection
 document.querySelectorAll(".option").forEach(button => {
     button.addEventListener("click", () => {
