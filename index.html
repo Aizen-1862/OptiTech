@@ -115,29 +115,128 @@
         </div>
 
 
-        <!-- BUDGET -->
-        <div class="form-group">
+       <!-- COUNTRY -->
+<div class="form-group">
 
-            <label for="budget">
-                Your maximum budget
-            </label>
+    <label for="country">
+        Your country
+    </label>
 
-            <div class="budget-input">
+    <select id="country">
 
-                <span>₹</span>
+        <option value="India">
+            🇮🇳 India
+        </option>
 
-                <input
-                    type="number"
-                    id="budget"
-                    placeholder="Example: 30000"
-                    min="1"
-                >
+        <option value="United States">
+            🇺🇸 United States
+        </option>
 
-            </div>
+        <option value="United Kingdom">
+            🇬🇧 United Kingdom
+        </option>
 
-        </div>
+        <option value="Canada">
+            🇨🇦 Canada
+        </option>
+
+        <option value="Australia">
+            🇦🇺 Australia
+        </option>
+
+        <option value="Germany">
+            🇩🇪 Germany
+        </option>
+
+        <option value="France">
+            🇫🇷 France
+        </option>
+
+        <option value="United Arab Emirates">
+            🇦🇪 UAE
+        </option>
+
+        <option value="Singapore">
+            🇸🇬 Singapore
+        </option>
+
+        <option value="Other">
+            🌎 Other
+        </option>
+
+    </select>
+
+</div>
 
 
+<!-- CURRENCY -->
+<div class="form-group">
+
+    <label for="currency">
+        Currency
+    </label>
+
+    <select id="currency">
+
+        <option value="INR">
+            🇮🇳 INR — Indian Rupee (₹)
+        </option>
+
+        <option value="USD">
+            🇺🇸 USD — US Dollar ($)
+        </option>
+
+        <option value="GBP">
+            🇬🇧 GBP — British Pound (£)
+        </option>
+
+        <option value="CAD">
+            🇨🇦 CAD — Canadian Dollar (C$)
+        </option>
+
+        <option value="AUD">
+            🇦🇺 AUD — Australian Dollar (A$)
+        </option>
+
+        <option value="EUR">
+            🇪🇺 EUR — Euro (€)
+        </option>
+
+        <option value="AED">
+            🇦🇪 AED — UAE Dirham
+        </option>
+
+        <option value="SGD">
+            🇸🇬 SGD — Singapore Dollar
+        </option>
+
+    </select>
+
+</div>
+
+
+<!-- BUDGET -->
+<div class="form-group">
+
+    <label for="budget">
+        Your maximum budget
+    </label>
+
+    <div class="budget-input">
+
+        <span id="currencySymbol">₹</span>
+
+        <input
+            type="number"
+            id="budget"
+            placeholder="Example: 30000"
+            min="1"
+        >
+
+    </div>
+
+</div>
+ 
         <!-- USES -->
         <div class="form-group">
 
