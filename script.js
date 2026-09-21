@@ -56,13 +56,20 @@ async function testOPITECHAI() {
     `;
 
     const preferences = {
-        productType: selectedType,
-        budget: document.getElementById("budget")?.value || "",
-        uses: getSelectedUses(),
-        priority: document.getElementById("priority")?.value || "balanced",
-        brand: document.getElementById("brand")?.value || "any"
-    };
+    productType: selectedType,
 
+    country: document.getElementById("country")?.value || "India",
+
+    currency: document.getElementById("currency")?.value || "INR",
+
+    budget: document.getElementById("budget")?.value || "",
+
+    uses: getSelectedUses(),
+
+    priority: document.getElementById("priority")?.value || "balanced",
+
+    brand: document.getElementById("brand")?.value || "any"
+};
     console.log("Sending preferences:", preferences);
 
     try {
