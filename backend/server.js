@@ -7,8 +7,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const apiKey = process.env.OPENAI_API_KEY;
+
+console.log(
+    "OPENAI KEY CHECK:",
+    apiKey ? `Loaded (${apiKey.length} characters)` : "MISSING"
+);
+
 const client = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY
+    apiKey: apiKey
 });
 
 app.get("/", (req, res) => {
