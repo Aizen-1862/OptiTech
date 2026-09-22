@@ -7,6 +7,7 @@ const app = express();
 app.use(cors({
     origin: "*"
 }));
+
 app.use(express.json());
 
 const apiKey = process.env.OPENAI_API_KEY;
@@ -20,6 +21,8 @@ const client = new OpenAI({
     apiKey: apiKey
 });
 
+
+// HOME / TEST ROUTE
 app.get("/", (req, res) => {
     res.json({
         status: "online",
@@ -27,8 +30,12 @@ app.get("/", (req, res) => {
     });
 });
 
+
+// AI RECOMMENDATION ROUTE
 app.post("/api/recommend", async (req, res) => {
+
     try {
+
         const { preferences } = req.body;
 
         console.log("Received preferences:", preferences);
@@ -40,65 +47,41 @@ app.post("/api/recommend", async (req, res) => {
         }
 
         const response = await client.responses.create({
-    model: "gpt-5.6-luna",
 
-    instructions: `
+            model: "gpt-5.6-luna",
+
+            instructions: `
 You are OPITECH, a smart electronics recommendation assistant.
 
-Your job is to find ACTUAL products that match the user's preferences.
+Analyze the user's electronics preferences.
 
 USER PREFERENCES:
 - Product type: ${preferences.productType}
-- Maximum budget: ₹${preferences.budget}
-- Uses: ${preferences.uses.join(", ") || "General use"}
+- Country: ${preferences.country}
+- Currency: ${preferences.currency}
+- Maximum budget: ${preferences.budget}
+- Uses: ${preferences.uses?.join(", ") || "General use"}
 - Priority: ${preferences.priority}
 - Preferred brand: ${preferences.brand}
 
-IMPORTANT RULES:
+Give useful and practical recommendations.
 
-1. Search the web for CURRENT products and prices.
-2. Prefer official manufacturer websites and reputable Indian retailers.
-3. Only recommend products that fit within the user's maximum budget.
-4. Give specific product names, NOT just product categories.
-5. Never invent prices, specifications, availability, or product names.
-6. If a price varies, clearly say that.
-7. If you cannot verify a price, say "Price needs verification" instead of making one up.
-8. Respect the user's preferred brand.
-9. For Xiaomi, POCO and Redmi can be considered related brands, but clearly identify which brand each product belongs to.
-10. Give several options and explain the differences.
+Do not invent specifications or prices.
 
-Return the results in this format:
+Explain:
+1. What the user needs
+2. Suitable product types
+3. Important specifications
+4. Why those specifications matter
+5. Important trade-offs
 
-## 🎯 Best Matches
-
-### 1. [Exact Product Name]
-- **Approx. price:** ₹...
-- **Processor:** ...
-- **RAM/Storage:** ...
-- **Display:** ...
-- **Battery:** ...
-- **Why it matches:** ...
-- **Main drawback:** ...
-- **Source:** ...
-
-### 2. [Exact Product Name]
-...
-
-### 3. [Exact Product Name]
-...
-
-## ⚡ Quick Comparison
-
-| Product | Price | Performance | Best for |
-|---|---:|---|---|
-
-## 🧠 OPITECH Verdict
-
-Explain which product characteristics best match the user's stated preferences WITHOUT inventing information.
+If you do not know a current price, clearly say that the price needs verification.
 `,
 
-    input: JSON.stringify(preferences)
-});
+            input: JSON.stringify(preferences)
+
+        });
+
         console.log("AI response received");
 
         return res.json({
@@ -107,22 +90,34 @@ Explain which product characteristics best match the user's stated preferences W
         });
 
     } catch (error) {
-    console.error("========== OPENAI ERROR ==========");
-    console.error("Message:", error.message);
-    console.error("Status:", error.status);
-    console.error("Code:", error.code);
-    console.error("Type:", error.type);
-    console.error("Full error:", error);
-    console.error("==================================");
 
-    return res.status(500).json({
-        error: "AI generation failed",
-        details: error.message || "Unknown server error"
-    });
-}
+        console.error("========== OPENAI ERROR ==========");
+        console.error("Message:", error.message);
+        console.error("Status:", error.status);
+        console.error("Code:", error.code);
+        console.error("Type:", error.type);
+        console.error("Full error:", error);
+        console.error("==================================");
 
+        return res.status(500).json({
+            error: "AI generation failed",
+            details: error.message || "Unknown server error",
+            type: error.type || "unknown",
+            code: error.code || "unknown"
+        });
+
+    }
+
+});
+
+
+// START SERVER
 const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, "0.0.0.0", () => {
-    console.log(`OPITECH backend running on port ${PORT}`);
+
+    console.log(
+        `OPITECH backend running on port ${PORT}`
+    );
+
 });
