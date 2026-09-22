@@ -42,12 +42,6 @@ app.post("/api/recommend", async (req, res) => {
         const response = await client.responses.create({
     model: "gpt-5.6-luna",
 
-    tools: [
-        {
-            type: "web_search"
-        }
-    ],
-
     instructions: `
 You are OPITECH, a smart electronics recommendation assistant.
 
