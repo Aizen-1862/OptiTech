@@ -107,16 +107,19 @@ Explain which product characteristics best match the user's stated preferences W
         });
 
     } catch (error) {
-        console.error("OPENAI ERROR:", error);
+    console.error("========== OPENAI ERROR ==========");
+    console.error("Message:", error.message);
+    console.error("Status:", error.status);
+    console.error("Code:", error.code);
+    console.error("Type:", error.type);
+    console.error("Full error:", error);
+    console.error("==================================");
 
-        return res.status(500).json({
-    error: "AI generation failed",
-    details: error.message || "Unknown server error",
-    type: error.type || "unknown",
-    code: error.code || "unknown"
-});
-    }
-});
+    return res.status(500).json({
+        error: "AI generation failed",
+        details: error.message || "Unknown server error"
+    });
+}
 
 const PORT = process.env.PORT || 10000;
 
