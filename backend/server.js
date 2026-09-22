@@ -116,9 +116,11 @@ Explain which product characteristics best match the user's stated preferences W
         console.error("OPENAI ERROR:", error);
 
         return res.status(500).json({
-            error: "AI generation failed",
-            details: error.message || "Unknown server error"
-        });
+    error: "AI generation failed",
+    details: error.message || "Unknown server error",
+    type: error.type || "unknown",
+    code: error.code || "unknown"
+});
     }
 });
 
