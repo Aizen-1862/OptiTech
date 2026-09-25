@@ -50,6 +50,115 @@ app.get("/", (req, res) => {
 
 
 // ===============================
+// WAIT FUNCTION
+// ===============================
+
+function wait(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+
+// ===============================
+// GEMINI REQUEST WITH FALLBACK
+// ===============================
+
+async function generateWithFallback(prompt) {
+
+    const models = [
+        "gemini-3.6-flash",
+        "gemini-3.5-flash-lite",
+        "gemini-3.5-flash"
+    ];
+
+    let lastError = null;
+
+    for (let i = 0; i < models.length; i++) {
+
+        const model = models[i];
+
+        try {
+
+            console.log(
+                `Trying Gemini model: ${model}`
+            );
+
+            const response = await ai.models.generateContent({
+
+                model: model,
+
+                contents: prompt,
+
+                config: {
+                    maxOutputTokens: 1200,
+
+                    thinkingConfig: {
+                        thinkingLevel: "low"
+                    }
+                }
+
+            });
+
+            console.log(
+                `SUCCESS with model: ${model}`
+            );
+
+            return {
+                response,
+                model
+            };
+
+        } catch (error) {
+
+            lastError = error;
+
+            console.error(
+                `Model ${model} failed:`,
+                error.message
+            );
+
+            const status = error.status;
+
+            // Retry/fallback only for temporary server/rate errors
+            if (
+                status === 429 ||
+                status === 500 ||
+                status === 502 ||
+                status === 503 ||
+                status === 504
+            ) {
+
+                if (i < models.length - 1) {
+
+                    const delay =
+                        1000 * Math.pow(2, i);
+
+                    console.log(
+                        `Waiting ${delay}ms before fallback...`
+                    );
+
+                    await wait(delay);
+
+                    continue;
+                }
+
+            } else {
+
+                // Don't keep trying other models
+                // for API-key or request errors.
+                throw error;
+
+            }
+
+        }
+
+    }
+
+    throw lastError;
+
+}
+
+
+// ===============================
 // AI RECOMMENDATION ROUTE
 // ===============================
 
@@ -59,7 +168,10 @@ app.post("/api/recommend", async (req, res) => {
 
         const { preferences } = req.body;
 
-        console.log("Received preferences:", preferences);
+        console.log(
+            "Received preferences:",
+            preferences
+        );
 
 
         // -------------------------------
@@ -76,7 +188,7 @@ app.post("/api/recommend", async (req, res) => {
 
 
         // -------------------------------
-        // CHECK GEMINI KEY
+        // CHECK API KEY
         // -------------------------------
 
         if (!ai) {
@@ -89,7 +201,7 @@ app.post("/api/recommend", async (req, res) => {
 
 
         // -------------------------------
-        // CLEAN USER DATA
+        // USER DATA
         // -------------------------------
 
         const productType =
@@ -105,7 +217,7 @@ app.post("/api/recommend", async (req, res) => {
             preferences.budget || "Not specified";
 
         const uses =
-            Array.isArray(preferences.uses) && preferences.uses.length
+            Array.isArray(preferences.uses)
                 ? preferences.uses.join(", ")
                 : "General use";
 
@@ -123,9 +235,8 @@ app.post("/api/recommend", async (req, res) => {
         const prompt = `
 You are OPITECH, an electronics recommendation assistant.
 
-Analyze the user's preferences and give a concise, useful recommendation.
+Analyze these user preferences:
 
-USER:
 Product type: ${productType}
 Country: ${country}
 Currency: ${currency}
@@ -134,68 +245,86 @@ Uses: ${uses}
 Priority: ${priority}
 Preferred brand: ${brand}
 
-Your response must:
+Give a concise and practical recommendation.
 
-1. Understand what the user actually needs.
-2. Recommend suitable electronics or product categories.
-3. Explain the important specifications.
-4. Explain why those specifications matter for this user.
-5. Mention important trade-offs.
-6. Stay within the user's stated budget when possible.
-7. Respect the preferred brand when possible.
-8. Never invent specifications, prices, availability, or product models.
-9. If current price information is unavailable, clearly say that the price should be verified.
+Structure your response like this:
 
-Keep the answer easy to read.
+## 🎯 What You Need
 
-Do not give an extremely long explanation.
+Briefly describe the user's needs.
+
+## ⚙️ What Matters
+
+List the most important specifications for this use case.
+
+## 💡 OPITECH Recommendation
+
+Give suitable product types or models only when you are confident they are appropriate.
+
+## 🔍 Why
+
+Explain why the recommendation fits the user's needs.
+
+## ⚖️ Trade-offs
+
+Mention important compromises.
+
+Rules:
+- Respect the user's maximum budget.
+- Respect the preferred brand when possible.
+- Do not invent specifications.
+- Do not invent current prices.
+- Do not claim availability that you cannot verify.
+- If current price information is unavailable, say that the price should be verified.
+- Keep the response concise.
 `;
 
+        console.log(
+            "Sending request to Gemini..."
+        );
 
-        console.log("Sending request to Gemini...");
 
         const startTime = Date.now();
 
 
         // -------------------------------
-        // GEMINI REQUEST
+        // GEMINI
         // -------------------------------
 
-        const response = await ai.models.generateContent({
-
-            model: "gemini-3.6-flash",
-
-            contents: prompt,
-
-            config: {
-                temperature: 0.4,
-                maxOutputTokens: 2000
-            }
-
-        });
+        const result =
+            await generateWithFallback(prompt);
 
 
         const elapsed =
-            ((Date.now() - startTime) / 1000).toFixed(2);
+            ((Date.now() - startTime) / 1000)
+                .toFixed(2);
+
 
         console.log(
             `Gemini response received in ${elapsed}s`
         );
 
+        console.log(
+            `Model used: ${result.model}`
+        );
+
 
         // -------------------------------
-        // GET RESPONSE TEXT
+        // RESPONSE TEXT
         // -------------------------------
 
-        const result =
-            response.text || "No recommendation was generated.";
+        const text =
+            result.response.text ||
+            "No recommendation was generated.";
 
 
         return res.json({
 
             success: true,
 
-            result: result,
+            result: text,
+
+            model: result.model,
 
             responseTime: `${elapsed}s`
 
@@ -238,7 +367,8 @@ Do not give an extremely long explanation.
             error: "Gemini AI generation failed",
 
             details:
-                error.message || "Unknown Gemini error"
+                error.message ||
+                "Unknown Gemini error"
 
         });
 
@@ -253,7 +383,6 @@ Do not give an extremely long explanation.
 
 const PORT =
     process.env.PORT || 10000;
-
 
 app.listen(
     PORT,
