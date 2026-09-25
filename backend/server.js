@@ -233,8 +233,8 @@ try {
 
 You are OPITECH, an electronics recommendation engine.
 
-Your job is to analyze the user's preferences and produce the
-THREE most suitable products, ranked from #1 to #3.
+Analyze the user's preferences and produce the THREE most suitable
+specific products, ranked from #1 to #3.
 
 USER PREFERENCES:
 
@@ -250,46 +250,49 @@ Preferred brand: ${brand}
 RANKING SYSTEM
 ==============
 
-Evaluate candidate products using these factors:
+Evaluate products using these factors:
 
 1. Match with the user's selected product type.
-2. Stay within the user's maximum budget whenever possible.
+2. Stay within the user's maximum budget.
 3. Match the user's intended uses.
 4. Give extra importance to the user's selected priority.
 5. Respect the preferred brand when possible.
-6. Consider important specifications for the user's use case.
-7. Consider overall value for the user's requirements.
+6. Consider the specifications that matter for the user's use case.
+7. Consider overall value for THIS particular user.
 8. Penalize products that fail an important requirement.
 
-The ranking must represent the BEST MATCH for THIS USER,
-not simply the most expensive or most powerful product.
+The ranking must represent the BEST MATCH for this user.
 
 #1 = strongest overall match.
 #2 = second strongest match.
 #3 = third strongest match.
 
-Do NOT rank randomly.
+Do not rank products randomly.
 
-Do NOT give more than 3 products.
+Do not rank a product higher simply because it is more expensive
+or more powerful.
 
-Do NOT give fewer than 3 products unless there genuinely are fewer
-suitable products available.
+A product with lower specifications can rank higher if it is a
+better match for the user's actual requirements.
+
+Return exactly 3 recommendations whenever 3 suitable products exist.
 
 ===============================
 IMPORTANT RULES
 ===============
 
-* Respect the maximum budget.
+* Respect the user's maximum budget.
 * Respect the preferred brand when possible.
-* If the preferred brand has suitable alternatives, consider them.
+* If the preferred brand has suitable products, prioritize them.
+* If the preferred brand has poor choices, suitable alternatives may be considered.
+* Use specific real product models.
+* Do not use generic descriptions such as "a good gaming phone".
 * Do not invent specifications.
-* Do not invent current prices.
-* Do not pretend that an uncertain specification is confirmed.
-* If a product's exact price is uncertain, clearly state that it needs verification.
-* Do not recommend an obviously unsuitable product just to fill a ranking.
-* Use actual product models when possible.
-* Avoid generic product categories such as "a good gaming phone".
-* Each recommendation must be a specific product model.
+* Do not invent prices.
+* If the exact current price is uncertain, write "Verify current price".
+* Do not recommend an obviously unsuitable product just to fill a position.
+* Keep explanations concise.
+* The ranking must be based on the user's preferences.
 
 ===============================
 OUTPUT FORMAT
@@ -304,9 +307,9 @@ Use exactly this structure:
 {
 "rank": 1,
 "product": "Exact product name",
-"price": "Price or 'Verify current price'",
+"price": "Price or Verify current price",
 "matchScore": 0,
-"why": "Short explanation of why this is a strong match",
+"why": "Short explanation of why this is the strongest match",
 "strengths": [
 "Important strength",
 "Important strength",
@@ -319,9 +322,9 @@ Use exactly this structure:
 {
 "rank": 2,
 "product": "Exact product name",
-"price": "Price or 'Verify current price'",
+"price": "Price or Verify current price",
 "matchScore": 0,
-"why": "Short explanation",
+"why": "Short explanation of why this is the second strongest match",
 "strengths": [
 "Important strength",
 "Important strength",
@@ -334,9 +337,9 @@ Use exactly this structure:
 {
 "rank": 3,
 "product": "Exact product name",
-"price": "Price or 'Verify current price'",
+"price": "Price or Verify current price",
 "matchScore": 0,
-"why": "Short explanation",
+"why": "Short explanation of why this is the third strongest match",
 "strengths": [
 "Important strength",
 "Important strength",
@@ -349,8 +352,10 @@ Use exactly this structure:
 ]
 }
 
-The matchScore should be a reasonable percentage from 0 to 100
-representing how closely the product matches THIS USER'S requirements.
+The matchScore must be a percentage from 0 to 100.
+
+The score should represent how closely the product matches THIS
+USER'S requirements.
 
 Do not use the score as the only reason for ranking.
 
@@ -396,7 +401,6 @@ Return JSON only.
         result.response.text ||
         "";
 
-
     text = text
         .replace(/```json/gi, "")
         .replace(/```/g, "")
@@ -404,7 +408,7 @@ Return JSON only.
 
 
     // ===============================
-    // PARSE RANKED RESULTS
+    // PARSE JSON
     // ===============================
 
     let recommendations;
@@ -428,9 +432,11 @@ Return JSON only.
 
         return res.status(500).json({
 
-            error: "Gemini returned invalid recommendation data",
+            error:
+                "Gemini returned invalid recommendation data",
 
-            rawResult: text
+            rawResult:
+                text
 
         });
 
@@ -438,7 +444,7 @@ Return JSON only.
 
 
     // ===============================
-    // VALIDATE RESULTS
+    // VALIDATE STRUCTURE
     // ===============================
 
     if (
@@ -448,20 +454,43 @@ Return JSON only.
 
         return res.status(500).json({
 
-            error: "Invalid recommendation structure"
+            error:
+                "Invalid recommendation structure"
 
         });
 
     }
 
 
-    // Make sure the ranking is always
-    // ordered #1 → #2 → #3.
+    // ===============================
+    // SORT #1 → #2 → #3
+    // ===============================
 
     recommendations.recommendations =
         recommendations.recommendations
-            .sort((a, b) => a.rank - b.rank)
+            .sort((a, b) => {
+
+                return Number(a.rank) - Number(b.rank);
+
+            })
             .slice(0, 3);
+
+
+    // ===============================
+    // FORCE CORRECT RANK NUMBERS
+    // ===============================
+
+    recommendations.recommendations =
+        recommendations.recommendations.map(
+            (item, index) => {
+
+                return {
+                    ...item,
+                    rank: index + 1
+                };
+
+            }
+        );
 
 
     console.log(
@@ -471,7 +500,7 @@ Return JSON only.
 
 
     // ===============================
-    // SEND RESULT TO FRONTEND
+    // SEND TO FRONTEND
     // ===============================
 
     return res.json({
