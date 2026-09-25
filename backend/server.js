@@ -4,73 +4,41 @@ const { GoogleGenAI } = require("@google/genai");
 
 const app = express();
 
-
-// =====================================
-// MIDDLEWARE
-// =====================================
-
-app.use(cors({
-    origin: "*"
-}));
-
+app.use(cors());
 app.use(express.json());
 
+const PORT = process.env.PORT || 10000;
 
-// =====================================
-// GEMINI SETUP
-// =====================================
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
-const apiKey = process.env.GEMINI_API_KEY;
+if (!GEMINI_API_KEY) {
+    console.error("GEMINI_API_KEY is missing!");
+}
 
-console.log(
-    "GEMINI KEY CHECK:",
-    apiKey
-        ? `Loaded (${apiKey.length} characters)`
-        : "MISSING"
-);
-
-const ai = apiKey
-    ? new GoogleGenAI({
-        apiKey: apiKey
-    })
-    : null;
-
-
-// =====================================
-// HOME ROUTE
-// =====================================
-
-app.get("/", (req, res) => {
-
-    res.json({
-        status: "online",
-        message: "OPITECH AI backend is running 🚀",
-        ai: apiKey
-            ? "Gemini configured"
-            : "Gemini API key missing"
-    });
-
+const ai = new GoogleGenAI({
+    apiKey: GEMINI_API_KEY
 });
 
 
-// =====================================
-// WAIT FUNCTION
-// =====================================
+/* =========================
+   HOME
+========================= */
 
-function wait(ms) {
-    return new Promise(resolve => {
-        setTimeout(resolve, ms);
+app.get("/", (req, res) => {
+    res.json({
+        status: "online",
+        message: "OPITECH AI backend is running 🚀",
+        ai: "Gemini + Google Search"
     });
-}
+});
 
 
-// =====================================
-// GEMINI GENERATOR
-// =====================================
+/* =========================
+   GEMINI + WEB SEARCH
+========================= */
 
-async function generateWithFallback(prompt) {
+async function generateRecommendation(prompt) {
 
-    // Put the currently working free model first.
     const models = [
         "gemini-3.5-flash-lite",
         "gemini-3.5-flash",
@@ -79,37 +47,33 @@ async function generateWithFallback(prompt) {
 
     let lastError = null;
 
-    for (let i = 0; i < models.length; i++) {
-
-        const model = models[i];
+    for (const model of models) {
 
         try {
 
-            console.log(
-                `Trying Gemini model: ${model}`
-            );
+            console.log(`Trying Gemini model: ${model}`);
 
-            const response =
-                await ai.models.generateContent({
+            const response = await ai.models.generateContent({
 
-                    model: model,
+                model: model,
 
-                    contents: prompt,
+                contents: prompt,
 
-                    config: {
-                        maxOutputTokens: 1800
-                    }
+                config: {
 
-                });
+                    tools: [
+                        {
+                            googleSearch: {}
+                        }
+                    ]
 
-            console.log(
-                `SUCCESS with model: ${model}`
-            );
+                }
 
-            return {
-                response: response,
-                model: model
-            };
+            });
+
+            console.log(`Gemini model succeeded: ${model}`);
+
+            return response;
 
         } catch (error) {
 
@@ -117,366 +81,222 @@ async function generateWithFallback(prompt) {
 
             console.error(
                 `Model ${model} failed:`,
-                error.message
+                error.message || error
             );
 
-            const status = error.status;
-
-            if (
-                status === 429 ||
-                status === 500 ||
-                status === 502 ||
-                status === 503 ||
-                status === 504
-            ) {
-
-                if (i < models.length - 1) {
-
-                    const delay =
-                        1000 * Math.pow(2, i);
-
-                    console.log(
-                        `Waiting ${delay}ms before fallback...`
-                    );
-
-                    await wait(delay);
-
-                    continue;
-                }
-
-            } else {
-
-                throw error;
-
-            }
         }
+
     }
 
     throw lastError;
 }
 
 
-// =====================================
-// RECOMMENDATION ROUTE
-// =====================================
+/* =========================
+   RECOMMENDATION API
+========================= */
 
 app.post("/api/recommend", async (req, res) => {
 
     try {
 
-        // =================================
-        // READ USER PREFERENCES
-        // =================================
-
-        const preferences = req.body.preferences;
-
-        console.log(
-            "Received preferences:",
-            preferences
-        );
-
-
-        // =================================
-        // CHECK PREFERENCES
-        // =================================
-
-        if (!preferences) {
-
-            return res.status(400).json({
-                error: "Preferences are required"
-            });
-
-        }
+        const {
+            productType,
+            country,
+            currency,
+            budget,
+            uses,
+            priority,
+            brand
+        } = req.body;
 
 
-        // =================================
-        // CHECK GEMINI
-        // =================================
-
-        if (!ai) {
-
-            return res.status(500).json({
-                error: "Gemini API key is missing"
-            });
-
-        }
+        console.log("Received preferences:", {
+            productType,
+            country,
+            currency,
+            budget,
+            uses,
+            priority,
+            brand
+        });
 
 
-        // =================================
-        // USER DATA
-        // =================================
-
-        const productType =
-            preferences.productType ||
-            "Any electronics";
-
-        const country =
-            preferences.country ||
-            "India";
-
-        const currency =
-            preferences.currency ||
-            "INR";
-
-        const budget =
-            preferences.budget ||
-            "Not specified";
-
-        const uses =
-            Array.isArray(preferences.uses)
-                ? preferences.uses.join(", ")
-                : "General use";
-
-        const priority =
-            preferences.priority ||
-            "Balanced";
-
-        const brand =
-            preferences.brand ||
-            "Any brand";
-
-
-        // =================================
-        // OPITECH AI PROMPT
-        // =================================
+        /* =========================
+           AI PROMPT
+        ========================= */
 
         const prompt = `
-You are OPITECH, an electronics recommendation engine.
+You are OPITECH, an electronics recommendation AI.
 
-Your job is to find the THREE best specific products for the user
-and rank them #1, #2, and #3.
+Your job is to find the BEST CURRENT products for the user's requirements.
 
-USER INFORMATION:
+USER REQUIREMENTS:
 
 Product type: ${productType}
 Country: ${country}
 Currency: ${currency}
 Maximum budget: ${budget}
-Uses: ${uses}
+Uses: ${Array.isArray(uses) ? uses.join(", ") : uses}
 Priority: ${priority}
 Preferred brand: ${brand}
 
 
-========================================
-RANKING RULES
-========================================
+IMPORTANT:
 
-Rank products according to how well they match THIS USER.
+You MUST use Google Search to find CURRENT information.
 
-Consider:
+Search the web for real products that are currently available in the user's country.
 
-1. Product type
-2. Maximum budget
-3. Intended uses
-4. User's selected priority
-5. Preferred brand
-6. Important specifications
-7. Overall value
-8. Important limitations
+For every recommendation:
 
-The ranking must be personalized.
-
-#1 must be the strongest overall match.
-
-#2 must be the second strongest match.
-
-#3 must be the third strongest match.
-
-Do NOT simply rank the most expensive product first.
-
-Do NOT simply rank the most powerful product first.
-
-A cheaper product can rank #1 if it is a better match for the
-user's actual requirements.
+1. Find the exact product model.
+2. Find its CURRENT price.
+3. Prefer prices from:
+   - official manufacturer stores
+   - Amazon
+   - Flipkart
+   - Croma
+   - Reliance Digital
+   - other reputable retailers
+4. Make sure the product fits within the user's maximum budget.
+5. Do NOT invent a price.
+6. Do NOT use "Verify current price".
+7. Do NOT use "Check price".
+8. Do NOT leave the price blank.
+9. Return the actual numeric price found during your web search.
+10. If multiple current prices exist, use the most relevant normal selling price and mention the source.
+11. Do not use an old launch price if a newer selling price is available.
 
 
-========================================
-PRODUCT RULES
-========================================
+RANKING:
 
-Use real, specific product models.
+Return exactly 3 products.
 
-For example:
+Rank them:
 
-GOOD:
-"POCO X7 Pro"
+#1 = strongest overall match
+#2 = second strongest match
+#3 = third strongest match
 
-BAD:
-"A good gaming phone"
+The ranking should consider:
 
-GOOD:
-"OnePlus Nord 4"
+- user's budget
+- user's uses
+- performance
+- user's priority
+- preferred brand
+- current specifications
+- current price
+- overall value
 
-BAD:
-"A OnePlus phone"
 
-Do not invent specifications.
+PRICE:
 
-Do not invent prices.
+The price MUST be the current price found from web search.
 
-If you are uncertain about a current price, write:
+For India, return prices like:
+
+₹24999
+
+For USD:
+
+$499
+
+Do not write:
 
 "Verify current price"
 
+Do not write:
 
-========================================
-BUDGET RULE
-========================================
+"Price unavailable"
 
-The user's maximum budget is:
-
-${budget}
-
-Prefer products within this budget.
-
-Do not recommend a product above the maximum budget unless there
-is an extremely important reason.
-
-If a product is above the budget, it should normally NOT be ranked
-above suitable products that fit within the budget.
+Do not make up a price.
 
 
-========================================
-BRAND RULE
-========================================
-
-Preferred brand:
-
-${brand}
-
-If the user selected a specific brand, prioritize suitable products
-from that brand.
-
-If the brand does not have suitable products, alternatives from
-other brands can be considered.
-
-
-========================================
-OUTPUT
-========================================
-
-Return ONLY valid JSON.
-
-Do not use Markdown.
-
-Do not use code fences.
+RETURN ONLY VALID JSON.
 
 Use exactly this structure:
 
 {
-    "recommendations": [
-        {
-            "rank": 1,
-            "product": "Exact product name",
-            "price": "Price or Verify current price",
-            "matchScore": 95,
-            "why": "Why this product is the strongest match",
-            "strengths": [
-                "Strength 1",
-                "Strength 2",
-                "Strength 3"
-            ],
-            "tradeoffs": [
-                "Limitation 1"
-            ]
-        },
-        {
-            "rank": 2,
-            "product": "Exact product name",
-            "price": "Price or Verify current price",
-            "matchScore": 90,
-            "why": "Why this product is the second strongest match",
-            "strengths": [
-                "Strength 1",
-                "Strength 2",
-                "Strength 3"
-            ],
-            "tradeoffs": [
-                "Limitation 1"
-            ]
-        },
-        {
-            "rank": 3,
-            "product": "Exact product name",
-            "price": "Price or Verify current price",
-            "matchScore": 85,
-            "why": "Why this product is the third strongest match",
-            "strengths": [
-                "Strength 1",
-                "Strength 2",
-                "Strength 3"
-            ],
-            "tradeoffs": [
-                "Limitation 1"
-            ]
-        }
-    ]
+  "recommendations": [
+    {
+      "rank": 1,
+      "name": "Exact Product Model",
+      "price": "₹24999",
+      "priceSource": "Source name",
+      "matchScore": 95,
+      "why": "Short explanation of why this product matches the user's requirements.",
+      "strengths": [
+        "Strength 1",
+        "Strength 2",
+        "Strength 3"
+      ],
+      "tradeoffs": [
+        "Tradeoff 1",
+        "Tradeoff 2"
+      ]
+    },
+    {
+      "rank": 2,
+      "name": "Exact Product Model",
+      "price": "₹XXXXX",
+      "priceSource": "Source name",
+      "matchScore": 90,
+      "why": "Short explanation.",
+      "strengths": [
+        "Strength 1",
+        "Strength 2",
+        "Strength 3"
+      ],
+      "tradeoffs": [
+        "Tradeoff 1",
+        "Tradeoff 2"
+      ]
+    },
+    {
+      "rank": 3,
+      "name": "Exact Product Model",
+      "price": "₹XXXXX",
+      "priceSource": "Source name",
+      "matchScore": 85,
+      "why": "Short explanation.",
+      "strengths": [
+        "Strength 1",
+        "Strength 2",
+        "Strength 3"
+      ],
+      "tradeoffs": [
+        "Tradeoff 1",
+        "Tradeoff 2"
+      ]
+    }
+  ]
 }
-
-matchScore must be a number from 0 to 100.
-
-Return exactly three recommendations when three suitable products
-can reasonably be identified.
 `;
 
 
-        console.log(
-            "Sending ranking request to Gemini..."
-        );
+        /* =========================
+           CALL GEMINI
+        ========================= */
+
+        const response = await generateRecommendation(prompt);
+
+        let text = response.text || "";
+
+        console.log("RAW GEMINI RESPONSE:");
+        console.log(text);
 
 
-        const startTime = Date.now();
+        /* =========================
+           CLEAN JSON
+        ========================= */
 
-
-        // =================================
-        // CALL GEMINI
-        // =================================
-
-        const result =
-            await generateWithFallback(prompt);
-
-
-        const elapsed =
-            ((Date.now() - startTime) / 1000)
-                .toFixed(2);
-
-
-        console.log(
-            `Gemini response received in ${elapsed}s`
-        );
-
-        console.log(
-            `Model used: ${result.model}`
-        );
-
-
-        // =================================
-        // GET RESPONSE TEXT
-        // =================================
-
-        let text = "";
-
-        if (typeof result.response.text === "function") {
-            text = result.response.text();
-        } else {
-            text = result.response.text || "";
-        }
-
-        text = String(text)
+        text = text
             .replace(/```json/gi, "")
             .replace(/```/g, "")
             .trim();
 
-
-        console.log(
-            "Gemini raw response:",
-            text
-        );
-
-
-        // =================================
-        // PARSE JSON
-        // =================================
 
         let data;
 
@@ -486,170 +306,67 @@ can reasonably be identified.
 
         } catch (parseError) {
 
-            console.error(
-                "JSON parsing failed:",
-                parseError.message
-            );
+            console.error("JSON parsing failed:", parseError);
 
             return res.status(500).json({
-
-                error:
-                    "Gemini returned invalid recommendation data",
-
-                rawResult:
-                    text
-
+                error: "AI returned invalid JSON",
+                raw: text
             });
 
         }
 
 
-        // =================================
-        // CHECK RECOMMENDATIONS
-        // =================================
+        /* =========================
+           SORT BY RANK
+        ========================= */
 
         if (
-            !data ||
-            !Array.isArray(data.recommendations)
+            data.recommendations &&
+            Array.isArray(data.recommendations)
         ) {
 
-            return res.status(500).json({
-
-                error:
-                    "Gemini returned an invalid recommendation structure",
-
-                rawResult:
-                    text
-
-            });
+            data.recommendations.sort(
+                (a, b) => a.rank - b.rank
+            );
 
         }
 
 
-        // =================================
-        // SORT RECOMMENDATIONS
-        // =================================
+        /* =========================
+           SEND RESULT
+        ========================= */
 
-        data.recommendations =
-            data.recommendations
-                .sort((a, b) => {
-
-                    return Number(a.rank) -
-                        Number(b.rank);
-
-                })
-                .slice(0, 3);
-
-
-        // =================================
-        // FORCE RANK NUMBERS
-        // =================================
-
-        data.recommendations =
-            data.recommendations.map(
-                (product, index) => {
-
-                    return {
-                        ...product,
-                        rank: index + 1
-                    };
-
-                }
-            );
-
-
-        // =================================
-        // CREATE SIMPLE RESULT TEXT
-        // =================================
-
-        const resultText =
-            data.recommendations
-                .map(product => {
-
-                    return (
-                        `#${product.rank} ${product.product}\n` +
-                        `Price: ${product.price}\n` +
-                        `Match: ${product.matchScore}%\n` +
-                        `${product.why}`
-                    );
-
-                })
-                .join("\n\n");
-
-
-        console.log(
-            "FINAL RANKED RESULTS:",
-            JSON.stringify(
-                data.recommendations,
-                null,
-                2
-            )
-        );
-
-
-        // =================================
-        // SEND TO WEBSITE
-        // =================================
-
-        return res.json({
+        res.json({
 
             success: true,
 
-            // New structured ranking data
             recommendations:
-                data.recommendations,
+                data.recommendations || [],
 
-            // Compatibility with the old frontend
             result:
-                resultText,
-
-            model:
-                result.model,
-
-            responseTime:
-                `${elapsed}s`
+                data.recommendations || []
 
         });
 
 
     } catch (error) {
 
-        console.error(
-            "================================="
-        );
+        console.error("AI generation failed:");
 
-        console.error(
-            "OPITECH GEMINI ERROR"
-        );
+        console.error(error);
 
-        console.error(
-            "Message:",
-            error.message
-        );
+        res.status(500).json({
 
-        console.error(
-            "Status:",
-            error.status
-        );
-
-        console.error(
-            "Code:",
-            error.code
-        );
-
-        console.error(
-            "================================="
-        );
-
-
-        return res.status(500).json({
-
-            error:
-                "Gemini AI generation failed",
+            error: "AI generation failed",
 
             details:
-                error.message ||
-                "Unknown Gemini error"
+                error.message || "Unknown error",
+
+            type:
+                error.name || "UnknownError",
+
+            code:
+                error.status || error.code || null
 
         });
 
@@ -658,21 +375,9 @@ can reasonably be identified.
 });
 
 
-// =====================================
-// START SERVER
-// =====================================
-
-const PORT =
-    process.env.PORT || 10000;
-
-console.log(
-    "Starting OPITECH backend..."
-);
-
-console.log(
-    "PORT:",
-    PORT
-);
+/* =========================
+   START SERVER
+========================= */
 
 app.listen(
     PORT,
@@ -680,19 +385,7 @@ app.listen(
     () => {
 
         console.log(
-            "================================="
-        );
-
-        console.log(
-            "OPITECH BACKEND IS LIVE 🚀"
-        );
-
-        console.log(
-            `Listening on port ${PORT}`
-        );
-
-        console.log(
-            "================================="
+            `OPITECH BACKEND IS LIVE 🚀 PORT ${PORT}`
         );
 
     }
