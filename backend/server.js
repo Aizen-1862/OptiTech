@@ -169,7 +169,7 @@ Do not give an extremely long explanation.
 
             config: {
                 temperature: 0.4,
-                maxOutputTokens: 800
+                maxOutputTokens: 2000
             }
 
         });
