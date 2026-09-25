@@ -4,239 +4,249 @@ const { GoogleGenAI } = require("@google/genai");
 
 const app = express();
 
-// ===============================
+
+// =====================================
 // MIDDLEWARE
-// ===============================
+// =====================================
 
 app.use(cors({
-origin: "*"
+    origin: "*"
 }));
 
 app.use(express.json());
 
-// ===============================
+
+// =====================================
 // GEMINI SETUP
-// ===============================
+// =====================================
 
 const apiKey = process.env.GEMINI_API_KEY;
 
 console.log(
-"GEMINI KEY CHECK:",
-apiKey ? `Loaded (${apiKey.length} characters)` : "MISSING"
+    "GEMINI KEY CHECK:",
+    apiKey
+        ? `Loaded (${apiKey.length} characters)`
+        : "MISSING"
 );
 
 const ai = apiKey
-? new GoogleGenAI({
-apiKey: apiKey
-})
-: null;
+    ? new GoogleGenAI({
+        apiKey: apiKey
+    })
+    : null;
 
-// ===============================
-// HOME / TEST ROUTE
-// ===============================
+
+// =====================================
+// HOME ROUTE
+// =====================================
 
 app.get("/", (req, res) => {
 
-```
-res.json({
-    status: "online",
-    message: "OPITECH AI backend is running 🚀",
-    ai: apiKey ? "Gemini configured" : "Gemini API key missing"
-});
-```
+    res.json({
+        status: "online",
+        message: "OPITECH AI backend is running 🚀",
+        ai: apiKey
+            ? "Gemini configured"
+            : "Gemini API key missing"
+    });
 
 });
 
-// ===============================
+
+// =====================================
 // WAIT FUNCTION
-// ===============================
+// =====================================
 
 function wait(ms) {
-return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise(resolve => {
+        setTimeout(resolve, ms);
+    });
 }
 
-// ===============================
-// GEMINI REQUEST WITH FALLBACK
-// ===============================
+
+// =====================================
+// GEMINI GENERATOR
+// =====================================
 
 async function generateWithFallback(prompt) {
 
-```
-const models = [
-    "gemini-3.6-flash",
-    "gemini-3.5-flash-lite",
-    "gemini-3.5-flash"
-];
+    // Put the currently working free model first.
+    const models = [
+        "gemini-3.5-flash-lite",
+        "gemini-3.5-flash",
+        "gemini-3.6-flash"
+    ];
 
-let lastError = null;
+    let lastError = null;
 
-for (let i = 0; i < models.length; i++) {
+    for (let i = 0; i < models.length; i++) {
 
-    const model = models[i];
+        const model = models[i];
 
-    try {
+        try {
 
-        console.log(
-            `Trying Gemini model: ${model}`
-        );
+            console.log(
+                `Trying Gemini model: ${model}`
+            );
 
-        const response = await ai.models.generateContent({
+            const response =
+                await ai.models.generateContent({
 
-            model: model,
+                    model: model,
 
-            contents: prompt,
+                    contents: prompt,
 
-            config: {
-                maxOutputTokens: 1600,
+                    config: {
+                        maxOutputTokens: 1800
+                    }
 
-                thinkingConfig: {
-                    thinkingLevel: "low"
+                });
+
+            console.log(
+                `SUCCESS with model: ${model}`
+            );
+
+            return {
+                response: response,
+                model: model
+            };
+
+        } catch (error) {
+
+            lastError = error;
+
+            console.error(
+                `Model ${model} failed:`,
+                error.message
+            );
+
+            const status = error.status;
+
+            if (
+                status === 429 ||
+                status === 500 ||
+                status === 502 ||
+                status === 503 ||
+                status === 504
+            ) {
+
+                if (i < models.length - 1) {
+
+                    const delay =
+                        1000 * Math.pow(2, i);
+
+                    console.log(
+                        `Waiting ${delay}ms before fallback...`
+                    );
+
+                    await wait(delay);
+
+                    continue;
                 }
+
+            } else {
+
+                throw error;
+
             }
-
-        });
-
-        console.log(
-            `SUCCESS with model: ${model}`
-        );
-
-        return {
-            response,
-            model
-        };
-
-    } catch (error) {
-
-        lastError = error;
-
-        console.error(
-            `Model ${model} failed:`,
-            error.message
-        );
-
-        const status = error.status;
-
-        if (
-            status === 429 ||
-            status === 500 ||
-            status === 502 ||
-            status === 503 ||
-            status === 504
-        ) {
-
-            if (i < models.length - 1) {
-
-                const delay =
-                    1000 * Math.pow(2, i);
-
-                console.log(
-                    `Waiting ${delay}ms before fallback...`
-                );
-
-                await wait(delay);
-
-                continue;
-            }
-
-        } else {
-
-            throw error;
-
         }
-
     }
 
+    throw lastError;
 }
 
-throw lastError;
-```
 
-}
-
-// ===============================
-// AI RECOMMENDATION ROUTE
-// ===============================
+// =====================================
+// RECOMMENDATION ROUTE
+// =====================================
 
 app.post("/api/recommend", async (req, res) => {
 
-```
-try {
+    try {
 
-    const { preferences } = req.body;
+        // =================================
+        // READ USER PREFERENCES
+        // =================================
 
-    console.log(
-        "Received preferences:",
-        preferences
-    );
+        const preferences = req.body.preferences;
 
-
-    // ===============================
-    // CHECK PREFERENCES
-    // ===============================
-
-    if (!preferences) {
-
-        return res.status(400).json({
-            error: "Preferences are required"
-        });
-
-    }
+        console.log(
+            "Received preferences:",
+            preferences
+        );
 
 
-    // ===============================
-    // CHECK API KEY
-    // ===============================
+        // =================================
+        // CHECK PREFERENCES
+        // =================================
 
-    if (!ai) {
+        if (!preferences) {
 
-        return res.status(500).json({
-            error: "Gemini API key is missing"
-        });
+            return res.status(400).json({
+                error: "Preferences are required"
+            });
 
-    }
-
-
-    // ===============================
-    // USER DATA
-    // ===============================
-
-    const productType =
-        preferences.productType || "Any electronics";
-
-    const country =
-        preferences.country || "India";
-
-    const currency =
-        preferences.currency || "INR";
-
-    const budget =
-        preferences.budget || "Not specified";
-
-    const uses =
-        Array.isArray(preferences.uses)
-            ? preferences.uses.join(", ")
-            : "General use";
-
-    const priority =
-        preferences.priority || "Balanced";
-
-    const brand =
-        preferences.brand || "Any brand";
+        }
 
 
-    // ===============================
-    // OPITECH RANKING PROMPT
-    // ===============================
+        // =================================
+        // CHECK GEMINI
+        // =================================
 
-    const prompt = `
-```
+        if (!ai) {
 
+            return res.status(500).json({
+                error: "Gemini API key is missing"
+            });
+
+        }
+
+
+        // =================================
+        // USER DATA
+        // =================================
+
+        const productType =
+            preferences.productType ||
+            "Any electronics";
+
+        const country =
+            preferences.country ||
+            "India";
+
+        const currency =
+            preferences.currency ||
+            "INR";
+
+        const budget =
+            preferences.budget ||
+            "Not specified";
+
+        const uses =
+            Array.isArray(preferences.uses)
+                ? preferences.uses.join(", ")
+                : "General use";
+
+        const priority =
+            preferences.priority ||
+            "Balanced";
+
+        const brand =
+            preferences.brand ||
+            "Any brand";
+
+
+        // =================================
+        // OPITECH AI PROMPT
+        // =================================
+
+        const prompt = `
 You are OPITECH, an electronics recommendation engine.
 
-Analyze the user's preferences and produce the THREE most suitable
-specific products, ranked from #1 to #3.
+Your job is to find the THREE best specific products for the user
+and rank them #1, #2, and #3.
 
-USER PREFERENCES:
+USER INFORMATION:
 
 Product type: ${productType}
 Country: ${country}
@@ -246,344 +256,444 @@ Uses: ${uses}
 Priority: ${priority}
 Preferred brand: ${brand}
 
-===============================
-RANKING SYSTEM
-==============
 
-Evaluate products using these factors:
+========================================
+RANKING RULES
+========================================
 
-1. Match with the user's selected product type.
-2. Stay within the user's maximum budget.
-3. Match the user's intended uses.
-4. Give extra importance to the user's selected priority.
-5. Respect the preferred brand when possible.
-6. Consider the specifications that matter for the user's use case.
-7. Consider overall value for THIS particular user.
-8. Penalize products that fail an important requirement.
+Rank products according to how well they match THIS USER.
 
-The ranking must represent the BEST MATCH for this user.
+Consider:
 
-#1 = strongest overall match.
-#2 = second strongest match.
-#3 = third strongest match.
+1. Product type
+2. Maximum budget
+3. Intended uses
+4. User's selected priority
+5. Preferred brand
+6. Important specifications
+7. Overall value
+8. Important limitations
 
-Do not rank products randomly.
+The ranking must be personalized.
 
-Do not rank a product higher simply because it is more expensive
-or more powerful.
+#1 must be the strongest overall match.
 
-A product with lower specifications can rank higher if it is a
-better match for the user's actual requirements.
+#2 must be the second strongest match.
 
-Return exactly 3 recommendations whenever 3 suitable products exist.
+#3 must be the third strongest match.
 
-===============================
-IMPORTANT RULES
-===============
+Do NOT simply rank the most expensive product first.
 
-* Respect the user's maximum budget.
-* Respect the preferred brand when possible.
-* If the preferred brand has suitable products, prioritize them.
-* If the preferred brand has poor choices, suitable alternatives may be considered.
-* Use specific real product models.
-* Do not use generic descriptions such as "a good gaming phone".
-* Do not invent specifications.
-* Do not invent prices.
-* If the exact current price is uncertain, write "Verify current price".
-* Do not recommend an obviously unsuitable product just to fill a position.
-* Keep explanations concise.
-* The ranking must be based on the user's preferences.
+Do NOT simply rank the most powerful product first.
 
-===============================
-OUTPUT FORMAT
-=============
+A cheaper product can rank #1 if it is a better match for the
+user's actual requirements.
+
+
+========================================
+PRODUCT RULES
+========================================
+
+Use real, specific product models.
+
+For example:
+
+GOOD:
+"POCO X7 Pro"
+
+BAD:
+"A good gaming phone"
+
+GOOD:
+"OnePlus Nord 4"
+
+BAD:
+"A OnePlus phone"
+
+Do not invent specifications.
+
+Do not invent prices.
+
+If you are uncertain about a current price, write:
+
+"Verify current price"
+
+
+========================================
+BUDGET RULE
+========================================
+
+The user's maximum budget is:
+
+${budget}
+
+Prefer products within this budget.
+
+Do not recommend a product above the maximum budget unless there
+is an extremely important reason.
+
+If a product is above the budget, it should normally NOT be ranked
+above suitable products that fit within the budget.
+
+
+========================================
+BRAND RULE
+========================================
+
+Preferred brand:
+
+${brand}
+
+If the user selected a specific brand, prioritize suitable products
+from that brand.
+
+If the brand does not have suitable products, alternatives from
+other brands can be considered.
+
+
+========================================
+OUTPUT
+========================================
 
 Return ONLY valid JSON.
+
+Do not use Markdown.
+
+Do not use code fences.
 
 Use exactly this structure:
 
 {
-"recommendations": [
-{
-"rank": 1,
-"product": "Exact product name",
-"price": "Price or Verify current price",
-"matchScore": 0,
-"why": "Short explanation of why this is the strongest match",
-"strengths": [
-"Important strength",
-"Important strength",
-"Important strength"
-],
-"tradeoffs": [
-"Important limitation"
-]
-},
-{
-"rank": 2,
-"product": "Exact product name",
-"price": "Price or Verify current price",
-"matchScore": 0,
-"why": "Short explanation of why this is the second strongest match",
-"strengths": [
-"Important strength",
-"Important strength",
-"Important strength"
-],
-"tradeoffs": [
-"Important limitation"
-]
-},
-{
-"rank": 3,
-"product": "Exact product name",
-"price": "Price or Verify current price",
-"matchScore": 0,
-"why": "Short explanation of why this is the third strongest match",
-"strengths": [
-"Important strength",
-"Important strength",
-"Important strength"
-],
-"tradeoffs": [
-"Important limitation"
-]
+    "recommendations": [
+        {
+            "rank": 1,
+            "product": "Exact product name",
+            "price": "Price or Verify current price",
+            "matchScore": 95,
+            "why": "Why this product is the strongest match",
+            "strengths": [
+                "Strength 1",
+                "Strength 2",
+                "Strength 3"
+            ],
+            "tradeoffs": [
+                "Limitation 1"
+            ]
+        },
+        {
+            "rank": 2,
+            "product": "Exact product name",
+            "price": "Price or Verify current price",
+            "matchScore": 90,
+            "why": "Why this product is the second strongest match",
+            "strengths": [
+                "Strength 1",
+                "Strength 2",
+                "Strength 3"
+            ],
+            "tradeoffs": [
+                "Limitation 1"
+            ]
+        },
+        {
+            "rank": 3,
+            "product": "Exact product name",
+            "price": "Price or Verify current price",
+            "matchScore": 85,
+            "why": "Why this product is the third strongest match",
+            "strengths": [
+                "Strength 1",
+                "Strength 2",
+                "Strength 3"
+            ],
+            "tradeoffs": [
+                "Limitation 1"
+            ]
+        }
+    ]
 }
-]
-}
 
-The matchScore must be a percentage from 0 to 100.
+matchScore must be a number from 0 to 100.
 
-The score should represent how closely the product matches THIS
-USER'S requirements.
-
-Do not use the score as the only reason for ranking.
-
-Return JSON only.
+Return exactly three recommendations when three suitable products
+can reasonably be identified.
 `;
 
-````
-    console.log(
-        "Sending ranking request to Gemini..."
-    );
 
-
-    const startTime = Date.now();
-
-
-    // ===============================
-    // GEMINI
-    // ===============================
-
-    const result =
-        await generateWithFallback(prompt);
-
-
-    const elapsed =
-        ((Date.now() - startTime) / 1000)
-            .toFixed(2);
-
-
-    console.log(
-        `Gemini response received in ${elapsed}s`
-    );
-
-    console.log(
-        `Model used: ${result.model}`
-    );
-
-
-    // ===============================
-    // RESPONSE TEXT
-    // ===============================
-
-    let text =
-        result.response.text ||
-        "";
-
-    text = text
-        .replace(/```json/gi, "")
-        .replace(/```/g, "")
-        .trim();
-
-
-    // ===============================
-    // PARSE JSON
-    // ===============================
-
-    let recommendations;
-
-    try {
-
-        recommendations =
-            JSON.parse(text);
-
-    } catch (parseError) {
-
-        console.error(
-            "Failed to parse Gemini JSON:",
-            parseError.message
+        console.log(
+            "Sending ranking request to Gemini..."
         );
 
-        console.error(
-            "Gemini returned:",
+
+        const startTime = Date.now();
+
+
+        // =================================
+        // CALL GEMINI
+        // =================================
+
+        const result =
+            await generateWithFallback(prompt);
+
+
+        const elapsed =
+            ((Date.now() - startTime) / 1000)
+                .toFixed(2);
+
+
+        console.log(
+            `Gemini response received in ${elapsed}s`
+        );
+
+        console.log(
+            `Model used: ${result.model}`
+        );
+
+
+        // =================================
+        // GET RESPONSE TEXT
+        // =================================
+
+        let text = "";
+
+        if (typeof result.response.text === "function") {
+            text = result.response.text();
+        } else {
+            text = result.response.text || "";
+        }
+
+        text = String(text)
+            .replace(/```json/gi, "")
+            .replace(/```/g, "")
+            .trim();
+
+
+        console.log(
+            "Gemini raw response:",
             text
         );
 
-        return res.status(500).json({
 
-            error:
-                "Gemini returned invalid recommendation data",
+        // =================================
+        // PARSE JSON
+        // =================================
 
-            rawResult:
-                text
+        let data;
 
-        });
+        try {
 
-    }
+            data = JSON.parse(text);
 
+        } catch (parseError) {
 
-    // ===============================
-    // VALIDATE STRUCTURE
-    // ===============================
+            console.error(
+                "JSON parsing failed:",
+                parseError.message
+            );
 
-    if (
-        !recommendations ||
-        !Array.isArray(recommendations.recommendations)
-    ) {
+            return res.status(500).json({
 
-        return res.status(500).json({
+                error:
+                    "Gemini returned invalid recommendation data",
 
-            error:
-                "Invalid recommendation structure"
+                rawResult:
+                    text
 
-        });
+            });
 
-    }
-
-
-    // ===============================
-    // SORT #1 → #2 → #3
-    // ===============================
-
-    recommendations.recommendations =
-        recommendations.recommendations
-            .sort((a, b) => {
-
-                return Number(a.rank) - Number(b.rank);
-
-            })
-            .slice(0, 3);
+        }
 
 
-    // ===============================
-    // FORCE CORRECT RANK NUMBERS
-    // ===============================
+        // =================================
+        // CHECK RECOMMENDATIONS
+        // =================================
 
-    recommendations.recommendations =
-        recommendations.recommendations.map(
-            (item, index) => {
+        if (
+            !data ||
+            !Array.isArray(data.recommendations)
+        ) {
 
-                return {
-                    ...item,
-                    rank: index + 1
-                };
+            return res.status(500).json({
 
-            }
+                error:
+                    "Gemini returned an invalid recommendation structure",
+
+                rawResult:
+                    text
+
+            });
+
+        }
+
+
+        // =================================
+        // SORT RECOMMENDATIONS
+        // =================================
+
+        data.recommendations =
+            data.recommendations
+                .sort((a, b) => {
+
+                    return Number(a.rank) -
+                        Number(b.rank);
+
+                })
+                .slice(0, 3);
+
+
+        // =================================
+        // FORCE RANK NUMBERS
+        // =================================
+
+        data.recommendations =
+            data.recommendations.map(
+                (product, index) => {
+
+                    return {
+                        ...product,
+                        rank: index + 1
+                    };
+
+                }
+            );
+
+
+        // =================================
+        // CREATE SIMPLE RESULT TEXT
+        // =================================
+
+        const resultText =
+            data.recommendations
+                .map(product => {
+
+                    return (
+                        `#${product.rank} ${product.product}\n` +
+                        `Price: ${product.price}\n` +
+                        `Match: ${product.matchScore}%\n` +
+                        `${product.why}`
+                    );
+
+                })
+                .join("\n\n");
+
+
+        console.log(
+            "FINAL RANKED RESULTS:",
+            JSON.stringify(
+                data.recommendations,
+                null,
+                2
+            )
         );
 
 
-    console.log(
-        "Final ranked recommendations:",
-        recommendations.recommendations
-    );
+        // =================================
+        // SEND TO WEBSITE
+        // =================================
+
+        return res.json({
+
+            success: true,
+
+            // New structured ranking data
+            recommendations:
+                data.recommendations,
+
+            // Compatibility with the old frontend
+            result:
+                resultText,
+
+            model:
+                result.model,
+
+            responseTime:
+                `${elapsed}s`
+
+        });
 
 
-    // ===============================
-    // SEND TO FRONTEND
-    // ===============================
+    } catch (error) {
 
-    return res.json({
+        console.error(
+            "================================="
+        );
 
-        success: true,
+        console.error(
+            "OPITECH GEMINI ERROR"
+        );
 
-        recommendations:
-            recommendations.recommendations,
+        console.error(
+            "Message:",
+            error.message
+        );
 
-        model:
-            result.model,
+        console.error(
+            "Status:",
+            error.status
+        );
 
-        responseTime:
-            `${elapsed}s`
+        console.error(
+            "Code:",
+            error.code
+        );
 
-    });
-
-
-} catch (error) {
-
-    console.error(
-        "========== GEMINI ERROR =========="
-    );
-
-    console.error(
-        "Message:",
-        error.message
-    );
-
-    console.error(
-        "Status:",
-        error.status
-    );
-
-    console.error(
-        "Code:",
-        error.code
-    );
-
-    console.error(
-        "Full error:",
-        error
-    );
-
-    console.error(
-        "=================================="
-    );
+        console.error(
+            "================================="
+        );
 
 
-    return res.status(500).json({
+        return res.status(500).json({
 
-        error:
-            "Gemini AI generation failed",
+            error:
+                "Gemini AI generation failed",
 
-        details:
-            error.message ||
-            "Unknown Gemini error"
+            details:
+                error.message ||
+                "Unknown Gemini error"
 
-    });
+        });
 
-}
-````
+    }
 
 });
 
-// ===============================
+
+// =====================================
 // START SERVER
-// ===============================
+// =====================================
 
 const PORT =
-process.env.PORT || 10000;
+    process.env.PORT || 10000;
+
+console.log(
+    "Starting OPITECH backend..."
+);
+
+console.log(
+    "PORT:",
+    PORT
+);
 
 app.listen(
-PORT,
-"0.0.0.0",
-() => {
+    PORT,
+    "0.0.0.0",
+    () => {
 
-```
-    console.log(
-        `OPITECH backend running on port ${PORT}`
-    );
+        console.log(
+            "================================="
+        );
 
-}
-```
+        console.log(
+            "OPITECH BACKEND IS LIVE 🚀"
+        );
 
+        console.log(
+            `Listening on port ${PORT}`
+        );
+
+        console.log(
+            "================================="
+        );
+
+    }
 );
