@@ -12,116 +12,113 @@ const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
 
 if (!GROQ_API_KEY) {
-console.error("GROQ_API_KEY is missing!");
+    console.error("GROQ_API_KEY is missing!");
 }
 
 if (!TAVILY_API_KEY) {
-console.error("TAVILY_API_KEY is missing!");
+    console.error("TAVILY_API_KEY is missing!");
 }
 
+
 /* =========================
-HOME
+   HOME
 ========================= */
 
 app.get("/", (req, res) => {
-res.json({
-status: "online",
-message: "OPITECH AI backend is running 🚀",
-ai: "Groq + Tavily Web Search"
-});
+    res.json({
+        status: "online",
+        message: "OPITECH AI backend is running 🚀",
+        ai: "Groq + Tavily Web Search"
+    });
 });
 
+
 /* =========================
-TAVILY WEB SEARCH
+   TAVILY WEB SEARCH
 ========================= */
 
 async function searchProducts(query) {
 
-```
-if (!TAVILY_API_KEY) {
-    throw new Error("TAVILY_API_KEY is missing");
-}
-
-console.log("Searching Tavily:", query);
-
-const response = await fetch(
-    "https://api.tavily.com/search",
-    {
-        method: "POST",
-
-        headers: {
-            "Content-Type": "application/json"
-        },
-
-        body: JSON.stringify({
-            api_key: TAVILY_API_KEY,
-            query: query,
-            search_depth: "basic",
-            topic: "general",
-            max_results: 8,
-            include_answer: false,
-            include_raw_content: false,
-            include_images: false
-        })
+    if (!TAVILY_API_KEY) {
+        throw new Error("TAVILY_API_KEY is missing");
     }
-);
 
-const data = await response.json();
+    console.log("Searching Tavily:", query);
 
-if (!response.ok) {
-    console.error("Tavily error:", data);
+    const response = await fetch(
+        "https://api.tavily.com/search",
+        {
+            method: "POST",
 
-    throw new Error(
-        data.message ||
-        data.detail ||
-        "Tavily search failed"
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                api_key: TAVILY_API_KEY,
+                query: query,
+                search_depth: "basic",
+                topic: "general",
+                max_results: 8,
+                include_answer: false,
+                include_raw_content: false,
+                include_images: false
+            })
+        }
     );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        console.error("Tavily error:", data);
+
+        throw new Error(
+            data.message ||
+            data.detail ||
+            "Tavily search failed"
+        );
+    }
+
+    console.log(
+        `Tavily returned ${data.results?.length || 0} results`
+    );
+
+    return data.results || [];
 }
 
-console.log(
-    `Tavily returned ${data.results?.length || 0} results`
-);
-
-return data.results || [];
-```
-
-}
 
 /* =========================
-GROQ AI
+   GROQ AI
 ========================= */
 
 async function generateWithGroq(prompt) {
 
-```
-if (!GROQ_API_KEY) {
-    throw new Error("GROQ_API_KEY is missing");
-}
+    if (!GROQ_API_KEY) {
+        throw new Error("GROQ_API_KEY is missing");
+    }
 
-console.log("Sending results to Groq...");
+    console.log("Sending results to Groq...");
 
-const response = await fetch(
-    "https://api.groq.com/openai/v1/chat/completions",
-    {
-        method: "POST",
+    const response = await fetch(
+        "https://api.groq.com/openai/v1/chat/completions",
+        {
+            method: "POST",
 
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${GROQ_API_KEY}`
-        },
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${GROQ_API_KEY}`
+            },
 
-        body: JSON.stringify({
+            body: JSON.stringify({
 
-            model: "openai/gpt-oss-20b",
+                model: "openai/gpt-oss-20b",
 
-            messages: [
+                messages: [
 
-                {
-                    role: "system",
+                    {
+                        role: "system",
 
-                    content: `
-```
-
+                        content: `
 You are OPITECH, an electronics recommendation AI.
 
 You analyze real web-search results and recommend
@@ -135,74 +132,58 @@ Only use prices supported by the supplied search results.
 
 Return ONLY valid JSON.
 `
-},
+                    },
 
-```
-                {
-                    role: "user",
-                    content: prompt
+                    {
+                        role: "user",
+                        content: prompt
+                    }
+
+                ],
+
+                temperature: 0.2,
+
+                max_completion_tokens: 2500,
+
+                response_format: {
+                    type: "json_object"
                 }
 
-            ],
-
-            temperature: 0.2,
-
-            max_completion_tokens: 2500,
-
-            response_format: {
-                type: "json_object"
-            }
-
-        })
-    }
-);
-
-const data = await response.json();
-
-if (!response.ok) {
-
-    console.error("Groq error:", data);
-
-    throw new Error(
-        data.error?.message ||
-        "Groq request failed"
+            })
+        }
     );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+
+        console.error("Groq error:", data);
+
+        throw new Error(
+            data.error?.message ||
+            "Groq request failed"
+        );
+    }
+
+    const text =
+        data.choices?.[0]?.message?.content || "";
+
+    console.log("RAW GROQ RESPONSE:");
+    console.log(text);
+
+    return text;
 }
 
-const text =
-    data.choices?.[0]?.message?.content || "";
-
-console.log("RAW GROQ RESPONSE:");
-console.log(text);
-
-return text;
-```
-
-}
 
 /* =========================
-RECOMMENDATION API
+   RECOMMENDATION API
 ========================= */
 
 app.post("/api/recommend", async (req, res) => {
 
-```
-try {
+    try {
 
-    const {
-        productType,
-        country,
-        currency,
-        budget,
-        uses,
-        priority,
-        brand
-    } = req.body;
-
-
-    console.log(
-        "Received preferences:",
-        {
+        const {
             productType,
             country,
             currency,
@@ -210,144 +191,155 @@ try {
             uses,
             priority,
             brand
-        }
-    );
+        } = req.body;
 
 
-    /* =========================
-       VALIDATION
-    ========================= */
-
-    if (!productType) {
-
-        return res.status(400).json({
-            error: "Product type is required"
-        });
-
-    }
-
-    if (!budget) {
-
-        return res.status(400).json({
-            error: "Budget is required"
-        });
-
-    }
+        console.log(
+            "Received preferences:",
+            {
+                productType,
+                country,
+                currency,
+                budget,
+                uses,
+                priority,
+                brand
+            }
+        );
 
 
-    /* =========================
-       SEARCH QUERIES
-    ========================= */
+        /* =========================
+           VALIDATION
+        ========================= */
 
-    const useText =
-        Array.isArray(uses)
-            ? uses.join(", ")
-            : (uses || "general use");
+        if (!productType) {
 
-
-    const brandText =
-        brand &&
-        brand.toLowerCase() !== "any"
-            ? brand
-            : "";
-
-
-    const searchQueries = [
-
-        `${brandText} ${productType} ${useText} under ${budget} ${currency} ${country}`,
-
-        `best ${productType} ${brandText} ${useText} ${country} price ${currency}`,
-
-        `${brandText} ${productType} current price ${country} ${currency}`
-
-    ];
-
-
-    /* =========================
-       SEARCH WEB
-    ========================= */
-
-    let allResults = [];
-
-
-    for (const query of searchQueries) {
-
-        try {
-
-            const results =
-                await searchProducts(query);
-
-            allResults.push(...results);
-
-        } catch (searchError) {
-
-            console.error(
-                "Search query failed:",
-                searchError.message
-            );
+            return res.status(400).json({
+                error: "Product type is required"
+            });
 
         }
 
-    }
+        if (!budget) {
 
-
-    /* =========================
-       REMOVE DUPLICATES
-    ========================= */
-
-    const uniqueResults = [];
-
-    const seenUrls = new Set();
-
-
-    for (const result of allResults) {
-
-        if (
-            result.url &&
-            !seenUrls.has(result.url)
-        ) {
-
-            seenUrls.add(result.url);
-
-            uniqueResults.push(result);
+            return res.status(400).json({
+                error: "Budget is required"
+            });
 
         }
 
-    }
+
+        /* =========================
+           SEARCH QUERIES
+        ========================= */
+
+        const useText =
+            Array.isArray(uses)
+                ? uses.join(", ")
+                : (uses || "general use");
 
 
-    console.log(
-        `Total unique search results: ${uniqueResults.length}`
-    );
+        const brandText =
+            brand &&
+            brand.toLowerCase() !== "any"
+                ? brand
+                : "";
 
 
-    if (uniqueResults.length === 0) {
+        const searchQueries = [
 
-        return res.status(500).json({
+            `${brandText} ${productType} ${useText} under ${budget} ${currency} ${country}`,
 
-            error:
-                "No current product information was found.",
+            `best ${productType} ${brandText} ${useText} ${country} price ${currency}`,
 
-            details:
-                "Tavily returned no usable search results."
+            `${brandText} ${productType} current price ${country} ${currency}`
 
-        });
-
-    }
+        ];
 
 
-    /* =========================
-       PREPARE SEARCH DATA
-    ========================= */
+        /* =========================
+           SEARCH WEB
+        ========================= */
 
-    const searchData =
-        uniqueResults
-            .slice(0, 20)
-            .map((result, index) => {
+        let allResults = [];
 
-                return `
-```
 
+        for (const query of searchQueries) {
+
+            try {
+
+                const results =
+                    await searchProducts(query);
+
+                allResults.push(...results);
+
+            } catch (searchError) {
+
+                console.error(
+                    "Search query failed:",
+                    searchError.message
+                );
+
+            }
+
+        }
+
+
+        /* =========================
+           REMOVE DUPLICATES
+        ========================= */
+
+        const uniqueResults = [];
+
+        const seenUrls = new Set();
+
+
+        for (const result of allResults) {
+
+            if (
+                result.url &&
+                !seenUrls.has(result.url)
+            ) {
+
+                seenUrls.add(result.url);
+
+                uniqueResults.push(result);
+
+            }
+
+        }
+
+
+        console.log(
+            `Total unique search results: ${uniqueResults.length}`
+        );
+
+
+        if (uniqueResults.length === 0) {
+
+            return res.status(500).json({
+
+                error:
+                    "No current product information was found.",
+
+                details:
+                    "Tavily returned no usable search results."
+
+            });
+
+        }
+
+
+        /* =========================
+           PREPARE SEARCH DATA
+        ========================= */
+
+        const searchData =
+            uniqueResults
+                .slice(0, 20)
+                .map((result, index) => {
+
+                    return `
 RESULT ${index + 1}
 
 Title:
@@ -361,17 +353,15 @@ ${result.content || "No content available"}
 
 `;
 
-```
-            })
-            .join("\n");
+                })
+                .join("\n");
 
 
-    /* =========================
-       AI PROMPT
-    ========================= */
+        /* =========================
+           AI PROMPT
+        ========================= */
 
-    const prompt = `
-```
+        const prompt = `
 
 USER REQUIREMENTS
 
@@ -395,6 +385,7 @@ ${priority || "general"}
 
 Preferred brand:
 ${brand || "any"}
+
 
 IMPORTANT RULES
 
@@ -420,6 +411,7 @@ Each product must:
 12. Respect the preferred brand when possible.
 13. If the preferred brand has insufficient suitable products, use suitable alternatives when necessary.
 
+
 RANKING
 
 Return exactly 3 products.
@@ -432,14 +424,15 @@ Rank them:
 
 Consider:
 
-* budget
-* use cases
-* performance
-* priority
-* preferred brand
-* specifications
-* current price
-* overall suitability
+- budget
+- use cases
+- performance
+- priority
+- preferred brand
+- specifications
+- current price
+- overall suitability
+
 
 PRICE FORMAT
 
@@ -461,6 +454,7 @@ Do NOT return:
 
 "Unknown"
 
+
 PRICE SOURCE
 
 priceSource must identify the website or store where the price evidence came from.
@@ -473,193 +467,192 @@ Croma
 Samsung India
 Xiaomi India
 
+
 SEARCH RESULTS
 
 ${searchData}
 
+
 RETURN ONLY THIS JSON STRUCTURE
 
 {
-"recommendations": [
-{
-"rank": 1,
-"name": "Exact Product Model",
-"price": "₹24999",
-"priceSource": "Source name",
-"matchScore": 95,
-"why": "Short explanation.",
-"strengths": [
-"Strength 1",
-"Strength 2",
-"Strength 3"
-],
-"tradeoffs": [
-"Tradeoff 1",
-"Tradeoff 2"
-]
-},
-{
-"rank": 2,
-"name": "Exact Product Model",
-"price": "₹XXXXX",
-"priceSource": "Source name",
-"matchScore": 90,
-"why": "Short explanation.",
-"strengths": [
-"Strength 1",
-"Strength 2",
-"Strength 3"
-],
-"tradeoffs": [
-"Tradeoff 1",
-"Tradeoff 2"
-]
-},
-{
-"rank": 3,
-"name": "Exact Product Model",
-"price": "₹XXXXX",
-"priceSource": "Source name",
-"matchScore": 85,
-"why": "Short explanation.",
-"strengths": [
-"Strength 1",
-"Strength 2",
-"Strength 3"
-],
-"tradeoffs": [
-"Tradeoff 1",
-"Tradeoff 2"
-]
-}
-]
+  "recommendations": [
+    {
+      "rank": 1,
+      "name": "Exact Product Model",
+      "price": "₹24999",
+      "priceSource": "Source name",
+      "matchScore": 95,
+      "why": "Short explanation.",
+      "strengths": [
+        "Strength 1",
+        "Strength 2",
+        "Strength 3"
+      ],
+      "tradeoffs": [
+        "Tradeoff 1",
+        "Tradeoff 2"
+      ]
+    },
+    {
+      "rank": 2,
+      "name": "Exact Product Model",
+      "price": "₹XXXXX",
+      "priceSource": "Source name",
+      "matchScore": 90,
+      "why": "Short explanation.",
+      "strengths": [
+        "Strength 1",
+        "Strength 2",
+        "Strength 3"
+      ],
+      "tradeoffs": [
+        "Tradeoff 1",
+        "Tradeoff 2"
+      ]
+    },
+    {
+      "rank": 3,
+      "name": "Exact Product Model",
+      "price": "₹XXXXX",
+      "priceSource": "Source name",
+      "matchScore": 85,
+      "why": "Short explanation.",
+      "strengths": [
+        "Strength 1",
+        "Strength 2",
+        "Strength 3"
+      ],
+      "tradeoffs": [
+        "Tradeoff 1",
+        "Tradeoff 2"
+      ]
+    }
+  ]
 }
 
 `;
 
-```
-    /* =========================
-       CALL GROQ
-    ========================= */
 
-    const text =
-        await generateWithGroq(prompt);
+        /* =========================
+           CALL GROQ
+        ========================= */
+
+        const text =
+            await generateWithGroq(prompt);
 
 
-    /* =========================
-       PARSE JSON
-    ========================= */
+        /* =========================
+           PARSE JSON
+        ========================= */
 
-    let data;
+        let data;
 
-    try {
+        try {
 
-        data = JSON.parse(text);
+            data = JSON.parse(text);
 
-    } catch (parseError) {
+        } catch (parseError) {
+
+            console.error(
+                "JSON parsing failed:",
+                parseError
+            );
+
+            return res.status(500).json({
+
+                error:
+                    "AI returned invalid JSON",
+
+                raw:
+                    text
+
+            });
+
+        }
+
+
+        /* =========================
+           SORT RESULTS
+        ========================= */
+
+        if (
+            data.recommendations &&
+            Array.isArray(data.recommendations)
+        ) {
+
+            data.recommendations.sort(
+                (a, b) =>
+                    Number(a.rank) -
+                    Number(b.rank)
+            );
+
+        }
+
+
+        /* =========================
+           SEND TO FRONTEND
+        ========================= */
+
+        res.json({
+
+            success: true,
+
+            recommendations:
+                data.recommendations || [],
+
+            result:
+                data.recommendations || []
+
+        });
+
+
+    } catch (error) {
 
         console.error(
-            "JSON parsing failed:",
-            parseError
+            "OPITECH AI generation failed:"
         );
 
-        return res.status(500).json({
+        console.error(error);
+
+
+        res.status(500).json({
 
             error:
-                "AI returned invalid JSON",
+                "AI generation failed",
 
-            raw:
-                text
+            details:
+                error.message ||
+                "Unknown error",
+
+            type:
+                error.name ||
+                "UnknownError",
+
+            code:
+                error.status ||
+                error.code ||
+                null
 
         });
 
     }
 
-
-    /* =========================
-       SORT RESULTS
-    ========================= */
-
-    if (
-        data.recommendations &&
-        Array.isArray(data.recommendations)
-    ) {
-
-        data.recommendations.sort(
-            (a, b) =>
-                Number(a.rank) -
-                Number(b.rank)
-        );
-
-    }
-
-
-    /* =========================
-       SEND TO FRONTEND
-    ========================= */
-
-    res.json({
-
-        success: true,
-
-        recommendations:
-            data.recommendations || [],
-
-        result:
-            data.recommendations || []
-
-    });
-
-
-} catch (error) {
-
-    console.error(
-        "OPITECH AI generation failed:"
-    );
-
-    console.error(error);
-
-
-    res.status(500).json({
-
-        error:
-            "AI generation failed",
-
-        details:
-            error.message ||
-            "Unknown error",
-
-        type:
-            error.name ||
-            "UnknownError",
-
-        code:
-            error.status ||
-            error.code ||
-            null
-
-    });
-
-}
-```
-
 });
 
+
 /* =========================
-START SERVER
+   START SERVER
 ========================= */
 
 app.listen(
-PORT,
-"0.0.0.0",
-() => {
+    PORT,
+    "0.0.0.0",
+    () => {
 
-```
-    console.log(
-        `OPITECH BACKEND IS LIVE ON PORT ${PORT}`
-    );
+        console.log(
+            `OPITECH BACKEND IS LIVE ON PORT ${PORT}`
+        );
 
-}
-```
-
+    }
 );
