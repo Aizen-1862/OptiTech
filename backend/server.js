@@ -1,6 +1,5 @@
 const express = require("express");
 const cors = require("cors");
-const { GoogleGenAI } = require("@google/genai");
 
 const app = express();
 
@@ -9,193 +8,453 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 10000;
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
 
-if (!GEMINI_API_KEY) {
-    console.error("GEMINI_API_KEY is missing!");
+if (!GROQ_API_KEY) {
+console.error("❌ GROQ_API_KEY is missing!");
 }
 
-const ai = new GoogleGenAI({
-    apiKey: GEMINI_API_KEY
-});
-
+if (!TAVILY_API_KEY) {
+console.error("❌ TAVILY_API_KEY is missing!");
+}
 
 /* =========================
-   HOME
+HOME
 ========================= */
 
 app.get("/", (req, res) => {
-    res.json({
-        status: "online",
-        message: "OPITECH AI backend is running 🚀",
-        ai: "Gemini + Google Search"
-    });
+res.json({
+status: "online",
+message: "OPITECH AI backend is running 🚀",
+ai: "Groq + Tavily Web Search"
+});
 });
 
-
 /* =========================
-   GEMINI + WEB SEARCH
+TAVILY WEB SEARCH
 ========================= */
 
-async function generateRecommendation(prompt) {
+async function searchProducts(query, country) {
 
-    const models = [
-        "gemini-3.5-flash-lite",
-        "gemini-3.5-flash",
-        "gemini-3.6-flash"
+```
+if (!TAVILY_API_KEY) {
+    throw new Error("TAVILY_API_KEY is missing");
+}
+
+console.log("🔎 Searching Tavily:", query);
+
+const response = await fetch("https://api.tavily.com/search", {
+    method: "POST",
+
+    headers: {
+        "Content-Type": "application/json"
+    },
+
+    body: JSON.stringify({
+        api_key: TAVILY_API_KEY,
+
+        query: query,
+
+        search_depth: "basic",
+
+        topic: "general",
+
+        max_results: 8,
+
+        include_answer: false,
+
+        include_raw_content: false,
+
+        include_images: false
+    })
+});
+
+const data = await response.json();
+
+if (!response.ok) {
+
+    console.error("Tavily error:", data);
+
+    throw new Error(
+        data.message ||
+        data.detail ||
+        "Tavily search failed"
+    );
+}
+
+console.log(
+    `✅ Tavily returned ${data.results?.length || 0} results`
+);
+
+return data.results || [];
+```
+
+}
+
+/* =========================
+GROQ AI
+========================= */
+
+async function generateWithGroq(prompt) {
+
+```
+if (!GROQ_API_KEY) {
+    throw new Error("GROQ_API_KEY is missing");
+}
+
+console.log("🤖 Sending results to Groq...");
+
+const response = await fetch(
+    "https://api.groq.com/openai/v1/chat/completions",
+    {
+        method: "POST",
+
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${GROQ_API_KEY}`
+        },
+
+        body: JSON.stringify({
+
+            model: "openai/gpt-oss-20b",
+
+            messages: [
+
+                {
+                    role: "system",
+
+                    content: `
+```
+
+You are OPITECH, an electronics recommendation AI.
+
+You analyze real web-search results and recommend
+actual currently available electronics.
+
+Never invent products.
+
+Never invent prices.
+
+Only use prices supported by the supplied search results.
+
+Return ONLY valid JSON.
+`
+},
+
+```
+                {
+                    role: "user",
+
+                    content: prompt
+                }
+
+            ],
+
+            temperature: 0.2,
+
+            max_completion_tokens: 2500,
+
+            response_format: {
+                type: "json_object"
+            }
+
+        })
+    }
+);
+
+
+const data = await response.json();
+
+
+if (!response.ok) {
+
+    console.error("Groq error:", data);
+
+    throw new Error(
+        data.error?.message ||
+        "Groq request failed"
+    );
+}
+
+
+const text =
+    data.choices?.[0]?.message?.content || "";
+
+
+console.log("RAW GROQ RESPONSE:");
+console.log(text);
+
+
+return text;
+```
+
+}
+
+/* =========================
+RECOMMENDATION API
+========================= */
+
+app.post("/api/recommend", async (req, res) => {
+
+```
+try {
+
+    const {
+        productType,
+        country,
+        currency,
+        budget,
+        uses,
+        priority,
+        brand
+    } = req.body;
+
+
+    console.log(
+        "Received preferences:",
+        {
+            productType,
+            country,
+            currency,
+            budget,
+            uses,
+            priority,
+            brand
+        }
+    );
+
+
+    /* =========================
+       VALIDATION
+    ========================= */
+
+    if (!productType) {
+
+        return res.status(400).json({
+            error: "Product type is required"
+        });
+
+    }
+
+
+    if (!budget) {
+
+        return res.status(400).json({
+            error: "Budget is required"
+        });
+
+    }
+
+
+    /* =========================
+       SEARCH QUERIES
+    ========================= */
+
+    const useText =
+        Array.isArray(uses)
+            ? uses.join(", ")
+            : (uses || "general use");
+
+
+    const brandText =
+        brand &&
+        brand.toLowerCase() !== "any"
+            ? brand
+            : "";
+
+
+    const searchQueries = [
+
+        `${brandText} ${productType} ${useText} under ${budget} ${currency} ${country}`,
+
+        `best ${productType} ${brandText} ${useText} ${country} price ${currency}`,
+
+        `${brandText} ${productType} current price ${country} ${currency}`
+
     ];
 
-    let lastError = null;
 
-    for (const model of models) {
+    /* =========================
+       SEARCH WEB
+    ========================= */
+
+    let allResults = [];
+
+
+    for (const query of searchQueries) {
 
         try {
 
-            console.log(`Trying Gemini model: ${model}`);
+            const results =
+                await searchProducts(
+                    query,
+                    country
+                );
 
-            const response = await ai.models.generateContent({
+            allResults.push(...results);
 
-                model: model,
-
-                contents: prompt,
-
-                config: {
-
-                    tools: [
-                        {
-                            googleSearch: {}
-                        }
-                    ]
-
-                }
-
-            });
-
-            console.log(`Gemini model succeeded: ${model}`);
-
-            return response;
-
-        } catch (error) {
-
-            lastError = error;
+        } catch (searchError) {
 
             console.error(
-                `Model ${model} failed:`,
-                error.message || error
+                "Search query failed:",
+                searchError.message
             );
 
         }
 
     }
 
-    throw lastError;
-}
+
+    /* =========================
+       REMOVE DUPLICATE RESULTS
+    ========================= */
+
+    const uniqueResults = [];
+
+    const seenUrls = new Set();
 
 
-/* =========================
-   RECOMMENDATION API
-========================= */
+    for (const result of allResults) {
 
-app.post("/api/recommend", async (req, res) => {
+        if (
+            result.url &&
+            !seenUrls.has(result.url)
+        ) {
 
-    try {
+            seenUrls.add(result.url);
 
-        const {
-            productType,
-            country,
-            currency,
-            budget,
-            uses,
-            priority,
-            brand
-        } = req.body;
+            uniqueResults.push(result);
+
+        }
+
+    }
 
 
-        console.log("Received preferences:", {
-            productType,
-            country,
-            currency,
-            budget,
-            uses,
-            priority,
-            brand
+    console.log(
+        `📦 Total unique search results: ${uniqueResults.length}`
+    );
+
+
+    if (uniqueResults.length === 0) {
+
+        return res.status(500).json({
+
+            error:
+                "No current product information was found.",
+
+            details:
+                "Tavily returned no usable search results."
+
         });
 
-
-        /* =========================
-           AI PROMPT
-        ========================= */
-
-        const prompt = `
-You are OPITECH, an electronics recommendation AI.
-
-Your job is to find the BEST CURRENT products for the user's requirements.
-
-USER REQUIREMENTS:
-
-Product type: ${productType}
-Country: ${country}
-Currency: ${currency}
-Maximum budget: ${budget}
-Uses: ${Array.isArray(uses) ? uses.join(", ") : uses}
-Priority: ${priority}
-Preferred brand: ${brand}
+    }
 
 
-IMPORTANT:
+    /* =========================
+       PREPARE SEARCH DATA
+    ========================= */
 
-You MUST use Google Search to find CURRENT information.
+    const searchData =
+        uniqueResults
+            .slice(0, 20)
+            .map((result, index) => {
 
-Search the web for real products that are currently available in the user's country.
+                return `
+```
 
-For every recommendation:
+RESULT ${index + 1}
 
-1. Find the exact product model.
-2. Find its CURRENT price.
-3. Prefer prices from:
-   - official manufacturer stores
-   - Amazon
-   - Flipkart
-   - Croma
-   - Reliance Digital
-   - other reputable retailers
-4. Make sure the product fits within the user's maximum budget.
-5. Do NOT invent a price.
-6. Do NOT use "Verify current price".
-7. Do NOT use "Check price".
-8. Do NOT leave the price blank.
-9. Return the actual numeric price found during your web search.
-10. If multiple current prices exist, use the most relevant normal selling price and mention the source.
-11. Do not use an old launch price if a newer selling price is available.
+Title:
+${result.title || "Unknown"}
 
+URL:
+${result.url || "Unknown"}
 
-RANKING:
+Content:
+${result.content || "No content available"}
 
-Return exactly 3 products.
+`;
+})
+.join("\n");
 
-Rank them:
+```
+    /* =========================
+       AI PROMPT
+    ========================= */
 
-#1 = strongest overall match
-#2 = second strongest match
-#3 = third strongest match
+    const prompt = `
+```
 
-The ranking should consider:
+USER REQUIREMENTS
 
-- user's budget
-- user's uses
-- performance
-- user's priority
-- preferred brand
-- current specifications
-- current price
-- overall value
+Product type:
+${productType}
 
+Country:
+${country}
 
-PRICE:
+Currency:
+${currency}
 
-The price MUST be the current price found from web search.
+Maximum budget:
+${budget}
 
-For India, return prices like:
+Uses:
+${useText}
+
+Priority:
+${priority || "general"}
+
+Preferred brand:
+${brand || "any"}
+
+IMPORTANT RULES
+
+You are given CURRENT WEB SEARCH RESULTS below.
+
+Use ONLY those search results as evidence.
+
+Return exactly 3 real products.
+
+Each product must:
+
+1. Be an exact product model.
+2. Be relevant to the requested product type.
+3. Match the user's intended uses.
+4. Fit within the maximum budget when a reliable price is available.
+5. Use a price supported by the search results.
+6. Never invent a price.
+7. Never invent specifications.
+8. Prefer current retailer/manufacturer prices.
+9. Prefer results from reputable retailers or official manufacturer websites.
+10. Do not use old launch prices when a current selling price is available.
+11. If the same product appears multiple times, combine the evidence.
+12. The preferred brand should be respected when possible.
+13. If the preferred brand has insufficient suitable products, use closely related alternatives only when necessary.
+
+RANKING
+
+Return:
+
+#1 strongest overall match
+#2 second strongest match
+#3 third strongest match
+
+Consider:
+
+* budget
+* use cases
+* performance
+* priority
+* preferred brand
+* specifications
+* current price
+* overall suitability
+
+PRICE FORMAT
+
+For India:
 
 ₹24999
 
@@ -203,190 +462,222 @@ For USD:
 
 $499
 
-Do not write:
-
-"Verify current price"
-
-Do not write:
+Do NOT return:
 
 "Price unavailable"
 
-Do not make up a price.
+"Check price"
 
+"Verify current price"
 
-RETURN ONLY VALID JSON.
+"Unknown"
 
-Use exactly this structure:
+PRICE SOURCE
+
+priceSource must identify the website/store where the price evidence came from.
+
+Example:
+
+Amazon India
+
+Flipkart
+
+Croma
+
+Samsung India
+
+Xiaomi India
+
+SEARCH RESULTS
+
+${searchData}
+
+RETURN ONLY THIS JSON STRUCTURE
 
 {
-  "recommendations": [
-    {
-      "rank": 1,
-      "name": "Exact Product Model",
-      "price": "₹24999",
-      "priceSource": "Source name",
-      "matchScore": 95,
-      "why": "Short explanation of why this product matches the user's requirements.",
-      "strengths": [
-        "Strength 1",
-        "Strength 2",
-        "Strength 3"
-      ],
-      "tradeoffs": [
-        "Tradeoff 1",
-        "Tradeoff 2"
-      ]
-    },
-    {
-      "rank": 2,
-      "name": "Exact Product Model",
-      "price": "₹XXXXX",
-      "priceSource": "Source name",
-      "matchScore": 90,
-      "why": "Short explanation.",
-      "strengths": [
-        "Strength 1",
-        "Strength 2",
-        "Strength 3"
-      ],
-      "tradeoffs": [
-        "Tradeoff 1",
-        "Tradeoff 2"
-      ]
-    },
-    {
-      "rank": 3,
-      "name": "Exact Product Model",
-      "price": "₹XXXXX",
-      "priceSource": "Source name",
-      "matchScore": 85,
-      "why": "Short explanation.",
-      "strengths": [
-        "Strength 1",
-        "Strength 2",
-        "Strength 3"
-      ],
-      "tradeoffs": [
-        "Tradeoff 1",
-        "Tradeoff 2"
-      ]
-    }
-  ]
+"recommendations": [
+{
+"rank": 1,
+"name": "Exact Product Model",
+"price": "₹24999",
+"priceSource": "Source name",
+"matchScore": 95,
+"why": "Short explanation.",
+"strengths": [
+"Strength 1",
+"Strength 2",
+"Strength 3"
+],
+"tradeoffs": [
+"Tradeoff 1",
+"Tradeoff 2"
+]
+},
+{
+"rank": 2,
+"name": "Exact Product Model",
+"price": "₹XXXXX",
+"priceSource": "Source name",
+"matchScore": 90,
+"why": "Short explanation.",
+"strengths": [
+"Strength 1",
+"Strength 2",
+"Strength 3"
+],
+"tradeoffs": [
+"Tradeoff 1",
+"Tradeoff 2"
+]
+},
+{
+"rank": 3,
+"name": "Exact Product Model",
+"price": "₹XXXXX",
+"priceSource": "Source name",
+"matchScore": 85,
+"why": "Short explanation.",
+"strengths": [
+"Strength 1",
+"Strength 2",
+"Strength 3"
+],
+"tradeoffs": [
+"Tradeoff 1",
+"Tradeoff 2"
+]
 }
+]
+}
+
 `;
 
+```
+    /* =========================
+       CALL GROQ
+    ========================= */
 
-        /* =========================
-           CALL GEMINI
-        ========================= */
-
-        const response = await generateRecommendation(prompt);
-
-        let text = response.text || "";
-
-        console.log("RAW GEMINI RESPONSE:");
-        console.log(text);
+    const text =
+        await generateWithGroq(prompt);
 
 
-        /* =========================
-           CLEAN JSON
-        ========================= */
+    /* =========================
+       PARSE JSON
+    ========================= */
 
-        text = text
-            .replace(/```json/gi, "")
-            .replace(/```/g, "")
-            .trim();
+    let data;
 
 
-        let data;
+    try {
 
-        try {
+        data = JSON.parse(text);
 
-            data = JSON.parse(text);
+    } catch (parseError) {
 
-        } catch (parseError) {
+        console.error(
+            "❌ JSON parsing failed:",
+            parseError
+        );
 
-            console.error("JSON parsing failed:", parseError);
+        return res.status(500).json({
 
-            return res.status(500).json({
-                error: "AI returned invalid JSON",
-                raw: text
-            });
+            error:
+                "AI returned invalid JSON",
 
-        }
-
-
-        /* =========================
-           SORT BY RANK
-        ========================= */
-
-        if (
-            data.recommendations &&
-            Array.isArray(data.recommendations)
-        ) {
-
-            data.recommendations.sort(
-                (a, b) => a.rank - b.rank
-            );
-
-        }
-
-
-        /* =========================
-           SEND RESULT
-        ========================= */
-
-        res.json({
-
-            success: true,
-
-            recommendations:
-                data.recommendations || [],
-
-            result:
-                data.recommendations || []
-
-        });
-
-
-    } catch (error) {
-
-        console.error("AI generation failed:");
-
-        console.error(error);
-
-        res.status(500).json({
-
-            error: "AI generation failed",
-
-            details:
-                error.message || "Unknown error",
-
-            type:
-                error.name || "UnknownError",
-
-            code:
-                error.status || error.code || null
+            raw:
+                text
 
         });
 
     }
 
-});
 
+    /* =========================
+       SORT RESULTS
+    ========================= */
 
-/* =========================
-   START SERVER
-========================= */
+    if (
+        data.recommendations &&
+        Array.isArray(
+            data.recommendations
+        )
+    ) {
 
-app.listen(
-    PORT,
-    "0.0.0.0",
-    () => {
-
-        console.log(
-            `OPITECH BACKEND IS LIVE 🚀 PORT ${PORT}`
+        data.recommendations.sort(
+            (a, b) =>
+                Number(a.rank) -
+                Number(b.rank)
         );
 
     }
+
+
+    /* =========================
+       SEND TO FRONTEND
+    ========================= */
+
+    res.json({
+
+        success: true,
+
+        recommendations:
+            data.recommendations || [],
+
+        result:
+            data.recommendations || []
+
+    });
+
+
+} catch (error) {
+
+    console.error(
+        "❌ OPITECH AI generation failed:"
+    );
+
+    console.error(error);
+
+
+    res.status(500).json({
+
+        error:
+            "AI generation failed",
+
+        details:
+            error.message ||
+            "Unknown error",
+
+        type:
+            error.name ||
+            "UnknownError",
+
+        code:
+            error.status ||
+            error.code ||
+            null
+
+    });
+
+}
+```
+
+});
+
+/* =========================
+START SERVER
+========================= */
+
+app.listen(
+PORT,
+"0.0.0.0",
+() => {
+
+```
+    console.log(
+        `🚀 OPITECH BACKEND IS LIVE ON PORT ${PORT}`
+    );
+
+}
+```
+
 );
