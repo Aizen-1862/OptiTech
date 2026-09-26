@@ -12,11 +12,11 @@ const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
 
 if (!GROQ_API_KEY) {
-console.error("❌ GROQ_API_KEY is missing!");
+console.error("GROQ_API_KEY is missing!");
 }
 
 if (!TAVILY_API_KEY) {
-console.error("❌ TAVILY_API_KEY is missing!");
+console.error("TAVILY_API_KEY is missing!");
 }
 
 /* =========================
@@ -35,45 +35,40 @@ ai: "Groq + Tavily Web Search"
 TAVILY WEB SEARCH
 ========================= */
 
-async function searchProducts(query, country) {
+async function searchProducts(query) {
 
 ```
 if (!TAVILY_API_KEY) {
     throw new Error("TAVILY_API_KEY is missing");
 }
 
-console.log("🔎 Searching Tavily:", query);
+console.log("Searching Tavily:", query);
 
-const response = await fetch("https://api.tavily.com/search", {
-    method: "POST",
+const response = await fetch(
+    "https://api.tavily.com/search",
+    {
+        method: "POST",
 
-    headers: {
-        "Content-Type": "application/json"
-    },
+        headers: {
+            "Content-Type": "application/json"
+        },
 
-    body: JSON.stringify({
-        api_key: TAVILY_API_KEY,
-
-        query: query,
-
-        search_depth: "basic",
-
-        topic: "general",
-
-        max_results: 8,
-
-        include_answer: false,
-
-        include_raw_content: false,
-
-        include_images: false
-    })
-});
+        body: JSON.stringify({
+            api_key: TAVILY_API_KEY,
+            query: query,
+            search_depth: "basic",
+            topic: "general",
+            max_results: 8,
+            include_answer: false,
+            include_raw_content: false,
+            include_images: false
+        })
+    }
+);
 
 const data = await response.json();
 
 if (!response.ok) {
-
     console.error("Tavily error:", data);
 
     throw new Error(
@@ -84,7 +79,7 @@ if (!response.ok) {
 }
 
 console.log(
-    `✅ Tavily returned ${data.results?.length || 0} results`
+    `Tavily returned ${data.results?.length || 0} results`
 );
 
 return data.results || [];
@@ -103,7 +98,7 @@ if (!GROQ_API_KEY) {
     throw new Error("GROQ_API_KEY is missing");
 }
 
-console.log("🤖 Sending results to Groq...");
+console.log("Sending results to Groq...");
 
 const response = await fetch(
     "https://api.groq.com/openai/v1/chat/completions",
@@ -145,7 +140,6 @@ Return ONLY valid JSON.
 ```
                 {
                     role: "user",
-
                     content: prompt
                 }
 
@@ -163,9 +157,7 @@ Return ONLY valid JSON.
     }
 );
 
-
 const data = await response.json();
-
 
 if (!response.ok) {
 
@@ -177,14 +169,11 @@ if (!response.ok) {
     );
 }
 
-
 const text =
     data.choices?.[0]?.message?.content || "";
 
-
 console.log("RAW GROQ RESPONSE:");
 console.log(text);
-
 
 return text;
 ```
@@ -237,7 +226,6 @@ try {
 
     }
 
-
     if (!budget) {
 
         return res.status(400).json({
@@ -287,10 +275,7 @@ try {
         try {
 
             const results =
-                await searchProducts(
-                    query,
-                    country
-                );
+                await searchProducts(query);
 
             allResults.push(...results);
 
@@ -307,7 +292,7 @@ try {
 
 
     /* =========================
-       REMOVE DUPLICATE RESULTS
+       REMOVE DUPLICATES
     ========================= */
 
     const uniqueResults = [];
@@ -332,7 +317,7 @@ try {
 
 
     console.log(
-        `📦 Total unique search results: ${uniqueResults.length}`
+        `Total unique search results: ${uniqueResults.length}`
     );
 
 
@@ -375,10 +360,12 @@ Content:
 ${result.content || "No content available"}
 
 `;
-})
-.join("\n");
 
 ```
+            })
+            .join("\n");
+
+
     /* =========================
        AI PROMPT
     ========================= */
@@ -426,16 +413,18 @@ Each product must:
 5. Use a price supported by the search results.
 6. Never invent a price.
 7. Never invent specifications.
-8. Prefer current retailer/manufacturer prices.
-9. Prefer results from reputable retailers or official manufacturer websites.
+8. Prefer current retailer or manufacturer prices.
+9. Prefer reputable retailers or official manufacturer websites.
 10. Do not use old launch prices when a current selling price is available.
 11. If the same product appears multiple times, combine the evidence.
-12. The preferred brand should be respected when possible.
-13. If the preferred brand has insufficient suitable products, use closely related alternatives only when necessary.
+12. Respect the preferred brand when possible.
+13. If the preferred brand has insufficient suitable products, use suitable alternatives when necessary.
 
 RANKING
 
-Return:
+Return exactly 3 products.
+
+Rank them:
 
 #1 strongest overall match
 #2 second strongest match
@@ -474,18 +463,14 @@ Do NOT return:
 
 PRICE SOURCE
 
-priceSource must identify the website/store where the price evidence came from.
+priceSource must identify the website or store where the price evidence came from.
 
-Example:
+Examples:
 
 Amazon India
-
 Flipkart
-
 Croma
-
 Samsung India
-
 Xiaomi India
 
 SEARCH RESULTS
@@ -567,7 +552,6 @@ RETURN ONLY THIS JSON STRUCTURE
 
     let data;
 
-
     try {
 
         data = JSON.parse(text);
@@ -575,7 +559,7 @@ RETURN ONLY THIS JSON STRUCTURE
     } catch (parseError) {
 
         console.error(
-            "❌ JSON parsing failed:",
+            "JSON parsing failed:",
             parseError
         );
 
@@ -598,9 +582,7 @@ RETURN ONLY THIS JSON STRUCTURE
 
     if (
         data.recommendations &&
-        Array.isArray(
-            data.recommendations
-        )
+        Array.isArray(data.recommendations)
     ) {
 
         data.recommendations.sort(
@@ -632,7 +614,7 @@ RETURN ONLY THIS JSON STRUCTURE
 } catch (error) {
 
     console.error(
-        "❌ OPITECH AI generation failed:"
+        "OPITECH AI generation failed:"
     );
 
     console.error(error);
@@ -674,7 +656,7 @@ PORT,
 
 ```
     console.log(
-        `🚀 OPITECH BACKEND IS LIVE ON PORT ${PORT}`
+        `OPITECH BACKEND IS LIVE ON PORT ${PORT}`
     );
 
 }
