@@ -257,14 +257,10 @@ function validateRecommendations(data) {
 async function generateWithGroq(prompt) {
 
     if (!GROQ_API_KEY) {
-        throw new Error(
-            "GROQ_API_KEY is missing"
-        );
+        throw new Error("GROQ_API_KEY is missing");
     }
 
-    console.log(
-        "🤖 Sending request to Groq..."
-    );
+    console.log("🤖 Sending request to Groq...");
 
     const response = await fetch(
         "https://api.groq.com/openai/v1/chat/completions",
@@ -273,64 +269,25 @@ async function generateWithGroq(prompt) {
 
             headers: {
                 "Content-Type": "application/json",
-                "Authorization":
-                    `Bearer ${GROQ_API_KEY}`
+                "Authorization": `Bearer ${GROQ_API_KEY}`
             },
 
             body: JSON.stringify({
-
-                model:
-                    "openai/gpt-oss-20b",
+                model: "openai/gpt-oss-20b",
 
                 messages: [
-
                     {
                         role: "system",
-
                         content: `
 You are OPITECH, an electronics recommendation AI.
 
-Your job is to analyze supplied web-search results and recommend real electronics products.
+Use ONLY the supplied search evidence.
 
-IMPORTANT RULES:
+Return ONLY valid JSON.
 
-1. Use ONLY information contained in the supplied search results.
-2. Never invent product names.
-3. Never invent prices.
-4. Never invent specifications.
-5. Prefer current prices.
-6. Respect the user's maximum budget.
-7. Respect the preferred brand when possible.
-8. Consider the user's use cases and priority.
-9. Return exactly 3 recommendations when enough products exist.
-10. Return ONLY valid JSON.
-11. Do NOT use markdown.
-12. Do NOT put the JSON inside code fences.
-13. Do NOT add explanations before or after the JSON.
+Return exactly 3 real products.
 
-The JSON must have this structure:
-
-{
-  "recommendations": [
-    {
-      "rank": 1,
-      "name": "Exact product model",
-      "price": "₹24999",
-      "priceSource": "Website name",
-      "matchScore": 95,
-      "why": "Short explanation",
-      "strengths": [
-        "Strength 1",
-        "Strength 2",
-        "Strength 3"
-      ],
-      "tradeoffs": [
-        "Tradeoff 1",
-        "Tradeoff 2"
-      ]
-    }
-  ]
-}
+Never invent product names, prices, or specifications.
 `
                     },
 
@@ -338,53 +295,125 @@ The JSON must have this structure:
                         role: "user",
                         content: prompt
                     }
-
                 ],
 
                 temperature: 0.1,
 
-                max_completion_tokens: 1200
-
+                max_completion_tokens: 900
             })
         }
     );
 
-    const data = await response.json();
+    const rawResponse = await response.text();
+
+    console.log("========== GROQ HTTP STATUS ==========");
+    console.log(response.status);
+    console.log("======================================");
+
+    console.log("========== COMPLETE GROQ RESPONSE ==========");
+    console.log(rawResponse);
+    console.log("============================================");
 
 
     if (!response.ok) {
 
-        console.error(
-            "❌ Groq error:",
-            JSON.stringify(data, null, 2)
-        );
+        let errorData;
+
+        try {
+            errorData = JSON.parse(rawResponse);
+        } catch {
+            errorData = {};
+        }
 
         throw new Error(
-            data.error?.message ||
+            errorData.error?.message ||
+            rawResponse ||
             "Groq request failed"
         );
     }
 
 
-    const text =
-        data.choices?.[0]?.message?.content ||
-        "";
+    let data;
+
+    try {
+
+        data = JSON.parse(rawResponse);
+
+    } catch {
+
+        throw new Error(
+            "Groq returned a non-JSON API response"
+        );
+
+    }
+
+
+    /*
+       Normal Groq response:
+       choices[0].message.content
+    */
+
+    let text =
+        data.choices?.[0]?.message?.content;
+
+
+    /*
+       Some models may return content in another
+       structure, so check additional possibilities.
+    */
+
+    if (!text && data.choices?.[0]?.text) {
+        text = data.choices[0].text;
+    }
+
+    if (!text && data.output_text) {
+        text = data.output_text;
+    }
+
+
+    /*
+       If content is still empty, show useful
+       information instead of silently failing.
+    */
+
+    if (
+        !text ||
+        typeof text !== "string" ||
+        !text.trim()
+    ) {
+
+        console.error(
+            "❌ Groq returned no usable text."
+        );
+
+        console.error(
+            "Parsed Groq object:",
+            JSON.stringify(
+                data,
+                null,
+                2
+            )
+        );
+
+        throw new Error(
+            "Groq returned an empty response"
+        );
+    }
 
 
     console.log(
-        "========== RAW GROQ RESPONSE =========="
+        "========== GROQ AI TEXT =========="
     );
 
     console.log(text);
 
     console.log(
-        "========================================="
+        "=================================="
     );
 
 
-    return text;
+    return text.trim();
 }
-
 
 /* =========================
    RECOMMENDATION API
