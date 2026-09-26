@@ -1,894 +1,1073 @@
-const express = require("express");
-const cors = require("cors");
-
-const app = express();
-
-app.use(cors());
-app.use(express.json());
-
-const PORT = process.env.PORT || 10000;
-
-const GROQ_API_KEY = process.env.GROQ_API_KEY;
-const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
-
-if (!GROQ_API_KEY) {
-    console.error("❌ GROQ_API_KEY is missing!");
-}
-
-if (!TAVILY_API_KEY) {
-    console.error("❌ TAVILY_API_KEY is missing!");
-}
+/* =========================================================
+   OPITECH - FRONTEND JAVASCRIPT
+   Groq + Tavily Backend
+========================================================= */
 
 
-/* =========================
-   HOME
-========================= */
+/* =========================================================
+   BACKEND
+========================================================= */
 
-app.get("/", (req, res) => {
-    res.json({
-        status: "online",
-        message: "OPITECH AI backend is running 🚀",
-        ai: "Groq + Tavily Web Search"
-    });
+const BACKEND_URL = "https://opitech-backend.onrender.com";
+
+
+/* =========================================================
+   GLOBAL VARIABLES
+========================================================= */
+
+let selectedType = "Phone";
+
+
+/* =========================================================
+   CURRENCY SYMBOLS
+========================================================= */
+
+const currencySymbols = {
+
+    INR: "₹",
+    USD: "$",
+    GBP: "£",
+    CAD: "C$",
+    AUD: "A$",
+    EUR: "€",
+    AED: "د.إ",
+    SGD: "S$"
+
+};
+
+
+/* =========================================================
+   PAGE INITIALIZATION
+========================================================= */
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    console.log("🚀 OPITECH frontend loaded");
+
+    setupProductTypeButtons();
+
+    setupCurrency();
+
+    setupFindButton();
+
 });
 
 
-/* =========================
-   TAVILY SEARCH
-========================= */
+/* =========================================================
+   PRODUCT TYPE BUTTONS
+========================================================= */
 
-async function searchProducts(query) {
+function setupProductTypeButtons() {
 
-    if (!TAVILY_API_KEY) {
-        throw new Error("TAVILY_API_KEY is missing");
-    }
+    const options =
+        document.querySelectorAll(".option");
 
-    console.log("🔎 Searching Tavily:", query);
+    options.forEach(option => {
 
-    const response = await fetch(
-        "https://api.tavily.com/search",
-        {
-            method: "POST",
+        option.addEventListener("click", () => {
 
-            headers: {
-                "Content-Type": "application/json"
-            },
+            options.forEach(item => {
+                item.classList.remove("active");
+            });
 
-            body: JSON.stringify({
-                api_key: TAVILY_API_KEY,
-                query: query,
-                search_depth: "basic",
-                topic: "general",
-                max_results: 5,
-                include_answer: false,
-                include_raw_content: false,
-                include_images: false
-            })
-        }
-    );
+            option.classList.add("active");
 
-    const data = await response.json();
+            selectedType =
+                option.dataset.type ||
+                option.textContent.trim();
 
-    if (!response.ok) {
+            console.log(
+                "📱 Selected product:",
+                selectedType
+            );
 
-        console.error("❌ Tavily error:", data);
+        });
 
-        throw new Error(
-            data.message ||
-            data.detail ||
-            "Tavily search failed"
-        );
-    }
+    });
 
-    console.log(
-        `✅ Tavily returned ${data.results?.length || 0} results`
-    );
-
-    return data.results || [];
 }
 
 
-/* =========================
-   CLEAN AI JSON
-========================= */
+/* =========================================================
+   CURRENCY
+========================================================= */
 
-function extractJSON(text) {
+function setupCurrency() {
 
-    if (!text || typeof text !== "string") {
-        throw new Error("AI returned an empty response");
+    const currency =
+        document.getElementById("currency");
+
+    const symbol =
+        document.getElementById("currencySymbol");
+
+    if (!currency) {
+        return;
     }
 
-    let cleaned = text.trim();
+    function updateCurrencySymbol() {
 
-    /*
-       Remove markdown code fences
-       Example:
+        const value =
+            currency.value;
 
-       ```json
-       {
-          ...
-       }
-       ```
-    */
+        if (symbol) {
 
-    cleaned = cleaned
-        .replace(/^```json\s*/i, "")
-        .replace(/^```\s*/i, "")
-        .replace(/\s*```$/i, "")
-        .trim();
+            symbol.textContent =
+                currencySymbols[value] ||
+                value;
+
+        }
+
+    }
+
+    currency.addEventListener(
+        "change",
+        updateCurrencySymbol
+    );
+
+    updateCurrencySymbol();
+
+}
 
 
-    /*
-       Find the first JSON object.
-       This protects against the model adding
-       a small sentence before the JSON.
-    */
+/* =========================================================
+   FIND BUTTON
+========================================================= */
 
-    const firstBrace = cleaned.indexOf("{");
-    const lastBrace = cleaned.lastIndexOf("}");
+function setupFindButton() {
 
-    if (
-        firstBrace === -1 ||
-        lastBrace === -1 ||
-        lastBrace <= firstBrace
-    ) {
-        throw new Error(
-            "AI response did not contain a valid JSON object"
+    const button =
+        document.getElementById("findButton");
+
+    if (!button) {
+
+        console.warn(
+            "⚠️ Find button not found"
         );
+
+        return;
     }
 
-    cleaned = cleaned.substring(
-        firstBrace,
-        lastBrace + 1
+    /*
+       Remove old inline behavior if necessary.
+       Your HTML may already contain onclick.
+       This listener still works safely.
+    */
+
+    button.addEventListener(
+        "click",
+        testOPITECHAI
+    );
+
+}
+
+
+/* =========================================================
+   GET SELECTED USES
+========================================================= */
+
+function getSelectedUses() {
+
+    const checkboxes =
+        document.querySelectorAll(
+            '.checkbox-grid input[type="checkbox"]:checked'
+        );
+
+    return Array.from(checkboxes)
+        .map(checkbox => {
+
+            /*
+               Prefer value attribute.
+               Fall back to label text.
+            */
+
+            return (
+                checkbox.value ||
+                checkbox.dataset.use ||
+                checkbox.parentElement?.textContent?.trim() ||
+                ""
+            ).trim();
+
+        })
+        .filter(Boolean);
+
+}
+
+
+/* =========================================================
+   GET VALUE SAFELY
+========================================================= */
+
+function getValue(id, fallback = "") {
+
+    const element =
+        document.getElementById(id);
+
+    if (!element) {
+        return fallback;
+    }
+
+    return element.value?.trim() || fallback;
+
+}
+
+
+/* =========================================================
+   MAIN OPITECH AI FUNCTION
+========================================================= */
+
+async function testOPITECHAI() {
+
+    console.log(
+        "🚀 OPITECH AI search started"
     );
 
 
+    /* =====================================================
+       GET USER PREFERENCES
+    ===================================================== */
+
+    const productType =
+        selectedType ||
+        getValue("productType", "Phone");
+
+    const country =
+        getValue(
+            "country",
+            "India"
+        );
+
+    const currency =
+        getValue(
+            "currency",
+            "INR"
+        );
+
+    const budget =
+        getValue(
+            "budget",
+            ""
+        );
+
+    const priority =
+        getValue(
+            "priority",
+            "balanced"
+        );
+
+    const brand =
+        getValue(
+            "brand",
+            "any"
+        );
+
+    const uses =
+        getSelectedUses();
+
+
+    /* =====================================================
+       VALIDATION
+    ===================================================== */
+
+    if (!budget) {
+
+        showError(
+            "Please enter your budget first."
+        );
+
+        return;
+
+    }
+
+
+    /* =====================================================
+       REQUEST OBJECT
+    ===================================================== */
+
+    const preferences = {
+
+        productType,
+        country,
+        currency,
+        budget,
+        uses,
+        priority,
+        brand
+
+    };
+
+
+    console.log(
+        "📤 Sending preferences:",
+        preferences
+    );
+
+
+    /* =====================================================
+       BUTTON LOADING STATE
+    ===================================================== */
+
+    const button =
+        document.getElementById("findButton");
+
+    const originalButtonText =
+        button?.innerHTML ||
+        "🔍 Find My Best Matches";
+
+
+    if (button) {
+
+        button.disabled = true;
+
+        button.innerHTML =
+            "⏳ Finding the best matches...";
+
+    }
+
+
+    /* =====================================================
+       SHOW LOADING
+    ===================================================== */
+
+    showLoading();
+
+
+    /* =====================================================
+       CALL BACKEND
+    ===================================================== */
+
     try {
 
-        return JSON.parse(cleaned);
+        const response =
+            await fetch(
+                `${BACKEND_URL}/api/recommend`,
+                {
+
+                    method: "POST",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json"
+
+                    },
+
+                    body:
+                        JSON.stringify(
+                            preferences
+                        )
+
+                }
+            );
+
+
+        console.log(
+            "📡 Backend HTTP status:",
+            response.status
+        );
+
+
+        /* =================================================
+           READ RESPONSE
+        ================================================= */
+
+        const rawText =
+            await response.text();
+
+
+        console.log(
+            "📥 Raw backend response:",
+            rawText
+        );
+
+
+        let data;
+
+
+        try {
+
+            data =
+                JSON.parse(rawText);
+
+        } catch {
+
+            throw new Error(
+                "Backend returned an invalid response."
+            );
+
+        }
+
+
+        /* =================================================
+           HANDLE BACKEND ERROR
+        ================================================= */
+
+        if (!response.ok) {
+
+            console.error(
+                "❌ Backend error:",
+                data
+            );
+
+            throw new Error(
+                data.details ||
+                data.error ||
+                `Backend error ${response.status}`
+            );
+
+        }
+
+
+        /* =================================================
+           GET RECOMMENDATIONS
+        ================================================= */
+
+        const recommendations =
+            data.recommendations ||
+            data.result;
+
+
+        if (
+            !Array.isArray(
+                recommendations
+            )
+        ) {
+
+            throw new Error(
+                "AI returned no recommendations."
+            );
+
+        }
+
+
+        if (
+            recommendations.length === 0
+        ) {
+
+            throw new Error(
+                "No suitable products were found."
+            );
+
+        }
+
+
+        console.log(
+            "✅ Recommendations received:",
+            recommendations
+        );
+
+
+        /* =================================================
+           DISPLAY RESULTS
+        ================================================= */
+
+        displayRecommendations(
+            recommendations,
+            preferences
+        );
+
 
     } catch (error) {
 
-        console.error("❌ JSON parse error");
-        console.error("AI output:");
-        console.error(cleaned);
-
-        throw new Error(
-            "AI returned invalid JSON"
+        console.error(
+            "❌ OPITECH AI failed:",
+            error
         );
+
+
+        showError(
+            error.message ||
+            "Something went wrong while finding recommendations."
+        );
+
+
+    } finally {
+
+        /* =================================================
+           RESTORE BUTTON
+        ================================================= */
+
+        if (button) {
+
+            button.disabled = false;
+
+            button.innerHTML =
+                originalButtonText;
+
+        }
+
     }
+
 }
 
 
-/* =========================
-   VALIDATE RECOMMENDATIONS
-========================= */
+/* =========================================================
+   LOADING SCREEN
+========================================================= */
 
-function validateRecommendations(data) {
+function showLoading() {
 
-    if (!data || typeof data !== "object") {
-        throw new Error("AI returned invalid data");
-    }
-
-    if (
-        !Array.isArray(data.recommendations)
-    ) {
-        throw new Error(
-            "AI response does not contain recommendations"
+    let container =
+        document.getElementById(
+            "results"
         );
+
+
+    if (!container) {
+
+        container =
+            document.querySelector(
+                ".results"
+            );
+
     }
 
-    if (
-        data.recommendations.length < 1
-    ) {
-        throw new Error(
-            "AI returned no recommendations"
+
+    if (!container) {
+
+        console.warn(
+            "⚠️ Results container not found"
         );
+
+        return;
+
     }
+
+
+    container.innerHTML = `
+
+        <div class="opitech-loading">
+
+            <div class="loading-spinner"></div>
+
+            <h2>
+                OPITECH AI is searching...
+            </h2>
+
+            <p>
+                Checking current products,
+                prices and specifications.
+            </p>
+
+        </div>
+
+    `;
+
+
+    container.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+
+}
+
+
+/* =========================================================
+   DISPLAY ERROR
+========================================================= */
+
+function showError(message) {
+
+    let container =
+        document.getElementById(
+            "results"
+        );
+
+
+    if (!container) {
+
+        container =
+            document.querySelector(
+                ".results"
+            );
+
+    }
+
+
+    if (!container) {
+
+        alert(message);
+
+        return;
+
+    }
+
+
+    container.innerHTML = `
+
+        <div class="opitech-error">
+
+            <div class="error-icon">
+                ⚠️
+            </div>
+
+            <h2>
+                AI connection failed
+            </h2>
+
+            <p>
+                ${escapeHTML(message)}
+            </p>
+
+            <button
+                class="retry-button"
+                onclick="testOPITECHAI()"
+            >
+                🔄 Try Again
+            </button>
+
+        </div>
+
+    `;
+
+
+    container.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+
+}
+
+
+/* =========================================================
+   DISPLAY RECOMMENDATIONS
+========================================================= */
+
+function displayRecommendations(
+    recommendations,
+    preferences
+) {
+
+    let container =
+        document.getElementById(
+            "results"
+        );
+
+
+    if (!container) {
+
+        container =
+            document.querySelector(
+                ".results"
+            );
+
+    }
+
+
+    if (!container) {
+
+        console.error(
+            "❌ Results container not found"
+        );
+
+        return;
+
+    }
+
+
+    const currencySymbol =
+        currencySymbols[
+            preferences.currency
+        ] ||
+        preferences.currency ||
+        "₹";
+
+
+    let html = `
+
+        <div class="recommendations-header">
+
+            <h2>
+                🎯 Your OPITECH Matches
+            </h2>
+
+            <p>
+                Based on your
+                ${escapeHTML(
+                    preferences.productType
+                )}
+                requirements
+            </p>
+
+        </div>
+
+        <div class="recommendations-grid">
+
+    `;
+
+
+    recommendations.forEach(
+        (product, index) => {
+
+            html +=
+                createProductCard(
+                    product,
+                    index,
+                    currencySymbol
+                );
+
+        }
+    );
+
+
+    html += `
+
+        </div>
+
+    `;
+
+
+    container.innerHTML =
+        html;
+
+
+    container.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+
+
+    console.log(
+        "🎉 Results displayed"
+    );
+
+}
+
+
+/* =========================================================
+   CREATE PRODUCT CARD
+========================================================= */
+
+function createProductCard(
+    product,
+    index,
+    currencySymbol
+) {
+
+    const rank =
+        Number(product.rank) ||
+        index + 1;
+
+
+    const name =
+        product.name ||
+        "Unknown Product";
+
+
+    let price =
+        product.price ||
+        "Price unavailable";
+
 
     /*
-       Make sure every recommendation has
-       the fields the frontend expects.
+       If backend returns a numeric price,
+       format it with currency.
     */
 
-    data.recommendations =
-        data.recommendations.map(
-            (item, index) => {
+    if (
+        typeof price === "number"
+    ) {
 
-                return {
+        price =
+            currencySymbol +
+            price.toLocaleString(
+                "en-IN"
+            );
 
-                    rank:
-                        Number(item.rank) ||
-                        index + 1,
+    }
 
-                    name:
-                        item.name ||
-                        "Unknown product",
 
-                    price:
-                        item.price ||
-                        "Price unavailable",
+    const priceSource =
+        product.priceSource ||
+        "Web search";
 
-                    priceSource:
-                        item.priceSource ||
-                        "Web search",
 
-                    matchScore:
-                        Number(item.matchScore) ||
-                        0,
+    const matchScore =
+        Number(
+            product.matchScore
+        ) || 0;
 
-                    why:
-                        item.why ||
-                        "Matches the requested requirements.",
 
-                    strengths:
-                        Array.isArray(item.strengths)
-                            ? item.strengths.slice(0, 3)
-                            : [],
+    const why =
+        product.why ||
+        "Matches your requirements.";
 
-                    tradeoffs:
-                        Array.isArray(item.tradeoffs)
-                            ? item.tradeoffs.slice(0, 2)
-                            : []
 
-                };
+    const strengths =
+        Array.isArray(
+            product.strengths
+        )
+            ? product.strengths
+            : [];
 
+
+    const tradeoffs =
+        Array.isArray(
+            product.tradeoffs
+        )
+            ? product.tradeoffs
+            : [];
+
+
+    let strengthsHTML = "";
+
+
+    strengths
+        .slice(0, 3)
+        .forEach(strength => {
+
+            strengthsHTML += `
+
+                <li>
+                    <span>✓</span>
+                    ${escapeHTML(
+                        strength
+                    )}
+                </li>
+
+            `;
+
+        });
+
+
+    let tradeoffsHTML = "";
+
+
+    tradeoffs
+        .slice(0, 2)
+        .forEach(tradeoff => {
+
+            tradeoffsHTML += `
+
+                <li>
+                    <span>•</span>
+                    ${escapeHTML(
+                        tradeoff
+                    )}
+                </li>
+
+            `;
+
+        });
+
+
+    return `
+
+        <article
+            class="product-card"
+            data-rank="${rank}"
+        >
+
+            <div class="product-card-top">
+
+                <div class="rank-badge">
+                    #${rank}
+                </div>
+
+                <div class="match-score">
+                    ${matchScore}%
+                    Match
+                </div>
+
+            </div>
+
+
+            <h3 class="product-name">
+                ${escapeHTML(name)}
+            </h3>
+
+
+            <div class="product-price">
+                ${escapeHTML(
+                    String(price)
+                )}
+            </div>
+
+
+            <div class="price-source">
+                Price source:
+                ${escapeHTML(
+                    String(priceSource)
+                )}
+            </div>
+
+
+            <div class="product-why">
+
+                <h4>
+                    Why OPITECH picked it
+                </h4>
+
+                <p>
+                    ${escapeHTML(why)}
+                </p>
+
+            </div>
+
+
+            ${
+                strengths.length
+                    ? `
+
+                    <div class="product-strengths">
+
+                        <h4>
+                            Strengths
+                        </h4>
+
+                        <ul>
+                            ${strengthsHTML}
+                        </ul>
+
+                    </div>
+
+                    `
+                    : ""
             }
-        );
 
-    /*
-       Sort by rank
-    */
 
-    data.recommendations.sort(
-        (a, b) =>
-            Number(a.rank) -
-            Number(b.rank)
-    );
+            ${
+                tradeoffs.length
+                    ? `
 
-    return data;
+                    <div class="product-tradeoffs">
+
+                        <h4>
+                            Trade-offs
+                        </h4>
+
+                        <ul>
+                            ${tradeoffsHTML}
+                        </ul>
+
+                    </div>
+
+                    `
+                    : ""
+            }
+
+
+        </article>
+
+    `;
+
 }
 
 
-/* =========================
-   GROQ AI
-========================= */
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
 
-async function generateWithGroq(prompt) {
+function escapeHTML(value) {
 
-    if (!GROQ_API_KEY) {
-        throw new Error("GROQ_API_KEY is missing");
+    if (
+        value === null ||
+        value === undefined
+    ) {
+
+        return "";
+
     }
 
-    console.log("🤖 Sending request to Groq...");
 
-    const response = await fetch(
-        "https://api.groq.com/openai/v1/chat/completions",
-        {
-            method: "POST",
+    return String(value)
 
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${GROQ_API_KEY}`
-            },
+        .replace(
+            /&/g,
+            "&amp;"
+        )
 
-            body: JSON.stringify({
-                model: "openai/gpt-oss-20b",
+        .replace(
+            /</g,
+            "&lt;"
+        )
 
-                messages: [
-                    {
-                        role: "system",
-                        content: `
-You are OPITECH, an electronics recommendation AI.
+        .replace(
+            />/g,
+            "&gt;"
+        )
 
-Use ONLY the supplied search evidence.
+        .replace(
+            /"/g,
+            "&quot;"
+        )
 
-Return ONLY valid JSON.
-
-Return exactly 3 real products.
-
-Never invent product names, prices, or specifications.
-`
-                    },
-
-                    {
-                        role: "user",
-                        content: prompt
-                    }
-                ],
-
-                temperature: 0.1,
-
-                max_completion_tokens: 900
-            })
-        }
-    );
-
-    const rawResponse = await response.text();
-
-    console.log("========== GROQ HTTP STATUS ==========");
-    console.log(response.status);
-    console.log("======================================");
-
-    console.log("========== COMPLETE GROQ RESPONSE ==========");
-    console.log(rawResponse);
-    console.log("============================================");
-
-
-    if (!response.ok) {
-
-        let errorData;
-
-        try {
-            errorData = JSON.parse(rawResponse);
-        } catch {
-            errorData = {};
-        }
-
-        throw new Error(
-            errorData.error?.message ||
-            rawResponse ||
-            "Groq request failed"
+        .replace(
+            /'/g,
+            "&#039;"
         );
-    }
+
+}
 
 
-    let data;
+/* =========================================================
+   BACKEND CONNECTION TEST
+========================================================= */
+
+async function checkOPITECHBackend() {
 
     try {
 
-        data = JSON.parse(rawResponse);
-
-    } catch {
-
-        throw new Error(
-            "Groq returned a non-JSON API response"
+        console.log(
+            "🔎 Checking OPITECH backend..."
         );
 
-    }
 
-
-    /*
-       Normal Groq response:
-       choices[0].message.content
-    */
-
-    let text =
-        data.choices?.[0]?.message?.content;
-
-
-    /*
-       Some models may return content in another
-       structure, so check additional possibilities.
-    */
-
-    if (!text && data.choices?.[0]?.text) {
-        text = data.choices[0].text;
-    }
-
-    if (!text && data.output_text) {
-        text = data.output_text;
-    }
-
-
-    /*
-       If content is still empty, show useful
-       information instead of silently failing.
-    */
-
-    if (
-        !text ||
-        typeof text !== "string" ||
-        !text.trim()
-    ) {
-
-        console.error(
-            "❌ Groq returned no usable text."
-        );
-
-        console.error(
-            "Parsed Groq object:",
-            JSON.stringify(
-                data,
-                null,
-                2
-            )
-        );
-
-        throw new Error(
-            "Groq returned an empty response"
-        );
-    }
-
-
-    console.log(
-        "========== GROQ AI TEXT =========="
-    );
-
-    console.log(text);
-
-    console.log(
-        "=================================="
-    );
-
-
-    return text.trim();
-}
-
-/* =========================
-   RECOMMENDATION API
-========================= */
-
-app.post(
-    "/api/recommend",
-    async (req, res) => {
-
-        try {
-
-            const {
-                productType,
-                country,
-                currency,
-                budget,
-                uses,
-                priority,
-                brand
-            } = req.body;
-
-
-            console.log(
-                "📥 Received preferences:",
-                {
-                    productType,
-                    country,
-                    currency,
-                    budget,
-                    uses,
-                    priority,
-                    brand
-                }
+        const response =
+            await fetch(
+                BACKEND_URL
             );
 
 
-            /* =========================
-               VALIDATION
-            ========================= */
+        const data =
+            await response.json();
 
-            if (!productType) {
-
-                return res.status(400).json({
-                    error:
-                        "Product type is required"
-                });
-
-            }
-
-
-            if (!budget) {
-
-                return res.status(400).json({
-                    error:
-                        "Budget is required"
-                });
-
-            }
-
-
-            /* =========================
-               USER DATA
-            ========================= */
-
-            const useText =
-                Array.isArray(uses)
-                    ? uses.join(", ")
-                    : (uses || "general use");
-
-
-            const brandText =
-                brand &&
-                brand.toLowerCase() !== "any"
-                    ? brand
-                    : "";
-
-
-            /* =========================
-               SEARCH QUERIES
-            ========================= */
-
-            const searchQueries = [
-
-                `${brandText} ${productType} ${useText} under ${budget} ${currency} ${country}`,
-
-                `best ${productType} ${brandText} ${useText} ${country} current price specifications`,
-
-                `${brandText} ${productType} ${country} price specifications official`
-
-            ];
-
-
-            /* =========================
-               SEARCH WEB
-            ========================= */
-
-            let allResults = [];
-
-
-            for (
-                const query
-                of searchQueries
-            ) {
-
-                try {
-
-                    const results =
-                        await searchProducts(
-                            query
-                        );
-
-                    allResults.push(
-                        ...results
-                    );
-
-                } catch (searchError) {
-
-                    console.error(
-                        "⚠️ Search failed:",
-                        searchError.message
-                    );
-
-                }
-
-            }
-
-
-            /* =========================
-               REMOVE DUPLICATES
-            ========================= */
-
-            const uniqueResults = [];
-
-            const seenUrls =
-                new Set();
-
-
-            for (
-                const result
-                of allResults
-            ) {
-
-                if (
-                    result.url &&
-                    !seenUrls.has(
-                        result.url
-                    )
-                ) {
-
-                    seenUrls.add(
-                        result.url
-                    );
-
-                    uniqueResults.push(
-                        result
-                    );
-
-                }
-
-            }
-
-
-            console.log(
-                `📊 Unique search results: ${uniqueResults.length}`
-            );
-
-
-            if (
-                uniqueResults.length === 0
-            ) {
-
-                return res.status(500).json({
-
-                    error:
-                        "No current product information was found.",
-
-                    details:
-                        "Tavily returned no usable search results."
-
-                });
-
-            }
-
-
-            /* =========================
-               COMPRESS SEARCH DATA
-            ========================= */
-
-            const searchData =
-                uniqueResults
-                    .slice(0, 8)
-                    .map(
-                        (result, index) => {
-
-                            const content =
-                                (
-                                    result.content ||
-                                    ""
-                                )
-                                    .replace(
-                                        /\s+/g,
-                                        " "
-                                    )
-                                    .slice(
-                                        0,
-                                        650
-                                    );
-
-
-                            return `
-RESULT ${index + 1}
-
-Title:
-${result.title || "Unknown"}
-
-URL:
-${result.url || "Unknown"}
-
-Content:
-${content}
-`;
-
-                        }
-                    )
-                    .join("\n");
-
-
-            console.log(
-                `📦 Sending ${searchData.length} characters of search data to Groq`
-            );
-
-
-            /* =========================
-               AI PROMPT
-            ========================= */
-
-            const prompt = `
-USER REQUIREMENTS
-
-Product type: ${productType}
-
-Country:
-${country || "India"}
-
-Currency:
-${currency || "INR"}
-
-Maximum budget:
-${budget}
-
-Uses:
-${useText}
-
-Priority:
-${priority || "general"}
-
-Preferred brand:
-${brand || "any"}
-
-
-TASK
-
-Analyze ONLY the search results below.
-
-Select exactly 3 different real products whenever at least 3 suitable products are present.
-
-The recommendations should:
-
-- Be real products.
-- Use exact model names.
-- Prefer products within the maximum budget.
-- Respect the preferred brand.
-- Match the user's use cases.
-- Match the user's priority.
-- Use prices that appear in the supplied search results.
-- Prefer current prices.
-- Prefer reputable retailers or official manufacturer information.
-- Never invent missing information.
-
-
-IMPORTANT
-
-If a product's exact price is not supported by the search results, write:
-
-"Price unavailable"
-
-instead of guessing.
-
-Do not invent specifications.
-
-Return ONLY JSON.
-
-
-SEARCH RESULTS
-
-${searchData}
-
-
-OUTPUT FORMAT
-
-{
-  "recommendations": [
-    {
-      "rank": 1,
-      "name": "Exact Product Model",
-      "price": "₹24999",
-      "priceSource": "Source website",
-      "matchScore": 95,
-      "why": "Short explanation",
-      "strengths": [
-        "Strength 1",
-        "Strength 2",
-        "Strength 3"
-      ],
-      "tradeoffs": [
-        "Tradeoff 1",
-        "Tradeoff 2"
-      ]
-    },
-    {
-      "rank": 2,
-      "name": "Exact Product Model",
-      "price": "₹24999",
-      "priceSource": "Source website",
-      "matchScore": 90,
-      "why": "Short explanation",
-      "strengths": [
-        "Strength 1",
-        "Strength 2",
-        "Strength 3"
-      ],
-      "tradeoffs": [
-        "Tradeoff 1",
-        "Tradeoff 2"
-      ]
-    },
-    {
-      "rank": 3,
-      "name": "Exact Product Model",
-      "price": "₹24999",
-      "priceSource": "Source website",
-      "matchScore": 85,
-      "why": "Short explanation",
-      "strengths": [
-        "Strength 1",
-        "Strength 2",
-        "Strength 3"
-      ],
-      "tradeoffs": [
-        "Tradeoff 1",
-        "Tradeoff 2"
-      ]
-    }
-  ]
-}
-`;
-
-
-            /* =========================
-               CALL GROQ
-            ========================= */
-
-            const aiText =
-                await generateWithGroq(
-                    prompt
-                );
-
-
-            /* =========================
-               PARSE AI JSON
-            ========================= */
-
-            let resultData;
-
-
-            try {
-
-                resultData =
-                    extractJSON(
-                        aiText
-                    );
-
-                resultData =
-                    validateRecommendations(
-                        resultData
-                    );
-
-            } catch (jsonError) {
-
-                console.error(
-                    "❌ AI JSON validation failed:",
-                    jsonError.message
-                );
-
-                return res.status(500).json({
-
-                    error:
-                        "AI returned invalid recommendation data.",
-
-                    details:
-                        jsonError.message
-
-                });
-
-            }
-
-
-            /* =========================
-               SEND TO FRONTEND
-            ========================= */
-
-            console.log(
-                `✅ Returning ${resultData.recommendations.length} recommendations`
-            );
-
-
-            return res.json({
-
-                success: true,
-
-                recommendations:
-                    resultData.recommendations,
-
-                result:
-                    resultData.recommendations
-
-            });
-
-        } catch (error) {
-
-            console.error(
-                "❌ OPITECH AI generation failed:"
-            );
-
-            console.error(error);
-
-
-            return res.status(500).json({
-
-                error:
-                    "AI generation failed",
-
-                details:
-                    error.message ||
-                    "Unknown error",
-
-                type:
-                    error.name ||
-                    "UnknownError",
-
-                code:
-                    error.status ||
-                    error.code ||
-                    null
-
-            });
-
-        }
-
-    }
-);
-
-
-/* =========================
-   START SERVER
-========================= */
-
-app.listen(
-    PORT,
-    "0.0.0.0",
-    () => {
 
         console.log(
-            `🚀 OPITECH BACKEND IS LIVE ON PORT ${PORT}`
+            "✅ OPITECH backend:",
+            data
         );
 
+
+        return true;
+
+
+    } catch (error) {
+
+        console.error(
+            "❌ Backend unavailable:",
+            error
+        );
+
+
+        return false;
+
     }
-);
+
+}
+
+
+/* =========================================================
+   OPTIONAL BACKEND TEST
+========================================================= */
+
+window.checkOPITECHBackend =
+    checkOPITECHBackend;
+
+
+/* =========================================================
+   MAKE MAIN FUNCTION AVAILABLE TO HTML
+========================================================= */
+
+window.testOPITECHAI =
+    testOPITECHAI;
+
+
+/* =========================================================
+   INITIAL BACKEND CHECK
+========================================================= */
+
+setTimeout(() => {
+
+    checkOPITECHBackend();
+
+}, 1000);
