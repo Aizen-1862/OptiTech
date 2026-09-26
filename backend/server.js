@@ -11,230 +11,375 @@ const PORT = process.env.PORT || 10000;
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
 
+
+/* =========================================================
+   API KEY CHECK
+========================================================= */
+
 if (!GROQ_API_KEY) {
     console.error("❌ GROQ_API_KEY is missing!");
+} else {
+    console.log("✅ GROQ_API_KEY loaded");
 }
 
 if (!TAVILY_API_KEY) {
     console.error("❌ TAVILY_API_KEY is missing!");
+} else {
+    console.log("✅ TAVILY_API_KEY loaded");
 }
 
 
-/* =========================
+/* =========================================================
    HOME
-========================= */
+========================================================= */
 
 app.get("/", (req, res) => {
+
     res.json({
+
         status: "online",
-        message: "OPITECH AI backend is running 🚀",
-        ai: "Groq + Tavily Web Search"
+
+        message:
+            "OPITECH AI backend is running 🚀",
+
+        ai:
+            "Groq + Tavily Web Search"
+
     });
+
 });
 
 
-/* =========================
+/* =========================================================
    TAVILY SEARCH
-========================= */
+========================================================= */
 
 async function searchProducts(query) {
 
     if (!TAVILY_API_KEY) {
-        throw new Error("TAVILY_API_KEY is missing");
+
+        throw new Error(
+            "TAVILY_API_KEY is missing"
+        );
+
     }
 
-    console.log("🔎 Searching Tavily:", query);
+
+    console.log(
+        "🔎 Searching Tavily:",
+        query
+    );
+
 
     const response = await fetch(
         "https://api.tavily.com/search",
         {
+
             method: "POST",
 
             headers: {
-                "Content-Type": "application/json"
+
+                "Content-Type":
+                    "application/json"
+
             },
 
             body: JSON.stringify({
-                api_key: TAVILY_API_KEY,
-                query: query,
-                search_depth: "basic",
-                topic: "general",
-                max_results: 5,
-                include_answer: false,
-                include_raw_content: false,
-                include_images: false
+
+                api_key:
+                    TAVILY_API_KEY,
+
+                query:
+                    query,
+
+                search_depth:
+                    "basic",
+
+                topic:
+                    "general",
+
+                max_results:
+                    5,
+
+                include_answer:
+                    false,
+
+                include_raw_content:
+                    false,
+
+                include_images:
+                    false
+
             })
+
         }
     );
 
-    const data = await response.json();
+
+    const raw =
+        await response.text();
+
+
+    let data;
+
+
+    try {
+
+        data =
+            JSON.parse(raw);
+
+    } catch {
+
+        throw new Error(
+            "Tavily returned invalid JSON"
+        );
+
+    }
+
 
     if (!response.ok) {
 
-        console.error("❌ Tavily error:", data);
+        console.error(
+            "❌ Tavily error:",
+            data
+        );
+
 
         throw new Error(
             data.message ||
             data.detail ||
             "Tavily search failed"
         );
+
     }
 
+
     console.log(
-        `✅ Tavily returned ${data.results?.length || 0} results`
+        `✅ Tavily returned ${
+            data.results?.length || 0
+        } results`
     );
 
+
     return data.results || [];
+
 }
 
 
-/* =========================
-   CLEAN AI JSON
-========================= */
+/* =========================================================
+   EXTRACT JSON
+========================================================= */
 
 function extractJSON(text) {
 
-    if (!text || typeof text !== "string") {
-        throw new Error("AI returned an empty response");
+    if (
+        !text ||
+        typeof text !== "string"
+    ) {
+
+        throw new Error(
+            "AI returned an empty response"
+        );
+
     }
 
-    let cleaned = text.trim();
 
-    /*
-       Remove markdown code fences
-       Example:
-
-       ```json
-       {
-          ...
-       }
-       ```
-    */
-
-    cleaned = cleaned
-        .replace(/^```json\s*/i, "")
-        .replace(/^```\s*/i, "")
-        .replace(/\s*```$/i, "")
-        .trim();
+    let cleaned =
+        text.trim();
 
 
     /*
-       Find the first JSON object.
-       This protects against the model adding
-       a small sentence before the JSON.
+       Remove markdown fences
     */
 
-    const firstBrace = cleaned.indexOf("{");
-    const lastBrace = cleaned.lastIndexOf("}");
+    cleaned =
+        cleaned
+            .replace(
+                /^```json\s*/i,
+                ""
+            )
+            .replace(
+                /^```\s*/i,
+                ""
+            )
+            .replace(
+                /\s*```$/i,
+                ""
+            )
+            .trim();
+
+
+    /*
+       Find JSON object
+    */
+
+    const firstBrace =
+        cleaned.indexOf("{");
+
+
+    const lastBrace =
+        cleaned.lastIndexOf("}");
+
 
     if (
         firstBrace === -1 ||
         lastBrace === -1 ||
         lastBrace <= firstBrace
     ) {
-        throw new Error(
-            "AI response did not contain a valid JSON object"
+
+        console.error(
+            "❌ No JSON object found."
         );
+
+        console.error(
+            "AI text:",
+            cleaned
+        );
+
+
+        throw new Error(
+            "AI response did not contain valid JSON"
+        );
+
     }
 
-    cleaned = cleaned.substring(
-        firstBrace,
-        lastBrace + 1
-    );
+
+    cleaned =
+        cleaned.substring(
+            firstBrace,
+            lastBrace + 1
+        );
 
 
     try {
 
-        return JSON.parse(cleaned);
+        return JSON.parse(
+            cleaned
+        );
 
     } catch (error) {
 
-        console.error("❌ JSON parse error");
-        console.error("AI output:");
-        console.error(cleaned);
+        console.error(
+            "❌ JSON parse error"
+        );
+
+        console.error(
+            cleaned
+        );
+
 
         throw new Error(
             "AI returned invalid JSON"
         );
+
     }
+
 }
 
 
-/* =========================
+/* =========================================================
    VALIDATE RECOMMENDATIONS
-========================= */
+========================================================= */
 
 function validateRecommendations(data) {
 
-    if (!data || typeof data !== "object") {
-        throw new Error("AI returned invalid data");
+    if (
+        !data ||
+        typeof data !== "object"
+    ) {
+
+        throw new Error(
+            "AI returned invalid data"
+        );
+
     }
 
+
     if (
-        !Array.isArray(data.recommendations)
+        !Array.isArray(
+            data.recommendations
+        )
     ) {
+
         throw new Error(
             "AI response does not contain recommendations"
         );
+
     }
 
+
     if (
-        data.recommendations.length < 1
+        data.recommendations.length === 0
     ) {
+
         throw new Error(
             "AI returned no recommendations"
         );
+
     }
 
+
     /*
-       Make sure every recommendation has
-       the fields the frontend expects.
+       Normalize recommendations
     */
 
     data.recommendations =
-        data.recommendations.map(
-            (item, index) => {
+        data.recommendations
+            .slice(0, 3)
+            .map(
+                (item, index) => {
 
-                return {
+                    return {
 
-                    rank:
-                        Number(item.rank) ||
-                        index + 1,
+                        rank:
+                            Number(
+                                item.rank
+                            ) ||
+                            index + 1,
 
-                    name:
-                        item.name ||
-                        "Unknown product",
+                        name:
+                            item.name ||
+                            "Unknown product",
 
-                    price:
-                        item.price ||
-                        "Price unavailable",
+                        price:
+                            item.price ||
+                            "Price unavailable",
 
-                    priceSource:
-                        item.priceSource ||
-                        "Web search",
+                        priceSource:
+                            item.priceSource ||
+                            "Web search",
 
-                    matchScore:
-                        Number(item.matchScore) ||
-                        0,
+                        matchScore:
+                            Number(
+                                item.matchScore
+                            ) ||
+                            0,
 
-                    why:
-                        item.why ||
-                        "Matches the requested requirements.",
+                        why:
+                            item.why ||
+                            "Matches the requested requirements.",
 
-                    strengths:
-                        Array.isArray(item.strengths)
-                            ? item.strengths.slice(0, 3)
-                            : [],
+                        strengths:
+                            Array.isArray(
+                                item.strengths
+                            )
+                                ? item.strengths
+                                    .slice(0, 3)
+                                : [],
 
-                    tradeoffs:
-                        Array.isArray(item.tradeoffs)
-                            ? item.tradeoffs.slice(0, 2)
-                            : []
+                        tradeoffs:
+                            Array.isArray(
+                                item.tradeoffs
+                            )
+                                ? item.tradeoffs
+                                    .slice(0, 2)
+                                : []
 
-                };
+                    };
 
-            }
-        );
+                }
+            );
+
 
     /*
        Sort by rank
@@ -246,134 +391,297 @@ function validateRecommendations(data) {
             Number(b.rank)
     );
 
+
     return data;
+
 }
 
 
-/* =========================
+/* =========================================================
    GROQ AI
-========================= */
+========================================================= */
 
 async function generateWithGroq(prompt) {
 
     if (!GROQ_API_KEY) {
-        throw new Error("GROQ_API_KEY is missing");
+
+        throw new Error(
+            "GROQ_API_KEY is missing"
+        );
+
     }
 
-    console.log("🤖 Sending request to Groq...");
 
-    const response = await fetch(
-        "https://api.groq.com/openai/v1/chat/completions",
-        {
-            method: "POST",
+    console.log(
+        "🤖 Sending request to Groq..."
+    );
 
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${GROQ_API_KEY}`
-            },
 
-            body: JSON.stringify({
-                model: "openai/gpt-oss-20b",
+    const response =
+        await fetch(
+            "https://api.groq.com/openai/v1/chat/completions",
+            {
 
-                messages: [
-                    {
-                        role: "system",
-                        content: `
+                method: "POST",
+
+                headers: {
+
+                    "Content-Type":
+                        "application/json",
+
+                    "Authorization":
+                        `Bearer ${GROQ_API_KEY}`
+
+                },
+
+                body: JSON.stringify({
+
+                    model:
+                        "openai/gpt-oss-20b",
+
+                    messages: [
+
+                        {
+
+                            role:
+                                "system",
+
+                            content: `
 You are OPITECH, an electronics recommendation AI.
+
+Your job is to select real electronics products from the supplied web search results.
+
+IMPORTANT:
+
+Return ONLY the final JSON object.
+
+Do NOT explain your reasoning.
+
+Do NOT write markdown.
+
+Do NOT use code fences.
+
+Do NOT write anything before or after the JSON.
 
 Use ONLY the supplied search evidence.
 
-Return ONLY valid JSON.
+Never invent product names.
 
-Return exactly 3 real products.
+Never invent prices.
 
-Never invent product names, prices, or specifications.
+Never invent specifications.
+
+Return exactly 3 products when at least 3 suitable products exist.
+
+Keep every field short.
+
+JSON format:
+
+{
+  "recommendations": [
+    {
+      "rank": 1,
+      "name": "Exact Product Model",
+      "price": "₹24999",
+      "priceSource": "Source",
+      "matchScore": 95,
+      "why": "Short reason",
+      "strengths": [
+        "Short strength",
+        "Short strength"
+      ],
+      "tradeoffs": [
+        "Short tradeoff"
+      ]
+    }
+  ]
+}
 `
-                    },
 
-                    {
-                        role: "user",
-                        content: prompt
-                    }
-                ],
+                        },
 
-                temperature: 0.1,
+                        {
 
-                max_completion_tokens: 900
-            })
-        }
+                            role:
+                                "user",
+
+                            content:
+                                prompt
+
+                        }
+
+                    ],
+
+                    /*
+                       GPT-OSS uses completion
+                       tokens for reasoning AND
+                       final output.
+
+                       3000 gives it enough room.
+                    */
+
+                    max_completion_tokens:
+                        3000,
+
+                    temperature:
+                        0.1
+
+                })
+
+            }
+        );
+
+
+    const rawResponse =
+        await response.text();
+
+
+    console.log(
+        "========== GROQ HTTP STATUS =========="
     );
 
-    const rawResponse = await response.text();
+    console.log(
+        response.status
+    );
 
-    console.log("========== GROQ HTTP STATUS ==========");
-    console.log(response.status);
-    console.log("======================================");
+    console.log(
+        "======================================"
+    );
 
-    console.log("========== COMPLETE GROQ RESPONSE ==========");
-    console.log(rawResponse);
-    console.log("============================================");
+
+    console.log(
+        "========== COMPLETE GROQ RESPONSE =========="
+    );
+
+    console.log(
+        rawResponse
+    );
+
+    console.log(
+        "============================================"
+    );
 
 
     if (!response.ok) {
 
-        let errorData;
+        let errorData = {};
+
 
         try {
-            errorData = JSON.parse(rawResponse);
-        } catch {
-            errorData = {};
-        }
+
+            errorData =
+                JSON.parse(
+                    rawResponse
+                );
+
+        } catch {}
+
 
         throw new Error(
+
             errorData.error?.message ||
+
             rawResponse ||
+
             "Groq request failed"
+
         );
+
     }
 
 
     let data;
 
+
     try {
 
-        data = JSON.parse(rawResponse);
+        data =
+            JSON.parse(
+                rawResponse
+            );
 
     } catch {
 
         throw new Error(
-            "Groq returned a non-JSON API response"
+            "Groq returned invalid API JSON"
         );
 
     }
 
 
+    const choice =
+        data.choices?.[0];
+
+
+    if (!choice) {
+
+        throw new Error(
+            "Groq returned no choices"
+        );
+
+    }
+
+
+    console.log(
+        "🧠 Finish reason:",
+        choice.finish_reason
+    );
+
+
+    console.log(
+        "🧠 Completion tokens:",
+        data.usage?.completion_tokens
+    );
+
+
+    console.log(
+        "🧠 Reasoning tokens:",
+        data.usage
+            ?.completion_tokens_details
+            ?.reasoning_tokens || 0
+    );
+
+
     /*
-       Normal Groq response:
-       choices[0].message.content
+       IMPORTANT:
+       GPT-OSS may return reasoning
+       separately from content.
+
+       We ONLY use content.
     */
 
     let text =
-        data.choices?.[0]?.message?.content;
+        choice.message?.content;
 
 
     /*
-       Some models may return content in another
-       structure, so check additional possibilities.
+       Fallbacks for unusual responses
     */
 
-    if (!text && data.choices?.[0]?.text) {
-        text = data.choices[0].text;
+    if (
+        !text &&
+        choice.text
+    ) {
+
+        text =
+            choice.text;
+
     }
 
-    if (!text && data.output_text) {
-        text = data.output_text;
+
+    if (
+        !text &&
+        data.output_text
+    ) {
+
+        text =
+            data.output_text;
+
     }
 
 
     /*
-       If content is still empty, show useful
-       information instead of silently failing.
+       No final answer
     */
 
     if (
@@ -383,41 +691,58 @@ Never invent product names, prices, or specifications.
     ) {
 
         console.error(
-            "❌ Groq returned no usable text."
+            "❌ Groq returned no final content."
         );
 
+
         console.error(
-            "Parsed Groq object:",
-            JSON.stringify(
-                data,
-                null,
-                2
-            )
+            "Finish reason:",
+            choice.finish_reason
         );
+
+
+        if (
+            choice.finish_reason ===
+            "length"
+        ) {
+
+            throw new Error(
+                "Groq reached the token limit before producing the final JSON. Please try again."
+            );
+
+        }
+
 
         throw new Error(
             "Groq returned an empty response"
         );
+
     }
 
 
     console.log(
-        "========== GROQ AI TEXT =========="
+        "========== GROQ FINAL ANSWER =========="
     );
 
-    console.log(text);
 
     console.log(
-        "=================================="
+        text
+    );
+
+
+    console.log(
+        "======================================="
     );
 
 
     return text.trim();
+
 }
 
-/* =========================
+
+/* =========================================================
    RECOMMENDATION API
-========================= */
+========================================================= */
 
 app.post(
     "/api/recommend",
@@ -426,39 +751,59 @@ app.post(
         try {
 
             const {
+
                 productType,
+
                 country,
+
                 currency,
+
                 budget,
+
                 uses,
+
                 priority,
+
                 brand
+
             } = req.body;
 
 
             console.log(
-                "📥 Received preferences:",
-                {
-                    productType,
-                    country,
-                    currency,
-                    budget,
-                    uses,
-                    priority,
-                    brand
-                }
+                "📥 Received preferences:"
             );
 
 
-            /* =========================
+            console.log({
+
+                productType,
+
+                country,
+
+                currency,
+
+                budget,
+
+                uses,
+
+                priority,
+
+                brand
+
+            });
+
+
+            /* =================================================
                VALIDATION
-            ========================= */
+            ================================================= */
 
             if (!productType) {
 
                 return res.status(400).json({
+
                     error:
                         "Product type is required"
+
                 });
 
             }
@@ -467,33 +812,48 @@ app.post(
             if (!budget) {
 
                 return res.status(400).json({
+
                     error:
                         "Budget is required"
+
                 });
 
             }
 
 
-            /* =========================
-               USER DATA
-            ========================= */
+            /* =================================================
+               USES
+            ================================================= */
 
             const useText =
-                Array.isArray(uses)
-                    ? uses.join(", ")
-                    : (uses || "general use");
 
+                Array.isArray(uses)
+
+                    ? uses.join(", ")
+
+                    : (
+                        uses ||
+                        "general use"
+                    );
+
+
+            /* =================================================
+               BRAND
+            ================================================= */
 
             const brandText =
+
                 brand &&
                 brand.toLowerCase() !== "any"
+
                     ? brand
+
                     : "";
 
 
-            /* =========================
+            /* =================================================
                SEARCH QUERIES
-            ========================= */
+            ================================================= */
 
             const searchQueries = [
 
@@ -506,9 +866,15 @@ app.post(
             ];
 
 
-            /* =========================
-               SEARCH WEB
-            ========================= */
+            console.log(
+                "🔎 Search queries:",
+                searchQueries
+            );
+
+
+            /* =================================================
+               TAVILY SEARCH
+            ================================================= */
 
             let allResults = [];
 
@@ -525,11 +891,15 @@ app.post(
                             query
                         );
 
+
                     allResults.push(
                         ...results
                     );
 
-                } catch (searchError) {
+
+                } catch (
+                    searchError
+                ) {
 
                     console.error(
                         "⚠️ Search failed:",
@@ -541,11 +911,13 @@ app.post(
             }
 
 
-            /* =========================
+            /* =================================================
                REMOVE DUPLICATES
-            ========================= */
+            ================================================= */
 
-            const uniqueResults = [];
+            const uniqueResults =
+                [];
+
 
             const seenUrls =
                 new Set();
@@ -598,9 +970,9 @@ app.post(
             }
 
 
-            /* =========================
+            /* =================================================
                COMPRESS SEARCH DATA
-            ========================= */
+            ================================================= */
 
             const searchData =
                 uniqueResults
@@ -609,21 +981,25 @@ app.post(
                         (result, index) => {
 
                             const content =
+
                                 (
                                     result.content ||
                                     ""
                                 )
+
                                     .replace(
                                         /\s+/g,
                                         " "
                                     )
+
                                     .slice(
                                         0,
-                                        650
+                                        500
                                     );
 
 
                             return `
+
 RESULT ${index + 1}
 
 Title:
@@ -634,6 +1010,7 @@ ${result.url || "Unknown"}
 
 Content:
 ${content}
+
 `;
 
                         }
@@ -646,14 +1023,16 @@ ${content}
             );
 
 
-            /* =========================
+            /* =================================================
                AI PROMPT
-            ========================= */
+            ================================================= */
 
             const prompt = `
+
 USER REQUIREMENTS
 
-Product type: ${productType}
+Product type:
+${productType}
 
 Country:
 ${country || "India"}
@@ -668,7 +1047,7 @@ Uses:
 ${useText}
 
 Priority:
-${priority || "general"}
+${priority || "balanced"}
 
 Preferred brand:
 ${brand || "any"}
@@ -676,35 +1055,24 @@ ${brand || "any"}
 
 TASK
 
-Analyze ONLY the search results below.
+Analyze ONLY the supplied search results.
 
-Select exactly 3 different real products whenever at least 3 suitable products are present.
+Select exactly 3 different real products when at least 3 suitable products are available.
 
-The recommendations should:
+Requirements:
 
-- Be real products.
-- Use exact model names.
-- Prefer products within the maximum budget.
-- Respect the preferred brand.
-- Match the user's use cases.
-- Match the user's priority.
-- Use prices that appear in the supplied search results.
-- Prefer current prices.
-- Prefer reputable retailers or official manufacturer information.
-- Never invent missing information.
-
-
-IMPORTANT
-
-If a product's exact price is not supported by the search results, write:
-
-"Price unavailable"
-
-instead of guessing.
-
-Do not invent specifications.
-
-Return ONLY JSON.
+1. Use exact real model names.
+2. Prefer products within the user's maximum budget.
+3. Respect the preferred brand.
+4. Match the user's listed uses.
+5. Consider the user's priority.
+6. Use only prices supported by the search results.
+7. Prefer current prices.
+8. Prefer official manufacturers or reputable retailers.
+9. Never invent information.
+10. If an exact price is not supported, use "Price unavailable".
+11. Keep explanations very short.
+12. Return ONLY JSON.
 
 
 SEARCH RESULTS
@@ -712,7 +1080,7 @@ SEARCH RESULTS
 ${searchData}
 
 
-OUTPUT FORMAT
+FINAL JSON FORMAT
 
 {
   "recommendations": [
@@ -720,61 +1088,56 @@ OUTPUT FORMAT
       "rank": 1,
       "name": "Exact Product Model",
       "price": "₹24999",
-      "priceSource": "Source website",
+      "priceSource": "Source",
       "matchScore": 95,
-      "why": "Short explanation",
+      "why": "Short reason",
       "strengths": [
-        "Strength 1",
-        "Strength 2",
-        "Strength 3"
+        "Strength",
+        "Strength"
       ],
       "tradeoffs": [
-        "Tradeoff 1",
-        "Tradeoff 2"
+        "Tradeoff"
       ]
     },
     {
       "rank": 2,
       "name": "Exact Product Model",
       "price": "₹24999",
-      "priceSource": "Source website",
+      "priceSource": "Source",
       "matchScore": 90,
-      "why": "Short explanation",
+      "why": "Short reason",
       "strengths": [
-        "Strength 1",
-        "Strength 2",
-        "Strength 3"
+        "Strength",
+        "Strength"
       ],
       "tradeoffs": [
-        "Tradeoff 1",
-        "Tradeoff 2"
+        "Tradeoff"
       ]
     },
     {
       "rank": 3,
       "name": "Exact Product Model",
       "price": "₹24999",
-      "priceSource": "Source website",
+      "priceSource": "Source",
       "matchScore": 85,
-      "why": "Short explanation",
+      "why": "Short reason",
       "strengths": [
-        "Strength 1",
-        "Strength 2",
-        "Strength 3"
+        "Strength",
+        "Strength"
       ],
       "tradeoffs": [
-        "Tradeoff 1",
-        "Tradeoff 2"
+        "Tradeoff"
       ]
     }
   ]
 }
+
 `;
 
 
-            /* =========================
+            /* =================================================
                CALL GROQ
-            ========================= */
+            ================================================= */
 
             const aiText =
                 await generateWithGroq(
@@ -782,9 +1145,9 @@ OUTPUT FORMAT
                 );
 
 
-            /* =========================
-               PARSE AI JSON
-            ========================= */
+            /* =================================================
+               PARSE JSON
+            ================================================= */
 
             let resultData;
 
@@ -796,17 +1159,22 @@ OUTPUT FORMAT
                         aiText
                     );
 
+
                 resultData =
                     validateRecommendations(
                         resultData
                     );
 
-            } catch (jsonError) {
+
+            } catch (
+                jsonError
+            ) {
 
                 console.error(
                     "❌ AI JSON validation failed:",
                     jsonError.message
                 );
+
 
                 return res.status(500).json({
 
@@ -821,9 +1189,9 @@ OUTPUT FORMAT
             }
 
 
-            /* =========================
-               SEND TO FRONTEND
-            ========================= */
+            /* =================================================
+               SUCCESS
+            ================================================= */
 
             console.log(
                 `✅ Returning ${resultData.recommendations.length} recommendations`
@@ -832,7 +1200,8 @@ OUTPUT FORMAT
 
             return res.json({
 
-                success: true,
+                success:
+                    true,
 
                 recommendations:
                     resultData.recommendations,
@@ -842,13 +1211,17 @@ OUTPUT FORMAT
 
             });
 
+
         } catch (error) {
 
             console.error(
                 "❌ OPITECH AI generation failed:"
             );
 
-            console.error(error);
+
+            console.error(
+                error
+            );
 
 
             return res.status(500).json({
@@ -877,9 +1250,9 @@ OUTPUT FORMAT
 );
 
 
-/* =========================
+/* =========================================================
    START SERVER
-========================= */
+========================================================= */
 
 app.listen(
     PORT,
