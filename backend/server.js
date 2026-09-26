@@ -12,11 +12,11 @@ const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
 
 if (!GROQ_API_KEY) {
-    console.error("GROQ_API_KEY is missing!");
+    console.error("❌ GROQ_API_KEY is missing!");
 }
 
 if (!TAVILY_API_KEY) {
-    console.error("TAVILY_API_KEY is missing!");
+    console.error("❌ TAVILY_API_KEY is missing!");
 }
 
 
@@ -43,7 +43,7 @@ async function searchProducts(query) {
         throw new Error("TAVILY_API_KEY is missing");
     }
 
-    console.log("Searching Tavily:", query);
+    console.log("🔎 Searching Tavily:", query);
 
     const response = await fetch(
         "https://api.tavily.com/search",
@@ -71,7 +71,7 @@ async function searchProducts(query) {
 
     if (!response.ok) {
 
-        console.error("Tavily error:", data);
+        console.error("❌ Tavily error:", data);
 
         throw new Error(
             data.message ||
@@ -81,10 +81,172 @@ async function searchProducts(query) {
     }
 
     console.log(
-        `Tavily returned ${data.results?.length || 0} results`
+        `✅ Tavily returned ${data.results?.length || 0} results`
     );
 
     return data.results || [];
+}
+
+
+/* =========================
+   CLEAN AI JSON
+========================= */
+
+function extractJSON(text) {
+
+    if (!text || typeof text !== "string") {
+        throw new Error("AI returned an empty response");
+    }
+
+    let cleaned = text.trim();
+
+    /*
+       Remove markdown code fences
+       Example:
+
+       ```json
+       {
+          ...
+       }
+       ```
+    */
+
+    cleaned = cleaned
+        .replace(/^```json\s*/i, "")
+        .replace(/^```\s*/i, "")
+        .replace(/\s*```$/i, "")
+        .trim();
+
+
+    /*
+       Find the first JSON object.
+       This protects against the model adding
+       a small sentence before the JSON.
+    */
+
+    const firstBrace = cleaned.indexOf("{");
+    const lastBrace = cleaned.lastIndexOf("}");
+
+    if (
+        firstBrace === -1 ||
+        lastBrace === -1 ||
+        lastBrace <= firstBrace
+    ) {
+        throw new Error(
+            "AI response did not contain a valid JSON object"
+        );
+    }
+
+    cleaned = cleaned.substring(
+        firstBrace,
+        lastBrace + 1
+    );
+
+
+    try {
+
+        return JSON.parse(cleaned);
+
+    } catch (error) {
+
+        console.error("❌ JSON parse error");
+        console.error("AI output:");
+        console.error(cleaned);
+
+        throw new Error(
+            "AI returned invalid JSON"
+        );
+    }
+}
+
+
+/* =========================
+   VALIDATE RECOMMENDATIONS
+========================= */
+
+function validateRecommendations(data) {
+
+    if (!data || typeof data !== "object") {
+        throw new Error("AI returned invalid data");
+    }
+
+    if (
+        !Array.isArray(data.recommendations)
+    ) {
+        throw new Error(
+            "AI response does not contain recommendations"
+        );
+    }
+
+    if (
+        data.recommendations.length < 1
+    ) {
+        throw new Error(
+            "AI returned no recommendations"
+        );
+    }
+
+    /*
+       Make sure every recommendation has
+       the fields the frontend expects.
+    */
+
+    data.recommendations =
+        data.recommendations.map(
+            (item, index) => {
+
+                return {
+
+                    rank:
+                        Number(item.rank) ||
+                        index + 1,
+
+                    name:
+                        item.name ||
+                        "Unknown product",
+
+                    price:
+                        item.price ||
+                        "Price unavailable",
+
+                    priceSource:
+                        item.priceSource ||
+                        "Web search",
+
+                    matchScore:
+                        Number(item.matchScore) ||
+                        0,
+
+                    why:
+                        item.why ||
+                        "Matches the requested requirements.",
+
+                    strengths:
+                        Array.isArray(item.strengths)
+                            ? item.strengths.slice(0, 3)
+                            : [],
+
+                    tradeoffs:
+                        Array.isArray(item.tradeoffs)
+                            ? item.tradeoffs.slice(0, 2)
+                            : []
+
+                };
+
+            }
+        );
+
+    /*
+       Sort by rank
+    */
+
+    data.recommendations.sort(
+        (a, b) =>
+            Number(a.rank) -
+            Number(b.rank)
+    );
+
+    return data;
 }
 
 
@@ -95,10 +257,14 @@ async function searchProducts(query) {
 async function generateWithGroq(prompt) {
 
     if (!GROQ_API_KEY) {
-        throw new Error("GROQ_API_KEY is missing");
+        throw new Error(
+            "GROQ_API_KEY is missing"
+        );
     }
 
-    console.log("Sending optimized request to Groq...");
+    console.log(
+        "🤖 Sending request to Groq..."
+    );
 
     const response = await fetch(
         "https://api.groq.com/openai/v1/chat/completions",
@@ -107,12 +273,14 @@ async function generateWithGroq(prompt) {
 
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${GROQ_API_KEY}`
+                "Authorization":
+                    `Bearer ${GROQ_API_KEY}`
             },
 
             body: JSON.stringify({
 
-                model: "openai/gpt-oss-20b",
+                model:
+                    "openai/gpt-oss-20b",
 
                 messages: [
 
@@ -122,13 +290,47 @@ async function generateWithGroq(prompt) {
                         content: `
 You are OPITECH, an electronics recommendation AI.
 
-Use ONLY the supplied web-search evidence.
+Your job is to analyze supplied web-search results and recommend real electronics products.
 
-Recommend exactly 3 real products.
+IMPORTANT RULES:
 
-Never invent product names, prices, or specifications.
+1. Use ONLY information contained in the supplied search results.
+2. Never invent product names.
+3. Never invent prices.
+4. Never invent specifications.
+5. Prefer current prices.
+6. Respect the user's maximum budget.
+7. Respect the preferred brand when possible.
+8. Consider the user's use cases and priority.
+9. Return exactly 3 recommendations when enough products exist.
+10. Return ONLY valid JSON.
+11. Do NOT use markdown.
+12. Do NOT put the JSON inside code fences.
+13. Do NOT add explanations before or after the JSON.
 
-Return ONLY valid JSON.
+The JSON must have this structure:
+
+{
+  "recommendations": [
+    {
+      "rank": 1,
+      "name": "Exact product model",
+      "price": "₹24999",
+      "priceSource": "Website name",
+      "matchScore": 95,
+      "why": "Short explanation",
+      "strengths": [
+        "Strength 1",
+        "Strength 2",
+        "Strength 3"
+      ],
+      "tradeoffs": [
+        "Tradeoff 1",
+        "Tradeoff 2"
+      ]
+    }
+  ]
+}
 `
                     },
 
@@ -139,13 +341,9 @@ Return ONLY valid JSON.
 
                 ],
 
-                temperature: 0.2,
+                temperature: 0.1,
 
-                max_completion_tokens: 1200,
-
-                response_format: {
-                    type: "json_object"
-                }
+                max_completion_tokens: 1200
 
             })
         }
@@ -153,9 +351,13 @@ Return ONLY valid JSON.
 
     const data = await response.json();
 
+
     if (!response.ok) {
 
-        console.error("Groq error:", data);
+        console.error(
+            "❌ Groq error:",
+            JSON.stringify(data, null, 2)
+        );
 
         throw new Error(
             data.error?.message ||
@@ -163,11 +365,22 @@ Return ONLY valid JSON.
         );
     }
 
-    const text =
-        data.choices?.[0]?.message?.content || "";
 
-    console.log("RAW GROQ RESPONSE:");
+    const text =
+        data.choices?.[0]?.message?.content ||
+        "";
+
+
+    console.log(
+        "========== RAW GROQ RESPONSE =========="
+    );
+
     console.log(text);
+
+    console.log(
+        "========================================="
+    );
+
 
     return text;
 }
@@ -177,24 +390,13 @@ Return ONLY valid JSON.
    RECOMMENDATION API
 ========================= */
 
-app.post("/api/recommend", async (req, res) => {
+app.post(
+    "/api/recommend",
+    async (req, res) => {
 
-    try {
+        try {
 
-        const {
-            productType,
-            country,
-            currency,
-            budget,
-            uses,
-            priority,
-            brand
-        } = req.body;
-
-
-        console.log(
-            "Received preferences:",
-            {
+            const {
                 productType,
                 country,
                 currency,
@@ -202,204 +404,286 @@ app.post("/api/recommend", async (req, res) => {
                 uses,
                 priority,
                 brand
-            }
-        );
+            } = req.body;
 
 
-        /* =========================
-           VALIDATION
-        ========================= */
-
-        if (!productType) {
-
-            return res.status(400).json({
-                error: "Product type is required"
-            });
-
-        }
-
-        if (!budget) {
-
-            return res.status(400).json({
-                error: "Budget is required"
-            });
-
-        }
+            console.log(
+                "📥 Received preferences:",
+                {
+                    productType,
+                    country,
+                    currency,
+                    budget,
+                    uses,
+                    priority,
+                    brand
+                }
+            );
 
 
-        /* =========================
-           USER DATA
-        ========================= */
+            /* =========================
+               VALIDATION
+            ========================= */
 
-        const useText =
-            Array.isArray(uses)
-                ? uses.join(", ")
-                : (uses || "general use");
+            if (!productType) {
 
-
-        const brandText =
-            brand &&
-            brand.toLowerCase() !== "any"
-                ? brand
-                : "";
-
-
-        /* =========================
-           SEARCH QUERIES
-        ========================= */
-
-        const searchQueries = [
-
-            `${brandText} ${productType} ${useText} under ${budget} ${currency} ${country}`,
-
-            `best ${productType} ${brandText} ${useText} ${country} current price`,
-
-            `${brandText} ${productType} ${country} price specifications`
-
-        ];
-
-
-        /* =========================
-           SEARCH WEB
-        ========================= */
-
-        let allResults = [];
-
-
-        for (const query of searchQueries) {
-
-            try {
-
-                const results =
-                    await searchProducts(query);
-
-                allResults.push(...results);
-
-            } catch (searchError) {
-
-                console.error(
-                    "Search query failed:",
-                    searchError.message
-                );
+                return res.status(400).json({
+                    error:
+                        "Product type is required"
+                });
 
             }
 
-        }
+
+            if (!budget) {
+
+                return res.status(400).json({
+                    error:
+                        "Budget is required"
+                });
+
+            }
 
 
-        /* =========================
-           REMOVE DUPLICATES
-        ========================= */
+            /* =========================
+               USER DATA
+            ========================= */
 
-        const uniqueResults = [];
+            const useText =
+                Array.isArray(uses)
+                    ? uses.join(", ")
+                    : (uses || "general use");
 
-        const seenUrls = new Set();
+
+            const brandText =
+                brand &&
+                brand.toLowerCase() !== "any"
+                    ? brand
+                    : "";
 
 
-        for (const result of allResults) {
+            /* =========================
+               SEARCH QUERIES
+            ========================= */
 
-            if (
-                result.url &&
-                !seenUrls.has(result.url)
+            const searchQueries = [
+
+                `${brandText} ${productType} ${useText} under ${budget} ${currency} ${country}`,
+
+                `best ${productType} ${brandText} ${useText} ${country} current price specifications`,
+
+                `${brandText} ${productType} ${country} price specifications official`
+
+            ];
+
+
+            /* =========================
+               SEARCH WEB
+            ========================= */
+
+            let allResults = [];
+
+
+            for (
+                const query
+                of searchQueries
             ) {
 
-                seenUrls.add(result.url);
+                try {
 
-                uniqueResults.push(result);
+                    const results =
+                        await searchProducts(
+                            query
+                        );
+
+                    allResults.push(
+                        ...results
+                    );
+
+                } catch (searchError) {
+
+                    console.error(
+                        "⚠️ Search failed:",
+                        searchError.message
+                    );
+
+                }
 
             }
 
-        }
+
+            /* =========================
+               REMOVE DUPLICATES
+            ========================= */
+
+            const uniqueResults = [];
+
+            const seenUrls =
+                new Set();
 
 
-        console.log(
-            `Total unique search results: ${uniqueResults.length}`
-        );
+            for (
+                const result
+                of allResults
+            ) {
+
+                if (
+                    result.url &&
+                    !seenUrls.has(
+                        result.url
+                    )
+                ) {
+
+                    seenUrls.add(
+                        result.url
+                    );
+
+                    uniqueResults.push(
+                        result
+                    );
+
+                }
+
+            }
 
 
-        if (uniqueResults.length === 0) {
-
-            return res.status(500).json({
-
-                error:
-                    "No current product information was found.",
-
-                details:
-                    "Tavily returned no usable search results."
-
-            });
-
-        }
+            console.log(
+                `📊 Unique search results: ${uniqueResults.length}`
+            );
 
 
-        /* =========================
-           COMPRESS SEARCH DATA
-        ========================= */
+            if (
+                uniqueResults.length === 0
+            ) {
 
-        const searchData =
-            uniqueResults
-                .slice(0, 8)
-                .map((result, index) => {
+                return res.status(500).json({
 
-                    const content =
-                        (result.content || "")
-                            .replace(/\s+/g, " ")
-                            .slice(0, 700);
+                    error:
+                        "No current product information was found.",
 
-                    return `
+                    details:
+                        "Tavily returned no usable search results."
+
+                });
+
+            }
+
+
+            /* =========================
+               COMPRESS SEARCH DATA
+            ========================= */
+
+            const searchData =
+                uniqueResults
+                    .slice(0, 8)
+                    .map(
+                        (result, index) => {
+
+                            const content =
+                                (
+                                    result.content ||
+                                    ""
+                                )
+                                    .replace(
+                                        /\s+/g,
+                                        " "
+                                    )
+                                    .slice(
+                                        0,
+                                        650
+                                    );
+
+
+                            return `
 RESULT ${index + 1}
-Title: ${result.title || "Unknown"}
-URL: ${result.url || "Unknown"}
-Content: ${content}
+
+Title:
+${result.title || "Unknown"}
+
+URL:
+${result.url || "Unknown"}
+
+Content:
+${content}
 `;
 
-                })
-                .join("\n");
+                        }
+                    )
+                    .join("\n");
 
 
-        console.log(
-            `Sending ${searchData.length} characters of search data to Groq`
-        );
+            console.log(
+                `📦 Sending ${searchData.length} characters of search data to Groq`
+            );
 
 
-        /* =========================
-           AI PROMPT
-        ========================= */
+            /* =========================
+               AI PROMPT
+            ========================= */
 
-        const prompt = `
+            const prompt = `
 USER REQUIREMENTS
 
 Product type: ${productType}
-Country: ${country}
-Currency: ${currency}
-Maximum budget: ${budget}
-Uses: ${useText}
-Priority: ${priority || "general"}
-Preferred brand: ${brand || "any"}
+
+Country:
+${country || "India"}
+
+Currency:
+${currency || "INR"}
+
+Maximum budget:
+${budget}
+
+Uses:
+${useText}
+
+Priority:
+${priority || "general"}
+
+Preferred brand:
+${brand || "any"}
+
 
 TASK
 
-Using ONLY the current search results below, select exactly 3 real products.
+Analyze ONLY the search results below.
 
-Rules:
+Select exactly 3 different real products whenever at least 3 suitable products are present.
 
-- Use exact product models.
-- Prefer products within the budget.
-- Respect the preferred brand when suitable products exist.
-- Consider the user's use cases and priority.
-- Use only prices supported by the search results.
-- Do not invent prices.
-- Do not invent specifications.
-- Prefer current prices over launch prices.
-- Prefer official manufacturers and reputable retailers.
-- Each recommendation must be different.
-- Return exactly 3 products.
+The recommendations should:
+
+- Be real products.
+- Use exact model names.
+- Prefer products within the maximum budget.
+- Respect the preferred brand.
+- Match the user's use cases.
+- Match the user's priority.
+- Use prices that appear in the supplied search results.
+- Prefer current prices.
+- Prefer reputable retailers or official manufacturer information.
+- Never invent missing information.
+
+
+IMPORTANT
+
+If a product's exact price is not supported by the search results, write:
+
+"Price unavailable"
+
+instead of guessing.
+
+Do not invent specifications.
+
+Return ONLY JSON.
+
 
 SEARCH RESULTS
 
 ${searchData}
 
-RETURN ONLY THIS JSON:
+
+OUTPUT FORMAT
 
 {
   "recommendations": [
@@ -407,7 +691,7 @@ RETURN ONLY THIS JSON:
       "rank": 1,
       "name": "Exact Product Model",
       "price": "₹24999",
-      "priceSource": "Source",
+      "priceSource": "Source website",
       "matchScore": 95,
       "why": "Short explanation",
       "strengths": [
@@ -424,7 +708,7 @@ RETURN ONLY THIS JSON:
       "rank": 2,
       "name": "Exact Product Model",
       "price": "₹24999",
-      "priceSource": "Source",
+      "priceSource": "Source website",
       "matchScore": 90,
       "why": "Short explanation",
       "strengths": [
@@ -441,7 +725,7 @@ RETURN ONLY THIS JSON:
       "rank": 3,
       "name": "Exact Product Model",
       "price": "₹24999",
-      "priceSource": "Source",
+      "priceSource": "Source website",
       "matchScore": 85,
       "why": "Short explanation",
       "strengths": [
@@ -459,111 +743,109 @@ RETURN ONLY THIS JSON:
 `;
 
 
-        /* =========================
-           CALL GROQ
-        ========================= */
+            /* =========================
+               CALL GROQ
+            ========================= */
 
-        const text =
-            await generateWithGroq(prompt);
+            const aiText =
+                await generateWithGroq(
+                    prompt
+                );
 
 
-        /* =========================
-           PARSE JSON
-        ========================= */
+            /* =========================
+               PARSE AI JSON
+            ========================= */
 
-        let data;
+            let resultData;
 
-        try {
 
-            data = JSON.parse(text);
+            try {
 
-        } catch (parseError) {
+                resultData =
+                    extractJSON(
+                        aiText
+                    );
+
+                resultData =
+                    validateRecommendations(
+                        resultData
+                    );
+
+            } catch (jsonError) {
+
+                console.error(
+                    "❌ AI JSON validation failed:",
+                    jsonError.message
+                );
+
+                return res.status(500).json({
+
+                    error:
+                        "AI returned invalid recommendation data.",
+
+                    details:
+                        jsonError.message
+
+                });
+
+            }
+
+
+            /* =========================
+               SEND TO FRONTEND
+            ========================= */
+
+            console.log(
+                `✅ Returning ${resultData.recommendations.length} recommendations`
+            );
+
+
+            return res.json({
+
+                success: true,
+
+                recommendations:
+                    resultData.recommendations,
+
+                result:
+                    resultData.recommendations
+
+            });
+
+        } catch (error) {
 
             console.error(
-                "JSON parsing failed:",
-                parseError
+                "❌ OPITECH AI generation failed:"
             );
+
+            console.error(error);
+
 
             return res.status(500).json({
 
                 error:
-                    "AI returned invalid JSON",
+                    "AI generation failed",
 
-                raw:
-                    text
+                details:
+                    error.message ||
+                    "Unknown error",
+
+                type:
+                    error.name ||
+                    "UnknownError",
+
+                code:
+                    error.status ||
+                    error.code ||
+                    null
 
             });
 
         }
 
-
-        /* =========================
-           SORT RESULTS
-        ========================= */
-
-        if (
-            data.recommendations &&
-            Array.isArray(data.recommendations)
-        ) {
-
-            data.recommendations.sort(
-                (a, b) =>
-                    Number(a.rank) -
-                    Number(b.rank)
-            );
-
-        }
-
-
-        /* =========================
-           SEND TO FRONTEND
-        ========================= */
-
-        res.json({
-
-            success: true,
-
-            recommendations:
-                data.recommendations || [],
-
-            result:
-                data.recommendations || []
-
-        });
-
-
-    } catch (error) {
-
-        console.error(
-            "OPITECH AI generation failed:"
-        );
-
-        console.error(error);
-
-
-        res.status(500).json({
-
-            error:
-                "AI generation failed",
-
-            details:
-                error.message ||
-                "Unknown error",
-
-            type:
-                error.name ||
-                "UnknownError",
-
-            code:
-                error.status ||
-                error.code ||
-                null
-
-        });
-
     }
-
-});
+);
 
 
 /* =========================
@@ -576,7 +858,7 @@ app.listen(
     () => {
 
         console.log(
-            `OPITECH BACKEND IS LIVE ON PORT ${PORT}`
+            `🚀 OPITECH BACKEND IS LIVE ON PORT ${PORT}`
         );
 
     }
