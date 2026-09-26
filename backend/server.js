@@ -34,7 +34,7 @@ app.get("/", (req, res) => {
 
 
 /* =========================
-   TAVILY WEB SEARCH
+   TAVILY SEARCH
 ========================= */
 
 async function searchProducts(query) {
@@ -59,7 +59,7 @@ async function searchProducts(query) {
                 query: query,
                 search_depth: "basic",
                 topic: "general",
-                max_results: 8,
+                max_results: 5,
                 include_answer: false,
                 include_raw_content: false,
                 include_images: false
@@ -70,6 +70,7 @@ async function searchProducts(query) {
     const data = await response.json();
 
     if (!response.ok) {
+
         console.error("Tavily error:", data);
 
         throw new Error(
@@ -97,7 +98,7 @@ async function generateWithGroq(prompt) {
         throw new Error("GROQ_API_KEY is missing");
     }
 
-    console.log("Sending results to Groq...");
+    console.log("Sending optimized request to Groq...");
 
     const response = await fetch(
         "https://api.groq.com/openai/v1/chat/completions",
@@ -121,14 +122,11 @@ async function generateWithGroq(prompt) {
                         content: `
 You are OPITECH, an electronics recommendation AI.
 
-You analyze real web-search results and recommend
-actual currently available electronics.
+Use ONLY the supplied web-search evidence.
 
-Never invent products.
+Recommend exactly 3 real products.
 
-Never invent prices.
-
-Only use prices supported by the supplied search results.
+Never invent product names, prices, or specifications.
 
 Return ONLY valid JSON.
 `
@@ -143,7 +141,7 @@ Return ONLY valid JSON.
 
                 temperature: 0.2,
 
-                max_completion_tokens: 2500,
+                max_completion_tokens: 1200,
 
                 response_format: {
                     type: "json_object"
@@ -230,7 +228,7 @@ app.post("/api/recommend", async (req, res) => {
 
 
         /* =========================
-           SEARCH QUERIES
+           USER DATA
         ========================= */
 
         const useText =
@@ -246,13 +244,17 @@ app.post("/api/recommend", async (req, res) => {
                 : "";
 
 
+        /* =========================
+           SEARCH QUERIES
+        ========================= */
+
         const searchQueries = [
 
             `${brandText} ${productType} ${useText} under ${budget} ${currency} ${country}`,
 
-            `best ${productType} ${brandText} ${useText} ${country} price ${currency}`,
+            `best ${productType} ${brandText} ${useText} ${country} current price`,
 
-            `${brandText} ${productType} current price ${country} ${currency}`
+            `${brandText} ${productType} ${country} price specifications`
 
         ];
 
@@ -331,30 +333,33 @@ app.post("/api/recommend", async (req, res) => {
 
 
         /* =========================
-           PREPARE SEARCH DATA
+           COMPRESS SEARCH DATA
         ========================= */
 
         const searchData =
             uniqueResults
-                .slice(0, 20)
+                .slice(0, 8)
                 .map((result, index) => {
+
+                    const content =
+                        (result.content || "")
+                            .replace(/\s+/g, " ")
+                            .slice(0, 700);
 
                     return `
 RESULT ${index + 1}
-
-Title:
-${result.title || "Unknown"}
-
-URL:
-${result.url || "Unknown"}
-
-Content:
-${result.content || "No content available"}
-
+Title: ${result.title || "Unknown"}
+URL: ${result.url || "Unknown"}
+Content: ${content}
 `;
 
                 })
                 .join("\n");
+
+
+        console.log(
+            `Sending ${searchData.length} characters of search data to Groq`
+        );
 
 
         /* =========================
@@ -362,118 +367,39 @@ ${result.content || "No content available"}
         ========================= */
 
         const prompt = `
-
 USER REQUIREMENTS
 
-Product type:
-${productType}
+Product type: ${productType}
+Country: ${country}
+Currency: ${currency}
+Maximum budget: ${budget}
+Uses: ${useText}
+Priority: ${priority || "general"}
+Preferred brand: ${brand || "any"}
 
-Country:
-${country}
+TASK
 
-Currency:
-${currency}
+Using ONLY the current search results below, select exactly 3 real products.
 
-Maximum budget:
-${budget}
+Rules:
 
-Uses:
-${useText}
-
-Priority:
-${priority || "general"}
-
-Preferred brand:
-${brand || "any"}
-
-
-IMPORTANT RULES
-
-You are given CURRENT WEB SEARCH RESULTS below.
-
-Use ONLY those search results as evidence.
-
-Return exactly 3 real products.
-
-Each product must:
-
-1. Be an exact product model.
-2. Be relevant to the requested product type.
-3. Match the user's intended uses.
-4. Fit within the maximum budget when a reliable price is available.
-5. Use a price supported by the search results.
-6. Never invent a price.
-7. Never invent specifications.
-8. Prefer current retailer or manufacturer prices.
-9. Prefer reputable retailers or official manufacturer websites.
-10. Do not use old launch prices when a current selling price is available.
-11. If the same product appears multiple times, combine the evidence.
-12. Respect the preferred brand when possible.
-13. If the preferred brand has insufficient suitable products, use suitable alternatives when necessary.
-
-
-RANKING
-
-Return exactly 3 products.
-
-Rank them:
-
-#1 strongest overall match
-#2 second strongest match
-#3 third strongest match
-
-Consider:
-
-- budget
-- use cases
-- performance
-- priority
-- preferred brand
-- specifications
-- current price
-- overall suitability
-
-
-PRICE FORMAT
-
-For India:
-
-₹24999
-
-For USD:
-
-$499
-
-Do NOT return:
-
-"Price unavailable"
-
-"Check price"
-
-"Verify current price"
-
-"Unknown"
-
-
-PRICE SOURCE
-
-priceSource must identify the website or store where the price evidence came from.
-
-Examples:
-
-Amazon India
-Flipkart
-Croma
-Samsung India
-Xiaomi India
-
+- Use exact product models.
+- Prefer products within the budget.
+- Respect the preferred brand when suitable products exist.
+- Consider the user's use cases and priority.
+- Use only prices supported by the search results.
+- Do not invent prices.
+- Do not invent specifications.
+- Prefer current prices over launch prices.
+- Prefer official manufacturers and reputable retailers.
+- Each recommendation must be different.
+- Return exactly 3 products.
 
 SEARCH RESULTS
 
 ${searchData}
 
-
-RETURN ONLY THIS JSON STRUCTURE
+RETURN ONLY THIS JSON:
 
 {
   "recommendations": [
@@ -481,9 +407,9 @@ RETURN ONLY THIS JSON STRUCTURE
       "rank": 1,
       "name": "Exact Product Model",
       "price": "₹24999",
-      "priceSource": "Source name",
+      "priceSource": "Source",
       "matchScore": 95,
-      "why": "Short explanation.",
+      "why": "Short explanation",
       "strengths": [
         "Strength 1",
         "Strength 2",
@@ -497,10 +423,10 @@ RETURN ONLY THIS JSON STRUCTURE
     {
       "rank": 2,
       "name": "Exact Product Model",
-      "price": "₹XXXXX",
-      "priceSource": "Source name",
+      "price": "₹24999",
+      "priceSource": "Source",
       "matchScore": 90,
-      "why": "Short explanation.",
+      "why": "Short explanation",
       "strengths": [
         "Strength 1",
         "Strength 2",
@@ -514,10 +440,10 @@ RETURN ONLY THIS JSON STRUCTURE
     {
       "rank": 3,
       "name": "Exact Product Model",
-      "price": "₹XXXXX",
-      "priceSource": "Source name",
+      "price": "₹24999",
+      "priceSource": "Source",
       "matchScore": 85,
-      "why": "Short explanation.",
+      "why": "Short explanation",
       "strengths": [
         "Strength 1",
         "Strength 2",
@@ -530,7 +456,6 @@ RETURN ONLY THIS JSON STRUCTURE
     }
   ]
 }
-
 `;
 
 
