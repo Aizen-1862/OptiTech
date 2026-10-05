@@ -13,37 +13,57 @@ const currencySymbols = {
     SGD: "S$"
 };
 
+
+// =====================================================
+// INITIALIZE
+// =====================================================
+
 document.addEventListener("DOMContentLoaded", () => {
 
     const currency = document.getElementById("currency");
     const symbol = document.getElementById("currencySymbol");
     const findButton = document.getElementById("findButton");
 
+    // Currency symbol
     if (currency && symbol) {
+
+        symbol.textContent =
+            currencySymbols[currency.value] || "₹";
+
         currency.addEventListener("change", () => {
+
             symbol.textContent =
                 currencySymbols[currency.value] ||
                 currency.value;
+
         });
     }
 
+
+    // Product type buttons
     document.querySelectorAll(".option").forEach(button => {
 
         button.type = "button";
 
         button.addEventListener("click", () => {
 
-            document.querySelectorAll(".option")
-                .forEach(x => x.classList.remove("active"));
+            document
+                .querySelectorAll(".option")
+                .forEach(option => {
+                    option.classList.remove("active");
+                });
 
             button.classList.add("active");
 
             selectedType =
                 button.dataset.type || "Phone";
+
         });
 
     });
 
+
+    // Find button
     if (findButton) {
 
         findButton.type = "button";
@@ -58,16 +78,26 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
+// =====================================================
+// GET VALUE
+// =====================================================
+
 function getValue(id, fallback = "") {
 
     const element =
         document.getElementById(id);
 
-    return element
-        ? element.value || fallback
-        : fallback;
+    if (!element) {
+        return fallback;
+    }
+
+    return element.value || fallback;
 }
 
+
+// =====================================================
+// GET SELECTED USES
+// =====================================================
 
 function getSelectedUses() {
 
@@ -76,11 +106,15 @@ function getSelectedUses() {
             '.checkbox-grid input[type="checkbox"]:checked'
         )
     )
-    .map(x => x.value)
+    .map(input => input.value)
     .filter(Boolean);
 
 }
 
+
+// =====================================================
+// ESCAPE HTML
+// =====================================================
 
 function escapeHtml(value) {
 
@@ -93,6 +127,10 @@ function escapeHtml(value) {
 
 }
 
+
+// =====================================================
+// FORMAT PRICE
+// =====================================================
 
 function formatPrice(price, currency) {
 
@@ -110,484 +148,78 @@ function formatPrice(price, currency) {
         return "Price unavailable";
     }
 
-    return (
+    const symbol =
         currencySymbols[currency] ||
         currency ||
-        "₹"
-    ) + number.toLocaleString("en-IN");
-
-}
-
-
-/* =====================================================
-   RESULTS
-   Images and marketplace links intentionally removed.
-   ===================================================== */
-
-function renderRecommendations(data) {
-
-    const container =
-        document.getElementById(
-            "resultsContainer"
-        );
-
-    if (!container) return;
-
-    const list =
-        Array.isArray(data.recommendations)
-            ? data.recommendations
-            : [];
-
-    if (!list.length) {
-
-        container.innerHTML = `
-
-            <div class="empty-results">
-
-                <div class="empty-icon">
-                    😕
-                </div>
-
-                <h3>
-                    No suitable products found
-                </h3>
-
-                <p>
-                    Try increasing your budget
-                    or changing your preferences.
-                </p>
-
-            </div>
-
-        `;
-
-        return;
-    }
-
-    const currency =
-        getValue(
-            "currency",
-            "INR"
-        );
-
-
-    container.innerHTML = list.map(
-        (product, index) => {
-
-            const strengths =
-                Array.isArray(
-                    product.strengths
-                )
-                    ? product.strengths
-                    : [];
-
-            const tradeoffs =
-                Array.isArray(
-                    product.tradeoffs
-                )
-                    ? product.tradeoffs
-                    : [];
-
-
-            return `
-
-                <article
-                    class="recommendation-card"
-                >
-
-                    <div class="rank">
-                        #${product.rank || index + 1}
-                    </div>
-
-
-                    <div class="product-content">
-
-                        <h3>
-                            ${escapeHtml(
-                                product.name ||
-                                "Recommended product"
-                            )}
-                        </h3>
-
-
-                        ${
-                            product.brand
-                                ? `
-                                    <div class="brand">
-                                        ${escapeHtml(
-                                            product.brand
-                                        )}
-                                    </div>
-                                `
-                                : ""
-                        }
-
-
-                        <div class="main-price">
-
-                            ${escapeHtml(
-                                formatPrice(
-                                    product.price,
-                                    currency
-                                )
-                            )}
-
-                        </div>
-
-
-                        ${
-                            product.priceSource
-                                ? `
-                                    <div class="price-source">
-
-                                        Price checked from:
-
-                                        <strong>
-                                            ${escapeHtml(
-                                                product.priceSource
-                                            )}
-                                        </strong>
-
-                                    </div>
-                                `
-                                : ""
-                        }
-
-
-                        ${
-                            product.matchScore
-                                ? `
-                                    <div class="match-score">
-
-                                        Match:
-
-                                        <strong>
-                                            ${escapeHtml(
-                                                product.matchScore
-                                            )}%
-                                        </strong>
-
-                                    </div>
-                                `
-                                : ""
-                        }
-
-
-                        ${
-                            product.why
-                                ? `
-                                    <div class="why">
-
-                                        <h4>
-                                            Why this pick?
-                                        </h4>
-
-                                        <p>
-                                            ${escapeHtml(
-                                                product.why
-                                            )}
-                                        </p>
-
-                                    </div>
-                                `
-                                : ""
-                        }
-
-
-                        ${
-                            strengths.length
-                                ? `
-                                    <div class="strengths">
-
-                                        <h4>
-                                            👍 Strengths
-                                        </h4>
-
-                                        <ul>
-
-                                            ${strengths
-                                                .map(
-                                                    x =>
-                                                        `<li>${escapeHtml(x)}</li>`
-                                                )
-                                                .join("")}
-
-                                        </ul>
-
-                                    </div>
-                                `
-                                : ""
-                        }
-
-
-                        ${
-                            tradeoffs.length
-                                ? `
-                                    <div class="tradeoffs">
-
-                                        <h4>
-                                            ⚠️ Trade-offs
-                                        </h4>
-
-                                        <ul>
-
-                                            ${tradeoffs
-                                                .map(
-                                                    x =>
-                                                        `<li>${escapeHtml(x)}</li>`
-                                                )
-                                                .join("")}
-
-                                        </ul>
-
-                                    </div>
-                                `
-                                : ""
-                        }
-
-                    </div>
-
-                </article>
-
-            `;
-
-        }
-    ).join("");
-
-
-    document
-        .getElementById("results")
-        ?.scrollIntoView({
-            behavior: "smooth"
-        });
-
-}
-
-
-async function testOPITECHAI() {
-
-    const button =
-        document.getElementById(
-            "findButton"
-        );
-
-    const container =
-        document.getElementById(
-            "resultsContainer"
-        );
-
-
-    if (!button || !container) {
-
-        alert(
-            "OPITECH form could not be loaded. Please refresh the page."
-        );
-
-        return;
-    }
-
-
-    const budget =
-        getValue("budget");
-
-
-    if (
-        !budget ||
-        Number(budget) <= 0
-    ) {
-
-        alert(
-            "Please enter your budget first."
-        );
-
-        return;
-    }
-
-
-    const payload = {
-
-        productType:
-            selectedType,
-
-        country:
-            getValue(
-                "country",
-                "India"
-            ),
-
-        currency:
-            getValue(
-                "currency",
-                "INR"
-            ),
-
-        budget:
-            budget,
-
-        uses:
-            getSelectedUses(),
-
-        priority:
-            getValue(
-                "priority",
-                "balanced"
-            ),
-
-        brand:
-            getValue(
-                "brand",
-                "any"
-            )
-
-    };
-
-
-    console.log(
-        "Sending OPITECH preferences:",
-        payload
+        "₹";
+
+    return (
+        symbol +
+        number.toLocaleString("en-IN")
     );
 
-
-    button.disabled = true;
-
-    button.textContent =
-        "⏳ Checking Amazon & Flipkart...";
+}
 
 
-    container.innerHTML = `
+// =====================================================
+// CREATE MATCH SCORE
+// =====================================================
 
-        <div class="empty-results">
+function renderMatchScore(score) {
 
-            <div class="empty-icon">
-                🔎
-            </div>
+    if (
+        score === null ||
+        score === undefined ||
+        score === ""
+    ) {
+        return "";
+    }
 
-            <h3>
-                OPITECH is searching...
-            </h3>
+    let number = Number(score);
 
-            <p>
-                Checking current Amazon India
-                and Flipkart prices.
-            </p>
+    if (!Number.isFinite(number)) {
+        return "";
+    }
+
+    number =
+        Math.max(
+            0,
+            Math.min(100, Math.round(number))
+        );
+
+    return `
+
+        <div class="match-score">
+
+            <span>
+                Match
+            </span>
+
+            <strong>
+                ${number}%
+            </strong>
 
         </div>
 
     `;
 
-
-    try {
-
-        const response =
-            await fetch(
-                BACKEND_URL +
-                "/api/recommend",
-                {
-
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body:
-                        JSON.stringify(
-                            payload
-                        )
-
-                }
-            );
-
-
-        const text =
-            await response.text();
-
-
-        let data;
-
-
-        try {
-
-            data =
-                JSON.parse(text);
-
-        } catch {
-
-            throw new Error(
-                "The backend returned an invalid response."
-            );
-
-        }
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                data.error ||
-                data.details ||
-                "Backend error " +
-                response.status
-            );
-
-        }
-
-
-        if (!data.success) {
-
-            throw new Error(
-                data.error ||
-                "Recommendation request failed."
-            );
-
-        }
-
-
-        renderRecommendations(data);
-
-
-    } catch (error) {
-
-        console.error(
-            "OPITECH error:",
-            error
-        );
-
-
-        container.innerHTML = `
-
-            <div class="empty-results">
-
-                <div class="empty-icon">
-                    ❌
-                </div>
-
-                <h3>
-                    OPITECH couldn't get recommendations
-                </h3>
-
-                <p>
-                    ${escapeHtml(
-                        error.message ||
-                        "Something went wrong."
-                    )}
-                </p>
-
-            </div>
-
-        `;
-
-    } finally {
-
-        button.disabled = false;
-
-        button.textContent =
-            "🔍 Find My Best Matches";
-
-    }
-
 }
 
 
-window.testOPITECHAI =
-    testOPITECHAI;
+// =====================================================
+// CREATE LIST
+// =====================================================
+
+function renderList(items, type) {
+
+    if (!Array.isArray(items) || !items.length) {
+        return "";
+    }
+
+    return `
+
+        <div class="${type}">
+
+            <h4>
+                ${
+                   
