@@ -16,7 +16,9 @@ body {
 }
 
 
-/* HEADER */
+/* =====================================================
+   HEADER
+   ===================================================== */
 
 .header {
     position: sticky;
@@ -39,9 +41,7 @@ body {
 .logo {
     font-size: 25px;
     font-weight: 900;
-
     letter-spacing: -1px;
-
     color: #ffffff;
 }
 
@@ -56,13 +56,9 @@ nav {
 
 nav a {
     color: #b8c7d9;
-
     text-decoration: none;
-
     font-weight: 600;
-
     font-size: 14px;
-
     transition: 0.2s;
 }
 
@@ -71,15 +67,15 @@ nav a:hover {
 }
 
 
-/* HERO */
+/* =====================================================
+   HERO
+   ===================================================== */
 
 .hero {
     min-height: 620px;
 
     display: flex;
-
     align-items: center;
-
     justify-content: center;
 
     text-align: center;
@@ -131,11 +127,7 @@ nav a:hover {
 }
 
 .hero h1 {
-    font-size: clamp(
-        45px,
-        8vw,
-        82px
-    );
+    font-size: clamp(45px, 8vw, 82px);
 
     line-height: 1.02;
 
@@ -148,7 +140,6 @@ nav a:hover {
 
 .hero h1 span {
     display: block;
-
     color: #1683ff;
 }
 
@@ -181,24 +172,20 @@ nav a:hover {
 
     box-shadow:
         0 8px 25px
-        rgba(
-            22,
-            131,
-            255,
-            0.25
-        );
+        rgba(22, 131, 255, 0.25);
 
     transition: 0.2s;
 }
 
 .primary-button:hover {
     background: #0066d6;
-
     transform: translateY(-2px);
 }
 
 
-/* GENERAL */
+/* =====================================================
+   GENERAL
+   ===================================================== */
 
 .recommend-section,
 .results-section,
@@ -231,11 +218,7 @@ nav a:hover {
 }
 
 .section-heading h2 {
-    font-size: clamp(
-        30px,
-        5vw,
-        48px
-    );
+    font-size: clamp(30px, 5vw, 48px);
 
     line-height: 1.1;
 
@@ -249,7 +232,9 @@ nav a:hover {
 }
 
 
-/* FORM CARD */
+/* =====================================================
+   FORM CARD
+   ===================================================== */
 
 .form-card {
     max-width: 900px;
@@ -266,12 +251,7 @@ nav a:hover {
 
     box-shadow:
         0 15px 50px
-        rgba(
-            0,
-            0,
-            0,
-            0.4
-        );
+        rgba(0, 0, 0, 0.4);
 }
 
 .form-group {
@@ -292,12 +272,13 @@ nav a:hover {
 
 .form-group label span {
     color: #71839a;
-
     font-weight: 400;
 }
 
 
-/* PRODUCT OPTIONS */
+/* =====================================================
+   PRODUCT OPTIONS
+   ===================================================== */
 
 .option-grid {
     display: grid;
@@ -338,7 +319,6 @@ nav a:hover {
 
 .option:hover {
     border-color: #1683ff;
-
     transform: translateY(-2px);
 }
 
@@ -346,25 +326,17 @@ nav a:hover {
     border-color: #1683ff;
 
     background:
-        rgba(
-            22,
-            131,
-            255,
-            0.12
-        );
+        rgba(22, 131, 255, 0.12);
 
     box-shadow:
         0 0 20px
-        rgba(
-            22,
-            131,
-            255,
-            0.12
-        );
+        rgba(22, 131, 255, 0.12);
 }
 
 
-/* BUDGET */
+/* =====================================================
+   BUDGET
+   ===================================================== */
 
 .budget-input {
     display: flex;
@@ -411,7 +383,9 @@ nav a:hover {
 }
 
 
-/* CHECKBOXES */
+/* =====================================================
+   CHECKBOXES
+   ===================================================== */
 
 .checkbox-grid {
     display: grid;
@@ -451,7 +425,9 @@ nav a:hover {
 }
 
 
-/* SELECT */
+/* =====================================================
+   SELECT
+   ===================================================== */
 
 select {
     width: 100%;
@@ -477,16 +453,13 @@ select:focus,
 
     box-shadow:
         0 0 12px
-        rgba(
-            22,
-            131,
-            255,
-            0.12
-        );
+        rgba(22, 131, 255, 0.12);
 }
 
 
-/* FIND BUTTON */
+/* =====================================================
+   FIND BUTTON
+   ===================================================== */
 
 .find-button {
     width: 100%;
@@ -520,42 +493,363 @@ select:focus,
 
     box-shadow:
         0 10px 25px
-        rgba(
-            22,
-            131,
-            255,
-            0.3
-        );
+        rgba(22, 131, 255, 0.3);
+}
+
+.find-button:disabled {
+    opacity: 0.7;
+    cursor: wait;
+    transform: none;
 }
 
 
-/* RESULTS */
+/* =====================================================
+   RESULTS SECTION
+   ===================================================== */
 
 .results-section {
-    background: #080d14;
+    background:
+        radial-gradient(
+            circle at 50% 0%,
+            rgba(22, 131, 255, 0.08),
+            transparent 35%
+        ),
+        #080d14;
 }
 
 .results-container {
     max-width: 1000px;
-
     margin: auto;
+
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
+
+
+/* =====================================================
+   RESULT CARD
+   ===================================================== */
+
+.recommendation-card {
+    position: relative;
+
+    display: grid;
+
+    grid-template-columns: 70px 1fr;
+
+    gap: 22px;
+
+    padding: 30px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #0d1621,
+            #0a1018
+        );
+
+    border: 1px solid #1b2b3d;
+
+    border-radius: 22px;
+
+    box-shadow:
+        0 12px 35px
+        rgba(0, 0, 0, 0.28);
+
+    overflow: hidden;
+
+    transition:
+        transform 0.2s,
+        border-color 0.2s,
+        box-shadow 0.2s;
+}
+
+.recommendation-card:hover {
+    transform: translateY(-3px);
+
+    border-color: #28567d;
+
+    box-shadow:
+        0 18px 45px
+        rgba(0, 0, 0, 0.35);
+}
+
+
+/* =====================================================
+   RANK
+   ===================================================== */
+
+.rank {
+    width: 58px;
+    height: 58px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 17px;
+
+    background: #101c29;
+
+    border: 1px solid #29435c;
+
+    color: #6faeff;
+
+    font-size: 18px;
+
+    font-weight: 900;
+}
+
+
+/* =====================================================
+   #1 SPECIAL CARD
+   ===================================================== */
+
+.recommendation-card:first-child {
+    border-color: #1b73c9;
+
+    background:
+        linear-gradient(
+            145deg,
+            #0d1c2d,
+            #0a111b
+        );
+
+    box-shadow:
+        0 15px 50px
+        rgba(0, 102, 255, 0.12);
+}
+
+.recommendation-card:first-child::before {
+    content: "BEST MATCH";
+
+    position: absolute;
+
+    top: 0;
+    right: 0;
+
+    padding: 8px 15px;
+
+    background: #1683ff;
+
+    color: white;
+
+    font-size: 10px;
+
+    font-weight: 900;
+
+    letter-spacing: 1px;
+
+    border-bottom-left-radius: 12px;
+}
+
+.recommendation-card:first-child .rank {
+    background:
+        rgba(22, 131, 255, 0.16);
+
+    border-color: #1683ff;
+
+    color: #ffffff;
+}
+
+
+/* =====================================================
+   PRODUCT CONTENT
+   ===================================================== */
+
+.product-content {
+    min-width: 0;
+}
+
+.product-content h3 {
+    padding-right: 100px;
+
+    font-size: 25px;
+
+    line-height: 1.25;
+
+    color: #ffffff;
+
+    margin-bottom: 4px;
+}
+
+.brand {
+    color: #6f89a3;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    text-transform: uppercase;
+
+    letter-spacing: 1px;
+
+    margin-bottom: 15px;
+}
+
+
+/* =====================================================
+   PRICE
+   ===================================================== */
+
+.main-price {
+    display: inline-block;
+
+    margin: 4px 0 8px;
+
+    font-size: 28px;
+
+    font-weight: 900;
+
+    color: #ffffff;
+}
+
+.price-source {
+    color: #71869d;
+
+    font-size: 12px;
+
+    margin-bottom: 12px;
+}
+
+.price-source strong {
+    color: #a9bdd2;
+}
+
+
+/* =====================================================
+   MATCH SCORE
+   ===================================================== */
+
+.match-score {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    padding: 6px 11px;
+
+    margin-bottom: 22px;
+
+    border-radius: 20px;
+
+    background:
+        rgba(22, 131, 255, 0.1);
+
+    border: 1px solid #194d7d;
+
+    color: #7daee0;
+
+    font-size: 12px;
+
+    font-weight: 700;
+}
+
+.match-score strong {
+    color: #ffffff;
+
+    font-size: 13px;
+}
+
+
+/* =====================================================
+   WHY
+   ===================================================== */
+
+.why {
+    margin-top: 5px;
+
+    padding: 18px;
+
+    border-left: 3px solid #1683ff;
+
+    background:
+        rgba(22, 131, 255, 0.045);
+
+    border-radius: 0 12px 12px 0;
+}
+
+.why h4,
+.strengths h4,
+.tradeoffs h4 {
+    margin-bottom: 7px;
+
+    font-size: 14px;
+
+    color: #ffffff;
+}
+
+.why p {
+    color: #9aacc0;
+
+    font-size: 14px;
+
+    line-height: 1.6;
+}
+
+
+/* =====================================================
+   STRENGTHS / TRADE-OFFS
+   ===================================================== */
+
+.strengths,
+.tradeoffs {
+    margin-top: 18px;
+
+    padding-top: 16px;
+
+    border-top: 1px solid #182839;
+}
+
+.strengths ul,
+.tradeoffs ul {
+    padding-left: 20px;
+}
+
+.strengths li,
+.tradeoffs li {
+    margin-bottom: 5px;
+
+    color: #9aacc0;
+
+    font-size: 13px;
+}
+
+.strengths li::marker {
+    color: #1683ff;
+}
+
+.tradeoffs li::marker {
+    color: #71869d;
+}
+
+
+/* =====================================================
+   EMPTY RESULTS
+   ===================================================== */
 
 .empty-results {
     text-align: center;
 
-    padding: 60px 20px;
+    padding: 60px 25px;
 
-    background: #0b111a;
+    background:
+        linear-gradient(
+            145deg,
+            #0b111a,
+            #080d14
+        );
 
-    border-radius: 20px;
+    border-radius: 22px;
 
     border: 1px solid #1b2b3d;
 }
 
 .empty-icon {
     font-size: 50px;
-
     margin-bottom: 15px;
 }
 
@@ -572,7 +866,9 @@ select:focus,
 }
 
 
-/* ABOUT */
+/* =====================================================
+   ABOUT
+   ===================================================== */
 
 .about-section {
     background: #05070a;
@@ -600,12 +896,7 @@ select:focus,
 
     box-shadow:
         0 15px 40px
-        rgba(
-            0,
-            0,
-            0,
-            0.3
-        );
+        rgba(0, 0, 0, 0.3);
 }
 
 .about-card h2 {
@@ -621,7 +912,9 @@ select:focus,
 }
 
 
-/* FOOTER */
+/* =====================================================
+   FOOTER
+   ===================================================== */
 
 footer {
     padding: 45px 7%;
@@ -650,7 +943,9 @@ footer .copyright {
 }
 
 
-/* MOBILE */
+/* =====================================================
+   MOBILE
+   ===================================================== */
 
 @media (max-width: 650px) {
 
@@ -701,6 +996,52 @@ footer .copyright {
         grid-template-columns: 1fr;
     }
 
+
+    /* MOBILE RESULT CARDS */
+
+    .results-container {
+        gap: 15px;
+    }
+
+    .recommendation-card {
+        grid-template-columns: 1fr;
+
+        gap: 15px;
+
+        padding: 22px;
+
+        border-radius: 18px;
+    }
+
+    .rank {
+        width: 48px;
+        height: 48px;
+
+        border-radius: 14px;
+
+        font-size: 15px;
+    }
+
+    .recommendation-card:first-child::before {
+        padding: 7px 11px;
+
+        font-size: 9px;
+    }
+
+    .product-content h3 {
+        padding-right: 0;
+
+        font-size: 21px;
+    }
+
+    .main-price {
+        font-size: 25px;
+    }
+
+    .why {
+        padding: 15px;
+    }
+
     .about-card {
         padding: 30px 20px;
     }
@@ -708,5 +1049,4 @@ footer .copyright {
     .about-card h2 {
         font-size: 30px;
     }
-
-    }
+}
