@@ -14,9 +14,9 @@ const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
 const GROQ_MODEL = "openai/gpt-oss-20b";
 
 
-// ======================================================
-// BASIC ROUTE
-// ======================================================
+// =====================================================
+// BASIC ROUTES
+// =====================================================
 
 app.get("/", (req, res) => {
     res.json({
@@ -28,14 +28,23 @@ app.get("/", (req, res) => {
 });
 
 
-// ======================================================
-// TAVILY SEARCH
-// ======================================================
+app.get("/health", (req, res) => {
+    res.json({
+        status: "ok",
+        groq: !!GROQ_API_KEY,
+        tavily: !!TAVILY_API_KEY
+    });
+});
 
-async function tavilySearch(query, domains = []) {
+
+// =====================================================
+// TAVILY SEARCH
+// =====================================================
+
+async function tavilySearch(query, domains) {
 
     if (!TAVILY_API_KEY) {
-        throw new Error("TAVILY_API_KEY is missing");
+        throw new Error("TAVILY_API_KEY is missing in Render.");
     }
 
     const response = await fetch(
@@ -49,209 +58,122 @@ async function tavilySearch(query, domains = []) {
 
             body: JSON.stringify({
                 api_key: TAVILY_API_KEY,
-
                 query: query,
-
                 search_depth: "basic",
-
-                max_results: 5,
-
+                max_results: 4,
                 include_answer: false,
-
                 include_raw_content: false,
-
-                include_images: false,
-
-                ...(domains.length
-                    ? {
-                        include_domains: domains
-                    }
-                    : {})
+                include_images: true,
+                include_domains: domains
             })
         }
     );
 
-    const responseText = await response.text();
+    const text = await response.text();
 
     if (!response.ok) {
         throw new Error(
-            `Tavily error ${response.status}: ${responseText}`
+            `Tavily error ${response.status}: ${text}`
         );
     }
 
+    let data;
+
     try {
-        return JSON.parse(responseText);
+        data = JSON.parse(text);
     } catch {
-        throw new Error(
-            "Tavily returned invalid JSON"
-        );
+        throw new Error("Tavily returned invalid JSON.");
     }
+
+    return data;
 }
 
 
-// ======================================================
-// GROQ STRUCTURED OUTPUT
-// ======================================================
+// =====================================================
+// CLEAN SEARCH RESULTS
+// =====================================================
 
-async function askGroq(prompt) {
+function cleanSearchResults(data, marketplace) {
+
+    if (!data || !Array.isArray(data.results)) {
+        return [];
+    }
+
+    return data.results.map((item, index) => {
+
+        return {
+            index: index,
+            marketplace: marketplace,
+            title: item.title || "",
+            url: item.url || "",
+            content: String(item.content || "")
+                .replace(/\s+/g, " ")
+                .slice(0, 700)
+        };
+
+    });
+}
+
+
+// =====================================================
+// GROQ
+// =====================================================
+
+async function askGroq(userPrompt, amazonResults, flipkartResults) {
 
     if (!GROQ_API_KEY) {
         throw new Error(
-            "GROQ_API_KEY is missing"
+            "GROQ_API_KEY is missing in Render."
         );
     }
 
-    const schema = {
-        type: "object",
 
-        additionalProperties: false,
+    const evidence = {
 
-        properties: {
+        amazon: amazonResults,
 
-            recommendations: {
-                type: "array",
+        flipkart: flipkartResults
 
-                items: {
-
-                    type: "object",
-
-                    additionalProperties: false,
-
-                    properties: {
-
-                        rank: {
-                            type: "integer"
-                        },
-
-                        name: {
-                            type: "string"
-                        },
-
-                        brand: {
-                            type: "string"
-                        },
-
-                        matchScore: {
-                            type: "integer"
-                        },
-
-                        why: {
-                            type: "string"
-                        },
-
-                        strengths: {
-                            type: "array",
-                            items: {
-                                type: "string"
-                            }
-                        },
-
-                        tradeoffs: {
-                            type: "array",
-                            items: {
-                                type: "string"
-                            }
-                        },
-
-                        amazonIndex: {
-                            type: [
-                                "integer",
-                                "null"
-                            ]
-                        },
-
-                        flipkartIndex: {
-                            type: [
-                                "integer",
-                                "null"
-                            ]
-                        }
-
-                    },
-
-                    required: [
-                        "rank",
-                        "name",
-                        "brand",
-                        "matchScore",
-                        "why",
-                        "strengths",
-                        "tradeoffs",
-                        "amazonIndex",
-                        "flipkartIndex"
-                    ]
-                }
-            }
-
-        },
-
-        required: [
-            "recommendations"
-        ]
     };
 
 
-    const response = await fetch(
-        "https://api.groq.com/openai/v1/chat/completions",
-        {
-            method: "POST",
+    const systemPrompt = `
+You are OPITECH AI, an electronics recommendation engine.
 
-            headers: {
-                "Content-Type":
-                    "application/json",
+Your task is to recommend the best real products for the user's requirements.
 
-                "Authorization":
-                    `Bearer ${GROQ_API_KEY}`
-            },
+IMPORTANT:
 
-            body: JSON.stringify({
+- Use ONLY products found in the supplied search evidence.
+- NEVER invent a product model.
+- NEVER invent a price.
+- NEVER invent an Amazon URL.
+- NEVER invent a Flipkart URL.
+- NEVER invent an image URL.
+- Prefer exact model names from the evidence.
+- Stay within the user's budget whenever possible.
+- Rank products based on the user's requested uses and priorities.
+- Return a maximum of 3 products.
+- Amazon and Flipkart prices must come from the supplied evidence.
+- If a marketplace does not have a reliable matching result, use null.
+- Do not put explanations outside the JSON.
 
-                model: GROQ_MODEL,
+The frontend expects this exact JSON structure:
 
-                temperature: 0,
-
-                max_tokens: 2200,
-
-                reasoning_effort: "low",
-
-                response_format: {
-
-                    type: "json_schema",
-
-                    json_schema: {
-
-                        name:
-                            "opitech_recommendations",
-
-                        strict: true,
-
-                        schema
-
-                    }
-
-                },
-
-                messages: [
-
-                    {
-                        role: "system",
-
-                        content: `
-You are OPITECH AI.
-
-Your job is to rank real electronics products using ONLY the supplied web-search evidence.
-
-CRITICAL RULES:
-
-1. Never invent a product.
-2. Never invent a price.
-3. Never invent a URL.
-4. Never invent an image.
-5. Choose products that actually appear in the supplied evidence.
-6. Prefer exact model matches.
-7. Do not confuse similar models.
-8. Respect the user's budget.
-9. Return at most 3 recommendations.
-10. amazonIndex must refer to an item in the supplied Amazon results.
-11. flipkartIndex must refer to an item in the supplied Flipkart results.
-12. If there is no reliable
+{
+  "recommendations": [
+    {
+      "rank": 1,
+      "name": "exact product name",
+      "brand": "brand",
+      "price": 49999,
+      "priceSource": "Amazon India",
+      "imageUrl": null,
+      "matchScore": 95,
+      "why": "short explanation",
+      "strengths": [
+        "strength 1",
+        "strength 2",
+        "strength 3"
+      ],
+     
