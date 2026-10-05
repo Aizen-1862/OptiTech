@@ -1,13 +1,6 @@
 const BACKEND_URL =
     "https://opitech-backend.onrender.com";
 
-let selectedType = "Phone";
-
-
-// =====================================
-// CURRENCY
-// =====================================
-
 const currencySymbols = {
     INR: "₹",
     USD: "$",
@@ -19,69 +12,12 @@ const currencySymbols = {
     SGD: "S$"
 };
 
-
-const currencySelect =
-    document.getElementById("currency");
-
-const currencySymbol =
-    document.getElementById("currencySymbol");
+let selectedType = "Phone";
 
 
-if (currencySelect) {
-
-    currencySelect.addEventListener(
-        "change",
-        () => {
-
-            const currency =
-                currencySelect.value;
-
-            if (currencySymbol) {
-                currencySymbol.textContent =
-                    currencySymbols[currency] ||
-                    currency;
-            }
-        }
-    );
-}
-
-
-// =====================================
-// PRODUCT TYPE
-// =====================================
-
-document
-    .querySelectorAll(".option")
-    .forEach(button => {
-
-        button.addEventListener(
-            "click",
-            () => {
-
-                document
-                    .querySelectorAll(".option")
-                    .forEach(item =>
-                        item.classList.remove("active")
-                    );
-
-                button.classList.add("active");
-
-                selectedType =
-                    button.dataset.type ||
-                    button.textContent.trim();
-
-                console.log(
-                    "Selected product:",
-                    selectedType
-                );
-            }
-        );
-    });
-
-
-// =====================================
+// ==============================
 // HELPERS
-// =====================================
+// ==============================
 
 function getValue(id, fallback = "") {
 
@@ -96,21 +32,6 @@ function getValue(id, fallback = "") {
 }
 
 
-function getSelectedUses() {
-
-    return Array.from(
-        document.querySelectorAll(
-            '.checkbox-grid input[type="checkbox"]:checked'
-        )
-    ).map(input =>
-        input.value ||
-        input.dataset.value ||
-        input.nextElementSibling?.textContent?.trim() ||
-        ""
-    ).filter(Boolean);
-}
-
-
 function escapeHtml(value) {
 
     return String(value ?? "")
@@ -119,29 +40,6 @@ function escapeHtml(value) {
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
-}
-
-
-function formatPrice(price, currency) {
-
-    if (
-        price === null ||
-        price === undefined ||
-        price === "" ||
-        !Number.isFinite(Number(price))
-    ) {
-        return "Price unavailable";
-    }
-
-    const symbol =
-        currencySymbols[currency] ||
-        currency ||
-        "₹";
-
-    return (
-        symbol +
-        Number(price).toLocaleString("en-IN")
-    );
 }
 
 
@@ -164,6 +62,7 @@ function safeUrl(url) {
         }
 
     } catch (error) {
+
         return "";
     }
 
@@ -171,9 +70,80 @@ function safeUrl(url) {
 }
 
 
-// =====================================
+function formatPrice(
+    price,
+    currency = "INR"
+) {
+
+    if (
+        price === null ||
+        price === undefined ||
+        price === "" ||
+        !Number.isFinite(Number(price))
+    ) {
+
+        return "Price unavailable";
+    }
+
+    const symbol =
+        currencySymbols[currency] ||
+        currency;
+
+    return (
+        symbol +
+        " " +
+        Number(price).toLocaleString(
+            "en-IN"
+        )
+    );
+}
+
+
+// ==============================
+// NAVIGATION
+// ==============================
+
+function start() {
+
+    const finder =
+        document.getElementById(
+            "finder"
+        );
+
+    if (finder) {
+
+        finder.scrollIntoView({
+            behavior: "smooth"
+        });
+    }
+}
+
+window.start = start;
+
+
+function selectCategory(type) {
+
+    selectedType = type;
+
+    const category =
+        document.getElementById(
+            "category"
+        );
+
+    if (category) {
+        category.value = type;
+    }
+
+    start();
+}
+
+window.selectCategory =
+    selectCategory;
+
+
+// ==============================
 // MARKETPLACE CARD
-// =====================================
+// ==============================
 
 function marketplaceCard(
     marketplaceName,
@@ -186,40 +156,26 @@ function marketplaceCard(
     }
 
     const url =
-        safeUrl(marketplace.url);
+        safeUrl(
+            marketplace.url
+        );
 
     const price =
-        marketplace.price
-            ? formatPrice(
-                marketplace.price,
-                currency
-            )
-            : "Price unavailable";
-
-
-    if (!url) {
-
-        return `
-            <div class="marketplace">
-                <strong>
-                    ${escapeHtml(marketplaceName)}
-                </strong>
-
-                <span>
-                    ${escapeHtml(price)}
-                </span>
-            </div>
-        `;
-    }
-
+        formatPrice(
+            marketplace.price,
+            currency
+        );
 
     return `
+
         <div class="marketplace">
 
             <div class="marketplace-info">
 
                 <strong>
-                    ${escapeHtml(marketplaceName)}
+                    ${escapeHtml(
+                        marketplaceName
+                    )}
                 </strong>
 
                 <span>
@@ -228,54 +184,63 @@ function marketplaceCard(
 
             </div>
 
-            <a
-                href="${escapeHtml(url)}"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="buy-button"
-            >
-                View Product ↗
-            </a>
+            ${
+                url
+                    ? `
+                        <a
+                            class="buy-button"
+                            href="${escapeHtml(url)}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            View Product ↗
+                        </a>
+                    `
+                    : ""
+            }
 
         </div>
+
     `;
 }
 
 
-// =====================================
-// RENDER RECOMMENDATIONS
-// =====================================
+// ==============================
+// RENDER RESULTS
+// ==============================
 
 function renderRecommendations(data) {
 
     const container =
         document.getElementById(
-            "results"
-        ) ||
-        document.getElementById(
-            "recommendations"
+            "result"
         );
-
 
     if (!container) {
-        console.error(
-            "Results container not found."
-        );
-
         return;
     }
 
+    container.classList.remove(
+        "hidden"
+    );
+
 
     const recommendations =
-        Array.isArray(data.recommendations)
+        Array.isArray(
+            data.recommendations
+        )
             ? data.recommendations
             : [];
 
 
-    if (!recommendations.length) {
+    if (
+        recommendations.length === 0
+    ) {
 
         container.innerHTML = `
+
             <div class="error-message">
+
                 <h3>
                     No suitable products found 😕
                 </h3>
@@ -284,7 +249,9 @@ function renderRecommendations(data) {
                     Try increasing your budget
                     or changing your preferences.
                 </p>
+
             </div>
+
         `;
 
         return;
@@ -292,10 +259,8 @@ function renderRecommendations(data) {
 
 
     const currency =
-        getValue(
-            "currency",
-            "INR"
-        );
+        data.currency ||
+        "INR";
 
 
     container.innerHTML = `
@@ -307,243 +272,314 @@ function renderRecommendations(data) {
             </h2>
 
             <p>
-                Live Amazon India + Flipkart
-                search completed.
+                OPITECH found these products
+                for your requirements.
             </p>
 
         </div>
 
+
         ${recommendations
-            .map((product, index) => {
+            .map(
+                (product, index) => {
 
-                const rank =
-                    product.rank ||
-                    index + 1;
+                    const rank =
+                        product.rank ||
+                        index + 1;
 
+                    const image =
+                        safeUrl(
+                            product.imageUrl
+                        );
 
-                const image =
-                    safeUrl(
-                        product.imageUrl
-                    );
-
-
-                const mainPrice =
-                    product.price
-                        ? formatPrice(
-                            product.price,
-                            currency
+                    const strengths =
+                        Array.isArray(
+                            product.strengths
                         )
-                        : "Price unavailable";
+                            ? product.strengths
+                            : [];
+
+                    const tradeoffs =
+                        Array.isArray(
+                            product.tradeoffs
+                        )
+                            ? product.tradeoffs
+                            : [];
 
 
-                const strengths =
-                    Array.isArray(
-                        product.strengths
-                    )
-                        ? product.strengths
-                        : [];
+                    return `
+
+                        <article
+                            class="recommendation-card"
+                        >
+
+                            <div class="rank">
+
+                                #${rank}
+
+                            </div>
 
 
-                const tradeoffs =
-                    Array.isArray(
-                        product.tradeoffs
-                    )
-                        ? product.tradeoffs
-                        : [];
+                            ${
+                                image
+                                    ? `
 
-
-                return `
-
-                    <article
-                        class="recommendation-card"
-                    >
-
-                        <div class="rank">
-                            #${rank}
-                        </div>
-
-
-                        ${
-                            image
-                                ? `
-                                    <div
-                                        class="product-image-container"
-                                    >
-                                        <img
-                                            src="${escapeHtml(image)}"
-                                            alt="${escapeHtml(product.name)}"
-                                            class="product-image"
-                                            loading="lazy"
-                                            onerror="this.parentElement.style.display='none'"
+                                        <div
+                                            class="product-image-container"
                                         >
-                                    </div>
-                                `
-                                : ""
-                        }
 
+                                            <img
+                                                class="product-image"
+                                                src="${escapeHtml(
+                                                    image
+                                                )}"
+                                                alt="${escapeHtml(
+                                                    product.name ||
+                                                    "Recommended product"
+                                                )}"
+                                                loading="lazy"
+                                                onerror="this.parentElement.style.display='none'"
+                                            >
 
-                        <div class="product-content">
-
-                            <h3>
-                                ${escapeHtml(
-                                    product.name ||
-                                    "Recommended product"
-                                )}
-                            </h3>
-
-
-                            ${
-                                product.brand
-                                    ? `
-                                        <div class="brand">
-                                            ${escapeHtml(
-                                                product.brand
-                                            )}
                                         </div>
+
                                     `
                                     : ""
                             }
 
 
-                            <div class="main-price">
-                                ${escapeHtml(
-                                    mainPrice
-                                )}
+                            <div
+                                class="product-content"
+                            >
+
+                                <h3>
+
+                                    ${escapeHtml(
+                                        product.name ||
+                                        "Recommended product"
+                                    )}
+
+                                </h3>
+
+
+                                ${
+                                    product.brand
+                                        ? `
+
+                                            <div class="brand">
+
+                                                ${escapeHtml(
+                                                    product.brand
+                                                )}
+
+                                            </div>
+
+                                        `
+                                        : ""
+                                }
+
+
+                                <div
+                                    class="main-price"
+                                >
+
+                                    ${escapeHtml(
+                                        formatPrice(
+                                            product.price,
+                                            currency
+                                        )
+                                    )}
+
+                                </div>
+
+
+                                ${
+                                    product.priceSource
+                                        ? `
+
+                                            <div
+                                                class="price-source"
+                                            >
+
+                                                Price checked from:
+
+                                                <strong>
+
+                                                    ${escapeHtml(
+                                                        product.priceSource
+                                                    )}
+
+                                                </strong>
+
+                                            </div>
+
+                                        `
+                                        : ""
+                                }
+
+
+                                ${
+                                    product.matchScore
+                                        ? `
+
+                                            <div
+                                                class="match-score"
+                                            >
+
+                                                Match:
+
+                                                <strong>
+
+                                                    ${escapeHtml(
+                                                        product.matchScore
+                                                    )}%
+
+                                                </strong>
+
+                                            </div>
+
+                                        `
+                                        : ""
+                                }
+
+
+                                <div
+                                    class="marketplaces"
+                                >
+
+                                    ${marketplaceCard(
+                                        "Amazon India",
+                                        product.amazon,
+                                        currency
+                                    )}
+
+                                    ${marketplaceCard(
+                                        "Flipkart",
+                                        product.flipkart,
+                                        currency
+                                    )}
+
+                                </div>
+
+
+                                ${
+                                    product.why
+                                        ? `
+
+                                            <div
+                                                class="why"
+                                            >
+
+                                                <h4>
+                                                    Why this pick?
+                                                </h4>
+
+                                                <p>
+
+                                                    ${escapeHtml(
+                                                        product.why
+                                                    )}
+
+                                                </p>
+
+                                            </div>
+
+                                        `
+                                        : ""
+                                }
+
+
+                                ${
+                                    strengths.length
+                                        ? `
+
+                                            <div
+                                                class="strengths"
+                                            >
+
+                                                <h4>
+                                                    👍 Strengths
+                                                </h4>
+
+                                                <ul>
+
+                                                    ${strengths
+                                                        .map(
+                                                            item =>
+                                                                `
+                                                                <li>
+                                                                    ${escapeHtml(
+                                                                        item
+                                                                    )}
+                                                                </li>
+                                                                `
+                                                        )
+                                                        .join("")
+                                                    }
+
+                                                </ul>
+
+                                            </div>
+
+                                        `
+                                        : ""
+                                }
+
+
+                                ${
+                                    tradeoffs.length
+                                        ? `
+
+                                            <div
+                                                class="tradeoffs"
+                                            >
+
+                                                <h4>
+                                                    ⚠️ Trade-offs
+                                                </h4>
+
+                                                <ul>
+
+                                                    ${tradeoffs
+                                                        .map(
+                                                            item =>
+                                                                `
+                                                                <li>
+                                                                    ${escapeHtml(
+                                                                        item
+                                                                    )}
+                                                                </li>
+                                                                `
+                                                        )
+                                                        .join("")
+                                                    }
+
+                                                </ul>
+
+                                            </div>
+
+                                        `
+                                        : ""
+                                }
+
                             </div>
 
+                        </article>
 
-                            ${
-                                product.priceSource
-                                    ? `
-                                        <div class="price-source">
-                                            Price checked from:
-                                            <strong>
-                                                ${escapeHtml(
-                                                    product.priceSource
-                                                )}
-                                            </strong>
-                                        </div>
-                                    `
-                                    : ""
-                            }
+                    `;
 
-
-                            ${
-                                product.matchScore
-                                    ? `
-                                        <div class="match-score">
-                                            Match:
-                                            <strong>
-                                                ${escapeHtml(
-                                                    product.matchScore
-                                                )}%
-                                            </strong>
-                                        </div>
-                                    `
-                                    : ""
-                            }
-
-
-                            <div class="marketplaces">
-
-                                ${marketplaceCard(
-                                    "Amazon India",
-                                    product.amazon,
-                                    currency
-                                )}
-
-                                ${marketplaceCard(
-                                    "Flipkart",
-                                    product.flipkart,
-                                    currency
-                                )}
-
-                            </div>
-
-
-                            ${
-                                product.why
-                                    ? `
-                                        <div class="why">
-                                            <h4>
-                                                Why this pick?
-                                            </h4>
-
-                                            <p>
-                                                ${escapeHtml(
-                                                    product.why
-                                                )}
-                                            </p>
-                                        </div>
-                                    `
-                                    : ""
-                            }
-
-
-                            ${
-                                strengths.length
-                                    ? `
-                                        <div class="strengths">
-
-                                            <h4>
-                                                👍 Strengths
-                                            </h4>
-
-                                            <ul>
-                                                ${strengths
-                                                    .map(
-                                                        item =>
-                                                            `<li>${escapeHtml(item)}</li>`
-                                                    )
-                                                    .join("")
-                                                }
-                                            </ul>
-
-                                        </div>
-                                    `
-                                    : ""
-                            }
-
-
-                            ${
-                                tradeoffs.length
-                                    ? `
-                                        <div class="tradeoffs">
-
-                                            <h4>
-                                                ⚠️ Trade-offs
-                                            </h4>
-
-                                            <ul>
-                                                ${tradeoffs
-                                                    .map(
-                                                        item =>
-                                                            `<li>${escapeHtml(item)}</li>`
-                                                    )
-                                                    .join("")
-                                                }
-                                            </ul>
-
-                                        </div>
-                                    `
-                                    : ""
-                            }
-
-                        </div>
-
-                    </article>
-
-                `;
-            })
+                }
+            )
             .join("")
         }
 
 
-        <div class="price-disclaimer">
+        <div
+            class="price-disclaimer"
+        >
 
-            ⚠️ Prices and availability can change.
-            OPITECH uses current web-search evidence
-            from Amazon India and Flipkart.
+            ⚠️ Prices and availability
+            can change.
 
         </div>
 
@@ -551,15 +587,20 @@ function renderRecommendations(data) {
 }
 
 
-// =====================================
-// MAIN AI FUNCTION
-// =====================================
+// ==============================
+// MAIN OPITECH AI FUNCTION
+// ==============================
 
 async function testOPITECHAI() {
 
     const button =
+        document.querySelector(
+            '#finderForm button[type="submit"]'
+        );
+
+    const container =
         document.getElementById(
-            "findButton"
+            "result"
         );
 
 
@@ -568,20 +609,15 @@ async function testOPITECHAI() {
         button.disabled = true;
 
         button.textContent =
-            "⏳ Checking Amazon & Flipkart...";
+            "⏳ Checking...";
     }
 
 
-    const container =
-        document.getElementById(
-            "results"
-        ) ||
-        document.getElementById(
-            "recommendations"
-        );
-
-
     if (container) {
+
+        container.classList.remove(
+            "hidden"
+        );
 
         container.innerHTML = `
 
@@ -592,8 +628,8 @@ async function testOPITECHAI() {
                 </h3>
 
                 <p>
-                    Checking current Amazon India
-                    and Flipkart prices.
+                    Finding recommendations
+                    based on your requirements.
                 </p>
 
                 <p>
@@ -606,70 +642,81 @@ async function testOPITECHAI() {
     }
 
 
+    const uses =
+        getValue(
+            "uses"
+        )
+        .split(",")
+        .map(
+            item =>
+                item.trim()
+        )
+        .filter(Boolean);
+
+
+    const payload = {
+
+        productType:
+            getValue(
+                "category",
+                "Phone"
+            ),
+
+        country:
+            "India",
+
+        currency:
+            "INR",
+
+        budget:
+            getValue(
+                "budget"
+            ),
+
+        uses:
+            uses,
+
+        priority:
+            getValue(
+                "priorities",
+                "balanced"
+            ),
+
+        brand:
+            getValue(
+                "preferences",
+                "any"
+            )
+    };
+
+
+    console.log(
+        "Sending OPITECH preferences:",
+        payload
+    );
+
+
     try {
-
-        const budget =
-            getValue("budget");
-
-
-        const payload = {
-
-            productType:
-                selectedType,
-
-            country:
-                getValue(
-                    "country",
-                    "India"
-                ),
-
-            currency:
-                getValue(
-                    "currency",
-                    "INR"
-                ),
-
-            budget:
-                budget,
-
-            uses:
-                getSelectedUses(),
-
-            priority:
-                getValue(
-                    "priority",
-                    "balanced"
-                ),
-
-            brand:
-                getValue(
-                    "brand",
-                    "any"
-                )
-        };
-
-
-        console.log(
-            "Sending OPITECH preferences:",
-            payload
-        );
-
 
         const response =
             await fetch(
                 `${BACKEND_URL}/api/recommend`,
                 {
+
                     method: "POST",
 
                     headers: {
+
                         "Content-Type":
                             "application/json"
+
                     },
 
                     body:
                         JSON.stringify(
                             payload
                         )
+
                 }
             );
 
@@ -680,15 +727,18 @@ async function testOPITECHAI() {
 
         let data;
 
+
         try {
 
             data =
-                JSON.parse(rawText);
+                JSON.parse(
+                    rawText
+                );
 
-        } catch (error) {
+        } catch {
 
             throw new Error(
-                `Backend returned invalid data: ${rawText.substring(0, 300)}`
+                "Backend returned invalid data."
             );
         }
 
@@ -726,7 +776,7 @@ async function testOPITECHAI() {
     } catch (error) {
 
         console.error(
-            "OPITECH frontend error:",
+            "OPITECH error:",
             error
         );
 
@@ -735,17 +785,21 @@ async function testOPITECHAI() {
 
             container.innerHTML = `
 
-                <div class="error-message">
+                <div
+                    class="error-message"
+                >
 
                     <h3>
                         ❌ OPITECH couldn't get recommendations
                     </h3>
 
                     <p>
+
                         ${escapeHtml(
                             error.message ||
                             "Something went wrong."
                         )}
+
                     </p>
 
                     <p>
@@ -757,7 +811,6 @@ async function testOPITECHAI() {
             `;
         }
 
-
     } finally {
 
         if (button) {
@@ -765,53 +818,58 @@ async function testOPITECHAI() {
             button.disabled = false;
 
             button.textContent =
-                "🔍 Find My Best Matches";
+                "Generate My OPITECH Profile →";
         }
     }
 }
 
-
-// =====================================
-// BACKEND TEST
-// =====================================
-
-async function checkOPITECHBackend() {
-
-    try {
-
-        const response =
-            await fetch(
-                BACKEND_URL
-            );
-
-        const data =
-            await response.json();
-
-        console.log(
-            "OPITECH backend:",
-            data
-        );
-
-        return data;
-
-    } catch (error) {
-
-        console.error(
-            "Backend check failed:",
-            error
-        );
-
-        return null;
-    }
-}
-
-
-// =====================================
-// GLOBAL FUNCTIONS
-// =====================================
-
 window.testOPITECHAI =
     testOPITECHAI;
 
-window.checkOPITECHBackend =
-    checkOPITECHBackend;
+
+// ==============================
+// FORM SETUP
+// ==============================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        const category =
+            document.getElementById(
+                "category"
+            );
+
+
+        if (category) {
+
+            selectedType =
+                category.value;
+
+            category.addEventListener(
+                "change",
+                () => {
+
+                    selectedType =
+                        category.value;
+
+                }
+            );
+        }
+
+
+        const form =
+            document.getElementById(
+                "finderForm"
+            );
+
+
+        if (form) {
+
+            form.addEventListener(
+                "submit",
+                event => {
+
+                    event.preventDefault();
+
+                    testOPITECHAI();
