@@ -4,476 +4,113 @@ const cors = require("cors");
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
 
 const PORT = process.env.PORT || 10000;
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
 
-
-/* =========================================================
-   API KEY CHECK
-========================================================= */
-
-if (!GROQ_API_KEY) {
-    console.error("❌ GROQ_API_KEY is missing!");
-} else {
-    console.log("✅ GROQ_API_KEY loaded");
-}
-
-if (!TAVILY_API_KEY) {
-    console.error("❌ TAVILY_API_KEY is missing!");
-} else {
-    console.log("✅ TAVILY_API_KEY loaded");
-}
+const GROQ_MODEL = "openai/gpt-oss-20b";
 
 
-/* =========================================================
-   HOME
-========================================================= */
+// ===============================
+// BASIC ROUTES
+// ===============================
 
 app.get("/", (req, res) => {
-
     res.json({
-
         status: "online",
-
-        message:
-            "OPITECH AI backend is running 🚀",
-
-        ai:
-            "Groq + Tavily Web Search"
-
+        message: "OPITECH AI backend is running 🚀",
+        ai: "Groq + Tavily",
+        livePrices: "Amazon India + Flipkart"
     });
-
 });
 
 
-/* =========================================================
-   TAVILY SEARCH
-========================================================= */
+// ===============================
+// TAVILY SEARCH
+// ===============================
 
-async function searchProducts(query) {
-
+async function tavilySearch(query, domains = []) {
     if (!TAVILY_API_KEY) {
-
-        throw new Error(
-            "TAVILY_API_KEY is missing"
-        );
-
+        throw new Error("TAVILY_API_KEY is missing");
     }
 
-
-    console.log(
-        "🔎 Searching Tavily:",
-        query
-    );
-
-
-    const response = await fetch(
-        "https://api.tavily.com/search",
-        {
-
-            method: "POST",
-
-            headers: {
-
-                "Content-Type":
-                    "application/json"
-
-            },
-
-            body: JSON.stringify({
-
-                api_key:
-                    TAVILY_API_KEY,
-
-                query:
-                    query,
-
-                search_depth:
-                    "basic",
-
-                topic:
-                    "general",
-
-                max_results:
-                    5,
-
-                include_answer:
-                    false,
-
-                include_raw_content:
-                    false,
-
-                include_images:
-                    false
-
-            })
-
-        }
-    );
-
-
-    const raw =
-        await response.text();
-
-
-    let data;
-
-
-    try {
-
-        data =
-            JSON.parse(raw);
-
-    } catch {
-
-        throw new Error(
-            "Tavily returned invalid JSON"
-        );
-
-    }
-
+    const response = await fetch("https://api.tavily.com/search", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            api_key: TAVILY_API_KEY,
+            query,
+            search_depth: "basic",
+            max_results: 5,
+            include_answer: false,
+            include_raw_content: false,
+            include_images: true,
+            ...(domains.length
+                ? { include_domains: domains }
+                : {})
+        })
+    });
 
     if (!response.ok) {
-
-        console.error(
-            "❌ Tavily error:",
-            data
-        );
-
-
+        const errorText = await response.text();
         throw new Error(
-            data.message ||
-            data.detail ||
-            "Tavily search failed"
+            `Tavily error ${response.status}: ${errorText}`
         );
-
     }
 
-
-    console.log(
-        `✅ Tavily returned ${
-            data.results?.length || 0
-        } results`
-    );
-
-
-    return data.results || [];
-
+    return await response.json();
 }
 
 
-/* =========================================================
-   EXTRACT JSON
-========================================================= */
-
-function extractJSON(text) {
-
-    if (
-        !text ||
-        typeof text !== "string"
-    ) {
-
-        throw new Error(
-            "AI returned an empty response"
-        );
-
-    }
-
-
-    let cleaned =
-        text.trim();
-
-
-    /*
-       Remove markdown fences
-    */
-
-    cleaned =
-        cleaned
-            .replace(
-                /^```json\s*/i,
-                ""
-            )
-            .replace(
-                /^```\s*/i,
-                ""
-            )
-            .replace(
-                /\s*```$/i,
-                ""
-            )
-            .trim();
-
-
-    /*
-       Find JSON object
-    */
-
-    const firstBrace =
-        cleaned.indexOf("{");
-
-
-    const lastBrace =
-        cleaned.lastIndexOf("}");
-
-
-    if (
-        firstBrace === -1 ||
-        lastBrace === -1 ||
-        lastBrace <= firstBrace
-    ) {
-
-        console.error(
-            "❌ No JSON object found."
-        );
-
-        console.error(
-            "AI text:",
-            cleaned
-        );
-
-
-        throw new Error(
-            "AI response did not contain valid JSON"
-        );
-
-    }
-
-
-    cleaned =
-        cleaned.substring(
-            firstBrace,
-            lastBrace + 1
-        );
-
-
-    try {
-
-        return JSON.parse(
-            cleaned
-        );
-
-    } catch (error) {
-
-        console.error(
-            "❌ JSON parse error"
-        );
-
-        console.error(
-            cleaned
-        );
-
-
-        throw new Error(
-            "AI returned invalid JSON"
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   VALIDATE RECOMMENDATIONS
-========================================================= */
-
-function validateRecommendations(data) {
-
-    if (
-        !data ||
-        typeof data !== "object"
-    ) {
-
-        throw new Error(
-            "AI returned invalid data"
-        );
-
-    }
-
-
-    if (
-        !Array.isArray(
-            data.recommendations
-        )
-    ) {
-
-        throw new Error(
-            "AI response does not contain recommendations"
-        );
-
-    }
-
-
-    if (
-        data.recommendations.length === 0
-    ) {
-
-        throw new Error(
-            "AI returned no recommendations"
-        );
-
-    }
-
-
-    /*
-       Normalize recommendations
-    */
-
-    data.recommendations =
-        data.recommendations
-            .slice(0, 3)
-            .map(
-                (item, index) => {
-
-                    return {
-
-                        rank:
-                            Number(
-                                item.rank
-                            ) ||
-                            index + 1,
-
-                        name:
-                            item.name ||
-                            "Unknown product",
-
-                        price:
-                            item.price ||
-                            "Price unavailable",
-
-                        priceSource:
-                            item.priceSource ||
-                            "Web search",
-
-                        matchScore:
-                            Number(
-                                item.matchScore
-                            ) ||
-                            0,
-
-                        why:
-                            item.why ||
-                            "Matches the requested requirements.",
-
-                        strengths:
-                            Array.isArray(
-                                item.strengths
-                            )
-                                ? item.strengths
-                                    .slice(0, 3)
-                                : [],
-
-                        tradeoffs:
-                            Array.isArray(
-                                item.tradeoffs
-                            )
-                                ? item.tradeoffs
-                                    .slice(0, 2)
-                                : []
-
-                    };
-
-                }
-            );
-
-
-    /*
-       Sort by rank
-    */
-
-    data.recommendations.sort(
-        (a, b) =>
-            Number(a.rank) -
-            Number(b.rank)
-    );
-
-
-    return data;
-
-}
-
-
-/* =========================================================
-   GROQ AI
-========================================================= */
-
-async function generateWithGroq(prompt) {
-
+// ===============================
+// GROQ
+// ===============================
+
+async function askGroq(prompt) {
     if (!GROQ_API_KEY) {
-
-        throw new Error(
-            "GROQ_API_KEY is missing"
-        );
-
+        throw new Error("GROQ_API_KEY is missing");
     }
 
+    const response = await fetch(
+        "https://api.groq.com/openai/v1/chat/completions",
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${GROQ_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: GROQ_MODEL,
+                temperature: 0.1,
+                max_tokens: 3500,
+                messages: [
+                    {
+                        role: "system",
+                        content: `
+You are OPITECH AI, an electronics recommendation engine.
 
-    console.log(
-        "🤖 Sending request to Groq..."
-    );
+You receive search evidence from the web.
 
+IMPORTANT RULES:
 
-    const response =
-        await fetch(
-            "https://api.groq.com/openai/v1/chat/completions",
-            {
-
-                method: "POST",
-
-                headers: {
-
-                    "Content-Type":
-                        "application/json",
-
-                    "Authorization":
-                        `Bearer ${GROQ_API_KEY}`
-
-                },
-
-                body: JSON.stringify({
-
-                    model:
-                        "openai/gpt-oss-20b",
-
-                    messages: [
-
-                        {
-
-                            role:
-                                "system",
-
-                            content: `
-You are OPITECH, an electronics recommendation AI.
-
-Your job is to select real electronics products from the supplied web search results.
-
-IMPORTANT:
-
-Return ONLY the final JSON object.
-
-Do NOT explain your reasoning.
-
-Do NOT write markdown.
-
-Do NOT use code fences.
-
-Do NOT write anything before or after the JSON.
-
-Use ONLY the supplied search evidence.
-
-Never invent product names.
-
-Never invent prices.
-
-Never invent specifications.
-
-Return exactly 3 products when at least 3 suitable products exist.
-
-Keep every field short.
+1. Recommend real products only.
+2. NEVER invent a product.
+3. NEVER invent a price.
+4. NEVER invent an Amazon URL.
+5. NEVER invent a Flipkart URL.
+6. NEVER invent an image URL.
+7. Use the supplied search evidence.
+8. Prefer Amazon India and Flipkart evidence.
+9. The user's budget must be respected.
+10. Return maximum 3 recommendations.
+11. Return ONLY valid JSON.
+12. Do not use markdown.
+13. Do not put JSON inside code fences.
 
 JSON format:
 
@@ -481,787 +118,669 @@ JSON format:
   "recommendations": [
     {
       "rank": 1,
-      "name": "Exact Product Model",
-      "price": "₹24999",
-      "priceSource": "Source",
-      "matchScore": 95,
-      "why": "Short reason",
-      "strengths": [
-        "Short strength",
-        "Short strength"
-      ],
-      "tradeoffs": [
-        "Short tradeoff"
-      ]
+      "name": "Product name",
+      "brand": "Brand",
+      "price": 0,
+      "currency": "INR",
+      "priceSource": "Amazon India",
+      "imageUrl": "",
+      "amazon": {
+        "title": "",
+        "price": 0,
+        "url": ""
+      },
+      "flipkart": {
+        "title": "",
+        "price": 0,
+        "url": ""
+      },
+      "matchScore": 0,
+      "why": "",
+      "strengths": [],
+      "tradeoffs": []
     }
   ]
 }
+
+If a marketplace result is not available, leave that marketplace object empty.
+
+Do not guess missing information.
 `
-
-                        },
-
-                        {
-
-                            role:
-                                "user",
-
-                            content:
-                                prompt
-
-                        }
-
-                    ],
-
-                    /*
-                       GPT-OSS uses completion
-                       tokens for reasoning AND
-                       final output.
-
-                       3000 gives it enough room.
-                    */
-
-                    max_completion_tokens:
-                        3000,
-
-                    temperature:
-                        0.1
-
-                })
-
-            }
-        );
-
-
-    const rawResponse =
-        await response.text();
-
-
-    console.log(
-        "========== GROQ HTTP STATUS =========="
+                    },
+                    {
+                        role: "user",
+                        content: prompt
+                    }
+                ]
+            })
+        }
     );
-
-    console.log(
-        response.status
-    );
-
-    console.log(
-        "======================================"
-    );
-
-
-    console.log(
-        "========== COMPLETE GROQ RESPONSE =========="
-    );
-
-    console.log(
-        rawResponse
-    );
-
-    console.log(
-        "============================================"
-    );
-
 
     if (!response.ok) {
-
-        let errorData = {};
-
-
-        try {
-
-            errorData =
-                JSON.parse(
-                    rawResponse
-                );
-
-        } catch {}
-
+        const errorText = await response.text();
 
         throw new Error(
-
-            errorData.error?.message ||
-
-            rawResponse ||
-
-            "Groq request failed"
-
+            `Groq error ${response.status}: ${errorText}`
         );
-
     }
 
+    const data = await response.json();
 
-    let data;
+    const content =
+        data &&
+        data.choices &&
+        data.choices[0] &&
+        data.choices[0].message &&
+        data.choices[0].message.content;
 
-
-    try {
-
-        data =
-            JSON.parse(
-                rawResponse
-            );
-
-    } catch {
-
-        throw new Error(
-            "Groq returned invalid API JSON"
-        );
-
+    if (!content || !content.trim()) {
+        throw new Error("Groq returned an empty response");
     }
 
-
-    const choice =
-        data.choices?.[0];
-
-
-    if (!choice) {
-
-        throw new Error(
-            "Groq returned no choices"
-        );
-
-    }
-
-
-    console.log(
-        "🧠 Finish reason:",
-        choice.finish_reason
-    );
-
-
-    console.log(
-        "🧠 Completion tokens:",
-        data.usage?.completion_tokens
-    );
-
-
-    console.log(
-        "🧠 Reasoning tokens:",
-        data.usage
-            ?.completion_tokens_details
-            ?.reasoning_tokens || 0
-    );
-
-
-    /*
-       IMPORTANT:
-       GPT-OSS may return reasoning
-       separately from content.
-
-       We ONLY use content.
-    */
-
-    let text =
-        choice.message?.content;
-
-
-    /*
-       Fallbacks for unusual responses
-    */
-
-    if (
-        !text &&
-        choice.text
-    ) {
-
-        text =
-            choice.text;
-
-    }
-
-
-    if (
-        !text &&
-        data.output_text
-    ) {
-
-        text =
-            data.output_text;
-
-    }
-
-
-    /*
-       No final answer
-    */
-
-    if (
-        !text ||
-        typeof text !== "string" ||
-        !text.trim()
-    ) {
-
-        console.error(
-            "❌ Groq returned no final content."
-        );
-
-
-        console.error(
-            "Finish reason:",
-            choice.finish_reason
-        );
-
-
-        if (
-            choice.finish_reason ===
-            "length"
-        ) {
-
-            throw new Error(
-                "Groq reached the token limit before producing the final JSON. Please try again."
-            );
-
-        }
-
-
-        throw new Error(
-            "Groq returned an empty response"
-        );
-
-    }
-
-
-    console.log(
-        "========== GROQ FINAL ANSWER =========="
-    );
-
-
-    console.log(
-        text
-    );
-
-
-    console.log(
-        "======================================="
-    );
-
-
-    return text.trim();
-
+    return content.trim();
 }
 
 
-/* =========================================================
-   RECOMMENDATION API
-========================================================= */
+// ===============================
+// HELPERS
+// ===============================
 
-app.post(
-    "/api/recommend",
-    async (req, res) => {
+function cleanJson(text) {
+    let cleaned = text.trim();
+
+    if (cleaned.startsWith("```")) {
+        cleaned = cleaned
+            .replace(/^```json/i, "")
+            .replace(/^```/i, "")
+            .replace(/```$/i, "")
+            .trim();
+    }
+
+    const firstBrace = cleaned.indexOf("{");
+    const lastBrace = cleaned.lastIndexOf("}");
+
+    if (firstBrace !== -1 && lastBrace !== -1) {
+        cleaned = cleaned.substring(
+            firstBrace,
+            lastBrace + 1
+        );
+    }
+
+    return cleaned;
+}
+
+
+function extractPrice(text) {
+    if (!text) return null;
+
+    const patterns = [
+        /₹\s?([0-9,]{3,})/gi,
+        /INR\s?([0-9,]{3,})/gi,
+        /Rs\.?\s?([0-9,]{3,})/gi
+    ];
+
+    for (const pattern of patterns) {
+        const match = pattern.exec(text);
+
+        if (match && match[1]) {
+            const number = Number(
+                match[1].replace(/,/g, "")
+            );
+
+            if (
+                Number.isFinite(number) &&
+                number >= 500 &&
+                number <= 1000000
+            ) {
+                return number;
+            }
+        }
+    }
+
+    return null;
+}
+
+
+function isAmazon(url) {
+    if (!url) return false;
+
+    return (
+        url.includes("amazon.in") ||
+        url.includes("amzn.in")
+    );
+}
+
+
+function isFlipkart(url) {
+    if (!url) return false;
+
+    return url.includes("flipkart.com");
+}
+
+
+function normalizeUrl(url) {
+    if (!url || typeof url !== "string") {
+        return "";
+    }
+
+    return url.trim();
+}
+
+
+function getSearchText(result) {
+    return [
+        result.title || "",
+        result.url || "",
+        result.content || ""
+    ].join(" ");
+}
+
+
+function findMarketplaceResult(results, productName, marketplace) {
+    if (!Array.isArray(results)) return null;
+
+    const words = String(productName || "")
+        .toLowerCase()
+        .split(/\s+/)
+        .filter(word => word.length >= 3);
+
+    let best = null;
+    let bestScore = 0;
+
+    for (const result of results) {
+        const url = normalizeUrl(result.url);
+
+        if (marketplace === "amazon" && !isAmazon(url)) {
+            continue;
+        }
+
+        if (marketplace === "flipkart" && !isFlipkart(url)) {
+            continue;
+        }
+
+        const text = getSearchText(result).toLowerCase();
+
+        let score = 0;
+
+        for (const word of words) {
+            if (text.includes(word)) {
+                score++;
+            }
+        }
+
+        if (score > bestScore) {
+            bestScore = score;
+            best = result;
+        }
+    }
+
+    return best;
+}
+
+
+function makeMarketplaceObject(result) {
+    if (!result) {
+        return {
+            title: "",
+            price: null,
+            url: ""
+        };
+    }
+
+    const text = getSearchText(result);
+
+    return {
+        title: result.title || "",
+        price: extractPrice(text),
+        url: normalizeUrl(result.url)
+    };
+}
+
+
+function findImage(searchData, productName) {
+    if (!searchData) return "";
+
+    const words = String(productName || "")
+        .toLowerCase()
+        .split(/\s+/)
+        .filter(word => word.length >= 3);
+
+    const images =
+        Array.isArray(searchData.images)
+            ? searchData.images
+            : [];
+
+    for (const image of images) {
+        if (typeof image === "string") {
+            return image;
+        }
+
+        if (
+            image &&
+            typeof image.url === "string"
+        ) {
+            return image.url;
+        }
+    }
+
+    return "";
+}
+
+
+// ===============================
+// RECOMMENDATION API
+// ===============================
+
+app.post("/api/recommend", async (req, res) => {
+    try {
+        const {
+            productType,
+            country,
+            currency,
+            budget,
+            uses,
+            priority,
+            brand
+        } = req.body || {};
+
+        if (!productType) {
+            return res.status(400).json({
+                error: "productType is required"
+            });
+        }
+
+        const numericBudget =
+            Number(
+                String(budget || "")
+                    .replace(/,/g, "")
+                    .replace(/[^\d.]/g, "")
+            );
+
+        if (
+            !Number.isFinite(numericBudget) ||
+            numericBudget <= 0
+        ) {
+            return res.status(400).json({
+                error: "A valid budget is required"
+            });
+        }
+
+
+        const useText =
+            Array.isArray(uses)
+                ? uses.join(", ")
+                : String(uses || "general use");
+
+        const baseQuery = [
+            productType,
+            brand && brand !== "any"
+                ? brand
+                : "",
+            `${country || "India"}`,
+            `${currency || "INR"} ${numericBudget}`,
+            useText,
+            priority || "balanced",
+            "best current price specifications"
+        ]
+            .filter(Boolean)
+            .join(" ");
+
+
+        console.log("================================");
+        console.log("OPITECH REQUEST");
+        console.log(baseQuery);
+        console.log("================================");
+
+
+        // ===============================
+        // LIVE MARKETPLACE SEARCHES
+        // ===============================
+
+        const amazonQuery =
+            `${baseQuery} site:amazon.in`;
+
+        const flipkartQuery =
+            `${baseQuery} site:flipkart.com`;
+
+        const generalQuery =
+            `${baseQuery} current price specifications`;
+
+
+        const [
+            amazonData,
+            flipkartData,
+            generalData
+        ] = await Promise.all([
+            tavilySearch(
+                amazonQuery,
+                ["amazon.in"]
+            ),
+
+            tavilySearch(
+                flipkartQuery,
+                ["flipkart.com"]
+            ),
+
+            tavilySearch(
+                generalQuery
+            )
+        ]);
+
+
+        const amazonResults =
+            Array.isArray(amazonData.results)
+                ? amazonData.results
+                : [];
+
+        const flipkartResults =
+            Array.isArray(flipkartData.results)
+                ? flipkartData.results
+                : [];
+
+        const generalResults =
+            Array.isArray(generalData.results)
+                ? generalData.results
+                : [];
+
+
+        console.log(
+            `Amazon results: ${amazonResults.length}`
+        );
+
+        console.log(
+            `Flipkart results: ${flipkartResults.length}`
+        );
+
+        console.log(
+            `General results: ${generalResults.length}`
+        );
+
+
+        // ===============================
+        // SEND EVIDENCE TO GROQ
+        // ===============================
+
+        const evidence = {
+            amazon: amazonResults.map(item => ({
+                title: item.title || "",
+                url: item.url || "",
+                content: item.content || ""
+            })),
+
+            flipkart: flipkartResults.map(item => ({
+                title: item.title || "",
+                url: item.url || "",
+                content: item.content || ""
+            })),
+
+            general: generalResults.map(item => ({
+                title: item.title || "",
+                url: item.url || "",
+                content: item.content || ""
+            }))
+        };
+
+
+        const prompt = `
+User requirements:
+
+Product type: ${productType}
+Country: ${country || "India"}
+Currency: ${currency || "INR"}
+Budget: ${numericBudget}
+Uses: ${useText}
+Priority: ${priority || "balanced"}
+Preferred brand: ${brand || "any"}
+
+LIVE WEB SEARCH EVIDENCE:
+
+${JSON.stringify(evidence, null, 2)}
+
+Choose the best products for this user.
+
+Remember:
+- Use only evidence above.
+- Prefer products within budget.
+- Amazon India and Flipkart are the required marketplaces.
+- Do not invent prices.
+- Do not invent links.
+- Do not invent images.
+- Return valid JSON only.
+`;
+
+
+        const aiText = await askGroq(prompt);
+
+        console.log("Groq response received.");
+
+
+        let aiJson;
 
         try {
-
-            const {
-
-                productType,
-
-                country,
-
-                currency,
-
-                budget,
-
-                uses,
-
-                priority,
-
-                brand
-
-            } = req.body;
-
-
-            console.log(
-                "📥 Received preferences:"
+            aiJson = JSON.parse(
+                cleanJson(aiText)
+            );
+        } catch (parseError) {
+            console.error(
+                "JSON parse failed:",
+                aiText
             );
 
-
-            console.log({
-
-                productType,
-
-                country,
-
-                currency,
-
-                budget,
-
-                uses,
-
-                priority,
-
-                brand
-
+            return res.status(502).json({
+                error: "AI returned invalid JSON",
+                details:
+                    "Groq response could not be parsed."
             });
+        }
 
 
-            /* =================================================
-               VALIDATION
-            ================================================= */
-
-            if (!productType) {
-
-                return res.status(400).json({
-
-                    error:
-                        "Product type is required"
-
-                });
-
-            }
+        let recommendations =
+            Array.isArray(aiJson.recommendations)
+                ? aiJson.recommendations
+                : [];
 
 
-            if (!budget) {
+        // ===============================
+        // VERIFY / ENRICH MARKETPLACE DATA
+        // ===============================
 
-                return res.status(400).json({
+        recommendations =
+            recommendations
+                .slice(0, 3)
+                .map((product, index) => {
 
-                    error:
-                        "Budget is required"
+                    const productName =
+                        product.name || "";
 
-                });
+                    const amazonMatch =
+                        findMarketplaceResult(
+                            amazonResults,
+                            productName,
+                            "amazon"
+                        );
 
-            }
-
-
-            /* =================================================
-               USES
-            ================================================= */
-
-            const useText =
-
-                Array.isArray(uses)
-
-                    ? uses.join(", ")
-
-                    : (
-                        uses ||
-                        "general use"
-                    );
-
-
-            /* =================================================
-               BRAND
-            ================================================= */
-
-            const brandText =
-
-                brand &&
-                brand.toLowerCase() !== "any"
-
-                    ? brand
-
-                    : "";
-
-
-            /* =================================================
-               SEARCH QUERIES
-            ================================================= */
-
-            const searchQueries = [
-
-                `${brandText} ${productType} ${useText} under ${budget} ${currency} ${country}`,
-
-                `best ${productType} ${brandText} ${useText} ${country} current price specifications`,
-
-                `${brandText} ${productType} ${country} price specifications official`
-
-            ];
-
-
-            console.log(
-                "🔎 Search queries:",
-                searchQueries
-            );
-
-
-            /* =================================================
-               TAVILY SEARCH
-            ================================================= */
-
-            let allResults = [];
-
-
-            for (
-                const query
-                of searchQueries
-            ) {
-
-                try {
-
-                    const results =
-                        await searchProducts(
-                            query
+                    const flipkartMatch =
+                        findMarketplaceResult(
+                            flipkartResults,
+                            productName,
+                            "flipkart"
                         );
 
 
-                    allResults.push(
-                        ...results
-                    );
+                    const amazon =
+                        makeMarketplaceObject(
+                            amazonMatch
+                        );
+
+                    const flipkart =
+                        makeMarketplaceObject(
+                            flipkartMatch
+                        );
 
 
-                } catch (
-                    searchError
-                ) {
-
-                    console.error(
-                        "⚠️ Search failed:",
-                        searchError.message
-                    );
-
-                }
-
-            }
+                    let finalPrice = null;
+                    let finalSource = "";
 
 
-            /* =================================================
-               REMOVE DUPLICATES
-            ================================================= */
+                    if (
+                        amazon.price &&
+                        amazon.price <= numericBudget
+                    ) {
+                        finalPrice =
+                            amazon.price;
 
-            const uniqueResults =
-                [];
-
-
-            const seenUrls =
-                new Set();
-
-
-            for (
-                const result
-                of allResults
-            ) {
-
-                if (
-                    result.url &&
-                    !seenUrls.has(
-                        result.url
-                    )
-                ) {
-
-                    seenUrls.add(
-                        result.url
-                    );
-
-                    uniqueResults.push(
-                        result
-                    );
-
-                }
-
-            }
+                        finalSource =
+                            "Amazon India";
+                    }
 
 
-            console.log(
-                `📊 Unique search results: ${uniqueResults.length}`
-            );
+                    if (
+                        flipkart.price &&
+                        flipkart.price <= numericBudget
+                    ) {
+                        if (
+                            finalPrice === null ||
+                            flipkart.price < finalPrice
+                        ) {
+                            finalPrice =
+                                flipkart.price;
 
-
-            if (
-                uniqueResults.length === 0
-            ) {
-
-                return res.status(500).json({
-
-                    error:
-                        "No current product information was found.",
-
-                    details:
-                        "Tavily returned no usable search results."
-
-                });
-
-            }
-
-
-            /* =================================================
-               COMPRESS SEARCH DATA
-            ================================================= */
-
-            const searchData =
-                uniqueResults
-                    .slice(0, 8)
-                    .map(
-                        (result, index) => {
-
-                            const content =
-
-                                (
-                                    result.content ||
-                                    ""
-                                )
-
-                                    .replace(
-                                        /\s+/g,
-                                        " "
-                                    )
-
-                                    .slice(
-                                        0,
-                                        500
-                                    );
-
-
-                            return `
-
-RESULT ${index + 1}
-
-Title:
-${result.title || "Unknown"}
-
-URL:
-${result.url || "Unknown"}
-
-Content:
-${content}
-
-`;
-
+                            finalSource =
+                                "Flipkart";
                         }
-                    )
-                    .join("\n");
+                    }
 
 
-            console.log(
-                `📦 Sending ${searchData.length} characters of search data to Groq`
-            );
+                    if (
+                        finalPrice === null &&
+                        amazon.price
+                    ) {
+                        finalPrice =
+                            amazon.price;
+
+                        finalSource =
+                            "Amazon India";
+                    }
 
 
-            /* =================================================
-               AI PROMPT
-            ================================================= */
+                    if (
+                        finalPrice === null &&
+                        flipkart.price
+                    ) {
+                        finalPrice =
+                            flipkart.price;
 
-            const prompt = `
-
-USER REQUIREMENTS
-
-Product type:
-${productType}
-
-Country:
-${country || "India"}
-
-Currency:
-${currency || "INR"}
-
-Maximum budget:
-${budget}
-
-Uses:
-${useText}
-
-Priority:
-${priority || "balanced"}
-
-Preferred brand:
-${brand || "any"}
+                        finalSource =
+                            "Flipkart";
+                    }
 
 
-TASK
-
-Analyze ONLY the supplied search results.
-
-Select exactly 3 different real products when at least 3 suitable products are available.
-
-Requirements:
-
-1. Use exact real model names.
-2. Prefer products within the user's maximum budget.
-3. Respect the preferred brand.
-4. Match the user's listed uses.
-5. Consider the user's priority.
-6. Use only prices supported by the search results.
-7. Prefer current prices.
-8. Prefer official manufacturers or reputable retailers.
-9. Never invent information.
-10. If an exact price is not supported, use "Price unavailable".
-11. Keep explanations very short.
-12. Return ONLY JSON.
+                    let imageUrl =
+                        product.imageUrl || "";
 
 
-SEARCH RESULTS
-
-${searchData}
-
-
-FINAL JSON FORMAT
-
-{
-  "recommendations": [
-    {
-      "rank": 1,
-      "name": "Exact Product Model",
-      "price": "₹24999",
-      "priceSource": "Source",
-      "matchScore": 95,
-      "why": "Short reason",
-      "strengths": [
-        "Strength",
-        "Strength"
-      ],
-      "tradeoffs": [
-        "Tradeoff"
-      ]
-    },
-    {
-      "rank": 2,
-      "name": "Exact Product Model",
-      "price": "₹24999",
-      "priceSource": "Source",
-      "matchScore": 90,
-      "why": "Short reason",
-      "strengths": [
-        "Strength",
-        "Strength"
-      ],
-      "tradeoffs": [
-        "Tradeoff"
-      ]
-    },
-    {
-      "rank": 3,
-      "name": "Exact Product Model",
-      "price": "₹24999",
-      "priceSource": "Source",
-      "matchScore": 85,
-      "why": "Short reason",
-      "strengths": [
-        "Strength",
-        "Strength"
-      ],
-      "tradeoffs": [
-        "Tradeoff"
-      ]
-    }
-  ]
-}
-
-`;
+                    if (!imageUrl) {
+                        imageUrl =
+                            findImage(
+                                amazonData,
+                                productName
+                            );
+                    }
 
 
-            /* =================================================
-               CALL GROQ
-            ================================================= */
-
-            const aiText =
-                await generateWithGroq(
-                    prompt
-                );
-
-
-            /* =================================================
-               PARSE JSON
-            ================================================= */
-
-            let resultData;
+                    if (!imageUrl) {
+                        imageUrl =
+                            findImage(
+                                flipkartData,
+                                productName
+                            );
+                    }
 
 
-            try {
+                    return {
+                        rank:
+                            index + 1,
 
-                resultData =
-                    extractJSON(
-                        aiText
-                    );
+                        name:
+                            productName,
 
+                        brand:
+                            product.brand || "",
 
-                resultData =
-                    validateRecommendations(
-                        resultData
-                    );
+                        price:
+                            finalPrice,
 
+                        currency:
+                            currency || "INR",
 
-            } catch (
-                jsonError
-            ) {
+                        priceSource:
+                            finalSource ||
+                            "Live marketplace search",
 
-                console.error(
-                    "❌ AI JSON validation failed:",
-                    jsonError.message
-                );
+                        imageUrl,
 
+                        amazon,
 
-                return res.status(500).json({
+                        flipkart,
 
-                    error:
-                        "AI returned invalid recommendation data.",
+                        matchScore:
+                            Number(
+                                product.matchScore
+                            ) || 0,
 
-                    details:
-                        jsonError.message
+                        why:
+                            product.why || "",
 
+                        strengths:
+                            Array.isArray(
+                                product.strengths
+                            )
+                                ? product.strengths
+                                : [],
+
+                        tradeoffs:
+                            Array.isArray(
+                                product.tradeoffs
+                            )
+                                ? product.tradeoffs
+                                : []
+                    };
                 });
 
-            }
+
+        return res.json({
+            success: true,
+            recommendations,
+            checkedAt:
+                new Date().toISOString(),
+
+            priceNotice:
+                "Prices and availability are checked from current web search results and may change on Amazon India or Flipkart."
+        });
 
 
-            /* =================================================
-               SUCCESS
-            ================================================= */
+    } catch (error) {
 
-            console.log(
-                `✅ Returning ${resultData.recommendations.length} recommendations`
-            );
-
-
-            return res.json({
-
-                success:
-                    true,
-
-                recommendations:
-                    resultData.recommendations,
-
-                result:
-                    resultData.recommendations
-
-            });
-
-
-        } catch (error) {
-
-            console.error(
-                "❌ OPITECH AI generation failed:"
-            );
-
-
-            console.error(
-                error
-            );
-
-
-            return res.status(500).json({
-
-                error:
-                    "AI generation failed",
-
-                details:
-                    error.message ||
-                    "Unknown error",
-
-                type:
-                    error.name ||
-                    "UnknownError",
-
-                code:
-                    error.status ||
-                    error.code ||
-                    null
-
-            });
-
-        }
-
-    }
-);
-
-
-/* =========================================================
-   START SERVER
-========================================================= */
-
-app.listen(
-    PORT,
-    "0.0.0.0",
-    () => {
-
-        console.log(
-            `🚀 OPITECH BACKEND IS LIVE ON PORT ${PORT}`
+        console.error(
+            "OPITECH ERROR:",
+            error
         );
 
+        return res.status(500).json({
+            error: "AI generation failed",
+            details:
+                error.message || "Unknown server error"
+        });
     }
-);
+});
+
+
+// ===============================
+// START SERVER
+// ===============================
+
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(
+        `OPITECH backend running on port ${PORT}`
+    );
+});
