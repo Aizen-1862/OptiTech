@@ -1,566 +1,310 @@
-<!DOCTYPE html><html lang="en"><head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>OPITECH — Smart Tech Recommendations</title>
+/* =========================================================
+   OPITECH — COMPLETE STYLE
+   Premium AI Recommendation Interface
+   ========================================================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
 
-<link rel="stylesheet" href="style.css?v=5">
+body {
+    font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Arial,
+        sans-serif;
 
-</head><body><!-- HEADER -->
-<header class="header">
+    background:
+        radial-gradient(
+            circle at 50% -10%,
+            rgba(37, 99, 235, 0.16),
+            transparent 38%
+        ),
+        #05070a;
 
-    <div class="logo">
-        <span>OPI</span>TECH
-    </div>
+    color: #f8fafc;
+    line-height: 1.6;
+}
 
-    <nav>
-        <a href="#home">Home</a>
-        <a href="#recommend">Find Tech</a>
-        <a href="#about">About</a>
-    </nav>
 
-</header>
+/* =========================================================
+   HEADER
+   ========================================================= */
 
+.header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
 
-<!-- HERO -->
-<section id="home" class="hero">
+    height: 72px;
 
-    <div class="hero-content">
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 
-        <div class="badge">
-            ⚡ Smart Tech Recommendations
-        </div>
+    padding: 0 7%;
 
-        <h1>
-            Find the tech that's
-            <span>right for you.</span>
-        </h1>
-
-        <p>
-            Tell OPITECH your budget, needs and preferences.
-            We'll help you discover devices that actually match your needs.
-        </p>
+    background: rgba(5, 7, 10, 0.82);
 
-        <a href="#recommend" class="primary-button">
-            Find My Tech →
-        </a>
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
 
-    </div>
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
 
-</section>
+.logo {
+    font-size: 24px;
+    font-weight: 900;
+    letter-spacing: -1px;
+}
 
+.logo span {
+    color: #3b82f6;
+}
 
-<!-- RECOMMENDER -->
-<section id="recommend" class="recommend-section">
+.header nav {
+    display: flex;
+    gap: 30px;
+}
 
-    <div class="section-heading">
+.header nav a {
+    color: #94a3b8;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
 
-        <p class="small-title">
-            OPITECH FINDER
-        </p>
+    transition: 0.2s ease;
+}
 
-        <h2>
-            Build your recommendation.
-        </h2>
+.header nav a:hover {
+    color: #ffffff;
+}
 
-        <p>
-            Tell us what you're looking for and OPITECH will find
-            the best matches for you.
-        </p>
 
-    </div>
+/* =========================================================
+   HERO
+   ========================================================= */
 
+.hero {
+    min-height: 650px;
 
-    <div class="form-card">
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
+    padding: 100px 20px;
 
-        <!-- PRODUCT TYPE -->
-        <div class="form-group">
+    text-align: center;
 
-            <label>
-                What are you looking for?
-            </label>
+    position: relative;
+    overflow: hidden;
+}
 
-            <div class="option-grid">
+.hero::before {
+    content: "";
 
-                <button
-                    type="button"
-                    class="option active"
-                    data-type="Phone"
-                >
-                    📱
-                    <span>Phone</span>
-                </button>
+    position: absolute;
 
-                <button
-                    type="button"
-                    class="option"
-                    data-type="Laptop"
-                >
-                    💻
-                    <span>Laptop</span>
-                </button>
+    width: 600px;
+    height: 600px;
 
-                <button
-                    type="button"
-                    class="option"
-                    data-type="Tablet"
-                >
-                    📲
-                    <span>Tablet</span>
-                </button>
+    top: -300px;
+    left: 50%;
 
-                <button
-                    type="button"
-                    class="option"
-                    data-type="TV"
-                >
-                    📺
-                    <span>TV</span>
-                </button>
+    transform: translateX(-50%);
 
-                <button
-                    type="button"
-                    class="option"
-                    data-type="Headphones"
-                >
-                    🎧
-                    <span>Headphones</span>
-                </button>
+    background: rgba(37, 99, 235, 0.18);
 
-                <button
-                    type="button"
-                    class="option"
-                    data-type="Speaker"
-                >
-                    🔊
-                    <span>Speaker</span>
-                </button>
+    filter: blur(100px);
 
-            </div>
+    border-radius: 50%;
 
-        </div>
+    pointer-events: none;
+}
 
+.hero-content {
+    max-width: 850px;
 
-        <!-- COUNTRY -->
-        <div class="form-group">
+    position: relative;
+    z-index: 2;
+}
 
-            <label>
-                Country
-            </label>
+.badge {
+    display: inline-flex;
+    align-items: center;
 
-            <select id="country">
+    padding: 8px 15px;
 
-                <option value="India" selected>
-                    🇮🇳 India
-                </option>
+    margin-bottom: 25px;
 
-                <option value="United States">
-                    🇺🇸 United States
-                </option>
+    border-radius: 999px;
 
-                <option value="United Kingdom">
-                    🇬🇧 United Kingdom
-                </option>
+    background: rgba(37, 99, 235, 0.10);
 
-                <option value="Canada">
-                    🇨🇦 Canada
-                </option>
+    border: 1px solid rgba(59, 130, 246, 0.25);
 
-                <option value="Australia">
-                    🇦🇺 Australia
-                </option>
+    color: #60a5fa;
 
-                <option value="Germany">
-                    🇩🇪 Germany
-                </option>
+    font-size: 13px;
+    font-weight: 700;
+}
 
-                <option value="United Arab Emirates">
-                    🇦🇪 UAE
-                </option>
+.hero h1 {
+    font-size: clamp(45px, 7vw, 82px);
 
-                <option value="Singapore">
-                    🇸🇬 Singapore
-                </option>
+    line-height: 1.02;
 
-            </select>
+    letter-spacing: -4px;
 
-        </div>
+    font-weight: 900;
 
+    margin-bottom: 25px;
+}
 
-        <!-- CURRENCY -->
-        <div class="form-group">
+.hero h1 span {
+    display: block;
 
-            <label>
-                Currency
-            </label>
+    background:
+        linear-gradient(
+            90deg,
+            #60a5fa,
+            #2563eb,
+            #8b5cf6
+        );
 
-            <select id="currency">
+    -webkit-background-clip: text;
+    background-clip: text;
 
-                <option value="INR" selected>
-                    INR — Indian Rupee
-                </option>
+    color: transparent;
+}
 
-                <option value="USD">
-                    USD — US Dollar
-                </option>
+.hero p {
+    max-width: 650px;
 
-                <option value="GBP">
-                    GBP — British Pound
-                </option>
-
-                <option value="CAD">
-                    CAD — Canadian Dollar
-                </option>
-
-                <option value="AUD">
-                    AUD — Australian Dollar
-                </option>
-
-                <option value="EUR">
-                    EUR — Euro
-                </option>
-
-                <option value="AED">
-                    AED — UAE Dirham
-                </option>
-
-                <option value="SGD">
-                    SGD — Singapore Dollar
-                </option>
-
-            </select>
-
-        </div>
-
-
-        <!-- BUDGET -->
-        <div class="form-group">
-
-            <label>
-                What's your budget?
-            </label>
-
-            <div class="budget-input">
-
-                <span id="currencySymbol">
-                    ₹
-                </span>
-
-                <input
-                    type="number"
-                    id="budget"
-                    placeholder="Enter your maximum budget"
-                    min="1"
-                    inputmode="numeric"
-                >
-
-            </div>
-
-        </div>
-
-
-        <!-- USES -->
-        <div class="form-group">
-
-            <label>
-                What will you use it for?
-                <span>(Choose all that apply)</span>
-            </label>
-
-            <div class="checkbox-grid">
-
-                <label class="check-option">
-                    <input
-                        type="checkbox"
-                        value="gaming"
-                    >
-                    🎮 Gaming
-                </label>
-
-                <label class="check-option">
-                    <input
-                        type="checkbox"
-                        value="performance"
-                    >
-                    ⚡ Performance
-                </label>
-
-                <label class="check-option">
-                    <input
-                        type="checkbox"
-                        value="camera"
-                    >
-                    📸 Camera
-                </label>
-
-                <label class="check-option">
-                    <input
-                        type="checkbox"
-                        value="battery"
-                    >
-                    🔋 Battery life
-                </label>
-
-                <label class="check-option">
-                    <input
-                        type="checkbox"
-                        value="study"
-                    >
-                    📚 Study
-                </label>
-
-                <label class="check-option">
-                    <input
-                        type="checkbox"
-                        value="work"
-                    >
-                    💼 Work
-                </label>
-
-                <label class="check-option">
-                    <input
-                        type="checkbox"
-                        value="video editing"
-                    >
-                    🎬 Video editing
-                </label>
-
-                <label class="check-option">
-                    <input
-                        type="checkbox"
-                        value="content creation"
-                    >
-                    🎥 Content creation
-                </label>
-
-                <label class="check-option">
-                    <input
-                        type="checkbox"
-                        value="music"
-                    >
-                    🎵 Music
-                </label>
-
-                <label class="check-option">
-                    <input
-                        type="checkbox"
-                        value="everyday use"
-                    >
-                    🌐 Everyday use
-                </label>
-
-            </div>
-
-        </div>
-
-
-        <!-- PRIORITY -->
-        <div class="form-group">
-
-            <label>
-                What's most important to you?
-            </label>
-
-            <select id="priority">
-
-                <option value="balanced" selected>
-                    ⚖️ Balanced
-                </option>
-
-                <option value="performance">
-                    ⚡ Performance
-                </option>
+    margin: 0 auto 35px;
 
-                <option value="gaming">
-                    🎮 Gaming
-                </option>
+    color: #94a3b8;
 
-                <option value="camera">
-                    📸 Camera
-                </option>
-
-                <option value="battery">
-                    🔋 Battery
-                </option>
+    font-size: 17px;
+}
 
-                <option value="value">
-                    💰 Best value
-                </option>
+.primary-button {
+    display: inline-flex;
 
-            </select>
+    align-items: center;
+    justify-content: center;
 
-        </div>
+    padding: 15px 25px;
 
+    border-radius: 12px;
 
-        <!-- BRAND -->
-        <div class="form-group">
+    background: #2563eb;
 
-            <label>
-                Preferred brand
-                <span>(Optional)</span>
-            </label>
+    color: white;
 
-            <select id="brand">
+    text-decoration: none;
 
-                <option value="any" selected>
-                    Any brand
-                </option>
+    font-weight: 800;
 
-                <option value="Xiaomi">
-                    Xiaomi
-                </option>
+    box-shadow:
+        0 10px 35px rgba(37, 99, 235, 0.25);
 
-                <option value="POCO">
-                    POCO
-                </option>
+    transition: 0.25s ease;
+}
 
-                <option value="Redmi">
-                    Redmi
-                </option>
+.primary-button:hover {
+    transform: translateY(-2px);
 
-                <option value="Samsung">
-                    Samsung
-                </option>
+    background: #3b82f6;
 
-                <option value="Apple">
-                    Apple
-                </option>
+    box-shadow:
+        0 15px 45px rgba(37, 99, 235, 0.35);
+}
 
-                <option value="OnePlus">
-                    OnePlus
-                </option>
 
-                <option value="Realme">
-                    Realme
-                </option>
+/* =========================================================
+   RECOMMENDER
+   ========================================================= */
 
-                <option value="Motorola">
-                    Motorola
-                </option>
+.recommend-section {
+    padding: 100px 7%;
+}
 
-                <option value="vivo">
-                    vivo
-                </option>
+.section-heading {
+    max-width: 700px;
 
-                <option value="OPPO">
-                    OPPO
-                </option>
+    margin: 0 auto 50px;
 
-                <option value="ASUS">
-                    ASUS
-                </option>
+    text-align: center;
+}
 
-                <option value="Lenovo">
-                    Lenovo
-                </option>
+.small-title {
+    color: #3b82f6;
 
-                <option value="HP">
-                    HP
-                </option>
+    font-size: 12px;
 
-                <option value="Dell">
-                    Dell
-                </option>
+    font-weight: 900;
 
-                <option value="Acer">
-                    Acer
-                </option>
+    letter-spacing: 2px;
 
-            </select>
+    margin-bottom: 10px;
+}
 
-        </div>
+.section-heading h2 {
+    font-size: 42px;
 
+    letter-spacing: -1.5px;
 
-        <!-- FIND BUTTON -->
-        <button
-            id="findButton"
-            class="find-button"
-            type="button"
-        >
-            🔍 Find My Best Matches
-        </button>
+    margin-bottom: 12px;
+}
 
+.section-heading > p:last-child {
+    color: #94a3b8;
+}
 
-    </div>
 
-</section>
+/* =========================================================
+   FORM
+   ========================================================= */
 
+.form-card {
+    max-width: 850px;
 
-<!-- RESULTS -->
-<section
-    id="results"
-    class="results-section"
->
+    margin: auto;
 
-    <div class="results-container">
+    padding: 35px;
 
-        <div
-            id="resultsContainer"
-            class="empty-results"
-        >
+    border-radius: 24px;
 
-            <div class="empty-icon">
-                🤖
-            </div>
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255, 255, 255, 0.055),
+            rgba(255, 255, 255, 0.018)
+        );
 
-            <h3>
-                Your recommendations will appear here
-            </h3>
+    border: 1px solid rgba(255, 255, 255, 0.08);
 
-            <p>
-                Tell OPITECH what you need and
-                click "Find My Best Matches".
-            </p>
+    box-shadow:
+        0 30px 80px rgba(0, 0, 0, 0.35);
 
-        </div>
+    backdrop-filter: blur(15px);
+}
 
-    </div>
+.form-group {
+    margin-bottom: 28px;
+}
 
-</section>
+.form-group > label {
+    display: block;
 
-
-<!-- ABOUT -->
-<section
-    id="about"
-    class="about-section"
->
-
-    <div class="about-card">
-
-        <h2>
-            Why OPITECH?
-        </h2>
-
-        <p>
-            OPITECH combines your budget, preferences,
-            use cases and current marketplace information
-            to help you find technology that actually
-            fits your needs.
-        </p>
-
-    </div>
-
-</section>
-
-
-<!-- FOOTER -->
-<footer>
-
-    <div class="logo">
-        <span>OPI</span>TECH
-    </div>
-
-    <p>
-        Smart technology recommendations.
-    </p>
-
-    <p class="copyright">
-        © 2026 OPITECH. All rights reserved.
-    </p>
-
-</footer>
-
-
-<!-- JAVASCRIPT -->
-<script src="script.js?v=5"></script>
-
-</body></html>
+    margin
