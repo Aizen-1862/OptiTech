@@ -1,6 +1,6 @@
 /* =========================================================
    OPITECH — COMPLETE STYLE
-   Old landing/form UI + premium AI results interface
+   Premium AI Recommendation Interface
    ========================================================= */
 
 * {
@@ -14,26 +14,19 @@ html {
 }
 
 body {
-    font-family:
-        Inter,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Roboto,
-        Arial,
-        sans-serif;
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, Arial, sans-serif;
 
     background:
         radial-gradient(
-            circle at 80% 10%,
-            rgba(37, 99, 235, 0.12),
-            transparent 28%
+            circle at 50% -10%,
+            rgba(37, 99, 235, 0.16),
+            transparent 38%
         ),
-        #05070c;
+        #05070a;
 
-    color: #f5f7fb;
+    color: #f8fafc;
     line-height: 1.6;
-    overflow-x: hidden;
 }
 
 /* =========================================================
@@ -43,9 +36,9 @@ body {
 .header {
     position: sticky;
     top: 0;
-    z-index: 1000;
+    z-index: 100;
 
-    height: 76px;
+    height: 72px;
 
     display: flex;
     align-items: center;
@@ -53,7 +46,8 @@ body {
 
     padding: 0 7%;
 
-    background: rgba(5, 7, 12, 0.82);
+    background: rgba(5, 7, 10, 0.82);
+
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
 
@@ -61,7 +55,7 @@ body {
 }
 
 .logo {
-    font-size: 25px;
+    font-size: 24px;
     font-weight: 900;
     letter-spacing: -1px;
 }
@@ -76,19 +70,17 @@ body {
 }
 
 .header nav a {
-    color: #aeb7c8;
+    color: #94a3b8;
     text-decoration: none;
+
     font-size: 14px;
     font-weight: 600;
 
-    transition:
-        color 0.2s ease,
-        transform 0.2s ease;
+    transition: 0.2s ease;
 }
 
 .header nav a:hover {
     color: #ffffff;
-    transform: translateY(-1px);
 }
 
 /* =========================================================
@@ -96,15 +88,17 @@ body {
    ========================================================= */
 
 .hero {
-    position: relative;
-    min-height: 700px;
+    min-height: 650px;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    padding: 100px 7%;
+    padding: 100px 20px;
 
+    text-align: center;
+
+    position: relative;
     overflow: hidden;
 }
 
@@ -113,75 +107,56 @@ body {
 
     position: absolute;
 
-    width: 520px;
-    height: 520px;
+    width: 600px;
+    height: 600px;
 
-    top: -180px;
-    right: -120px;
+    top: -300px;
+    left: 50%;
+
+    transform: translateX(-50%);
 
     background: rgba(37, 99, 235, 0.18);
 
     filter: blur(100px);
-    border-radius: 50%;
 
-    pointer-events: none;
-}
-
-.hero::after {
-    content: "";
-
-    position: absolute;
-
-    width: 400px;
-    height: 400px;
-
-    bottom: -200px;
-    left: -100px;
-
-    background: rgba(29, 78, 216, 0.10);
-
-    filter: blur(100px);
     border-radius: 50%;
 
     pointer-events: none;
 }
 
 .hero-content {
+    max-width: 850px;
+
     position: relative;
     z-index: 2;
-
-    max-width: 900px;
-    text-align: center;
 }
 
 .badge {
     display: inline-flex;
     align-items: center;
 
-    padding: 8px 16px;
+    padding: 8px 15px;
 
     margin-bottom: 25px;
 
     border-radius: 999px;
 
-    background: rgba(59, 130, 246, 0.10);
+    background: rgba(37, 99, 235, 0.10);
+
     border: 1px solid rgba(59, 130, 246, 0.25);
 
-    color: #75a9ff;
+    color: #60a5fa;
 
     font-size: 13px;
     font-weight: 700;
-
-    box-shadow:
-        0 0 30px rgba(37, 99, 235, 0.10);
 }
 
 .hero h1 {
     font-size: clamp(45px, 7vw, 82px);
 
-    line-height: 1.04;
+    line-height: 1.02;
 
-    letter-spacing: -3px;
+    letter-spacing: -4px;
 
     font-weight: 900;
 
@@ -196,7 +171,7 @@ body {
             90deg,
             #60a5fa,
             #2563eb,
-            #93c5fd
+            #8b5cf6
         );
 
     -webkit-background-clip: text;
@@ -210,80 +185,65 @@ body {
 
     margin: 0 auto 35px;
 
-    color: #9aa5b8;
+    color: #94a3b8;
 
     font-size: 17px;
 }
 
-/* =========================================================
-   BUTTONS
-   ========================================================= */
-
 .primary-button {
     display: inline-flex;
+
     align-items: center;
     justify-content: center;
 
-    min-height: 52px;
-
-    padding: 0 25px;
+    padding: 15px 25px;
 
     border-radius: 12px;
 
-    background:
-        linear-gradient(
-            135deg,
-            #3b82f6,
-            #2563eb
-        );
+    background: #2563eb;
 
     color: white;
 
     text-decoration: none;
 
     font-weight: 800;
-    font-size: 15px;
 
     box-shadow:
-        0 12px 35px rgba(37, 99, 235, 0.25);
+        0 10px 35px rgba(37, 99, 235, 0.25);
 
-    transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease;
+    transition: 0.25s ease;
 }
 
 .primary-button:hover {
-    transform: translateY(-3px);
+    transform: translateY(-2px);
+
+    background: #3b82f6;
 
     box-shadow:
-        0 18px 45px rgba(37, 99, 235, 0.35);
+        0 15px 45px rgba(37, 99, 235, 0.35);
 }
 
 /* =========================================================
-   RECOMMENDER SECTION
+   RECOMMENDER
    ========================================================= */
 
 .recommend-section {
-    padding: 110px 7%;
-
-    background:
-        linear-gradient(
-            180deg,
-            #070a10 0%,
-            #090c13 100%
-        );
+    padding: 100px 7%;
 }
 
 .section-heading {
-    max-width: 760px;
-    margin: 0 auto 45px;
+    max-width: 700px;
+
+    margin: 0 auto 50px;
+
     text-align: center;
 }
 
 .small-title {
-    color: #4f91ff;
+    color: #3b82f6;
 
     font-size: 12px;
+
     font-weight: 900;
 
     letter-spacing: 2px;
@@ -292,42 +252,44 @@ body {
 }
 
 .section-heading h2 {
-    font-size: clamp(32px, 5vw, 50px);
+    font-size: 42px;
 
-    letter-spacing: -1.8px;
+    letter-spacing: -1.5px;
 
     margin-bottom: 12px;
 }
 
 .section-heading > p:last-child {
-    color: #8e99ab;
-    font-size: 16px;
+    color: #94a3b8;
 }
 
 /* =========================================================
-   FORM CARD
+   FORM
    ========================================================= */
 
 .form-card {
-    width: min(900px, 100%);
+    max-width: 850px;
 
     margin: auto;
 
-    padding: clamp(24px, 5vw, 45px);
+    padding: 35px;
 
     border-radius: 24px;
 
     background:
         linear-gradient(
             145deg,
-            rgba(18, 24, 36, 0.96),
-            rgba(9, 13, 21, 0.96)
+            rgba(255, 255, 255, 0.055),
+            rgba(255, 255, 255, 0.018)
         );
 
     border: 1px solid rgba(255, 255, 255, 0.08);
 
     box-shadow:
-        0 30px 90px rgba(0, 0, 0, 0.35);
+        0 30px 80px rgba(0, 0, 0, 0.35);
+
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
 }
 
 .form-group {
@@ -339,14 +301,16 @@ body {
 
     margin-bottom: 12px;
 
-    color: #e9edf5;
+    color: #e2e8f0;
 
     font-size: 14px;
+
     font-weight: 800;
 }
 
 .form-group > label span {
-    color: #6f7b8e;
+    color: #64748b;
+
     font-weight: 500;
 }
 
@@ -364,44 +328,44 @@ body {
 }
 
 .option {
-    min-height: 86px;
+    min-height: 82px;
 
     display: flex;
+
     flex-direction: column;
+
     align-items: center;
     justify-content: center;
 
     gap: 5px;
 
+    padding: 12px;
+
     border-radius: 14px;
 
-    background: #0d121c;
+    background: rgba(15, 23, 42, 0.65);
 
     border: 1px solid rgba(255, 255, 255, 0.07);
 
-    color: #aeb8c8;
+    color: #94a3b8;
 
     cursor: pointer;
 
     font-size: 13px;
+
     font-weight: 700;
 
     transition:
-        border-color 0.2s ease,
-        background 0.2s ease,
-        transform 0.2s ease;
-}
-
-.option:first-line {
-    font-size: 25px;
+        0.2s ease;
 }
 
 .option:hover {
     transform: translateY(-2px);
 
-    border-color: rgba(59, 130, 246, 0.35);
+    border-color:
+        rgba(59, 130, 246, 0.35);
 
-    background: #111827;
+    color: #ffffff;
 }
 
 .option.active {
@@ -409,10 +373,11 @@ body {
         linear-gradient(
             145deg,
             rgba(37, 99, 235, 0.20),
-            rgba(30, 64, 175, 0.10)
+            rgba(37, 99, 235, 0.07)
         );
 
-    border-color: rgba(59, 130, 246, 0.65);
+    border-color:
+        rgba(59, 130, 246, 0.65);
 
     color: #ffffff;
 
@@ -421,45 +386,45 @@ body {
 }
 
 /* =========================================================
-   SELECTS
+   SELECTS + INPUT
    ========================================================= */
 
 select,
 input[type="number"] {
     width: 100%;
 
-    height: 54px;
+    height: 52px;
+
+    padding: 0 15px;
 
     border-radius: 12px;
 
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border:
+        1px solid rgba(255, 255, 255, 0.08);
 
-    background: #0d121c;
+    background: rgba(15, 23, 42, 0.72);
 
-    color: #eef2f8;
-
-    padding: 0 16px;
+    color: #f8fafc;
 
     outline: none;
 
     font-size: 14px;
 
-    transition:
-        border-color 0.2s ease,
-        box-shadow 0.2s ease;
+    transition: 0.2s ease;
 }
 
 select:focus,
 input[type="number"]:focus {
-    border-color: rgba(59, 130, 246, 0.65);
+    border-color:
+        rgba(59, 130, 246, 0.65);
 
     box-shadow:
         0 0 0 3px rgba(59, 130, 246, 0.10);
 }
 
 select option {
-    background: #0d121c;
-    color: white;
+    background: #0b1018;
+    color: #ffffff;
 }
 
 /* =========================================================
@@ -503,30 +468,37 @@ select option {
 }
 
 .check-option {
+    min-height: 48px;
+
     display: flex;
+
     align-items: center;
 
     gap: 10px;
-
-    min-height: 50px;
 
     padding: 0 14px;
 
     border-radius: 11px;
 
-    background: #0d121c;
+    background: rgba(15, 23, 42, 0.60);
 
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border:
+        1px solid rgba(255, 255, 255, 0.06);
 
-    color: #aeb7c8;
+    color: #94a3b8;
 
     cursor: pointer;
 
     font-size: 13px;
+
+    transition: 0.2s ease;
 }
 
 .check-option:hover {
-    border-color: rgba(59, 130, 246, 0.35);
+    border-color:
+        rgba(59, 130, 246, 0.35);
+
+    color: #e2e8f0;
 }
 
 .check-option input {
@@ -540,11 +512,11 @@ select option {
 .find-button {
     width: 100%;
 
-    min-height: 58px;
+    min-height: 56px;
 
     border: none;
 
-    border-radius: 14px;
+    border-radius: 13px;
 
     background:
         linear-gradient(
@@ -556,29 +528,28 @@ select option {
     color: white;
 
     font-size: 15px;
+
     font-weight: 900;
 
     cursor: pointer;
 
     box-shadow:
-        0 15px 40px rgba(37, 99, 235, 0.22);
+        0 12px 35px rgba(37, 99, 235, 0.25);
 
-    transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease,
-        opacity 0.2s ease;
+    transition: 0.25s ease;
 }
 
 .find-button:hover:not(:disabled) {
     transform: translateY(-2px);
 
     box-shadow:
-        0 20px 50px rgba(37, 99, 235, 0.32);
+        0 17px 45px rgba(37, 99, 235, 0.35);
 }
 
 .find-button:disabled {
+    opacity: 0.7;
+
     cursor: wait;
-    opacity: 0.75;
 }
 
 /* =========================================================
@@ -586,32 +557,33 @@ select option {
    ========================================================= */
 
 .results-section {
-    position: relative;
+    padding: 100px 7%;
 
-    padding: 110px 7% 120px;
+    position: relative;
 
     background:
         radial-gradient(
             circle at 50% 0%,
             rgba(37, 99, 235, 0.10),
-            transparent 32%
-        ),
-        #05070c;
+            transparent 40%
+        );
 }
 
 .results-container {
-    width: min(1100px, 100%);
+    max-width: 1050px;
+
     margin: auto;
 }
 
 /* =========================================================
-   EMPTY / LOADING STATE
+   EMPTY RESULTS
    ========================================================= */
 
 .empty-results {
-    min-height: 250px;
+    min-height: 260px;
 
     display: flex;
+
     flex-direction: column;
 
     align-items: center;
@@ -619,58 +591,58 @@ select option {
 
     text-align: center;
 
-    padding: 50px 25px;
+    padding: 45px 25px;
 
-    border-radius: 24px;
+    border-radius: 22px;
 
     background:
         linear-gradient(
             145deg,
-            rgba(15, 21, 32, 0.92),
-            rgba(8, 11, 18, 0.92)
+            rgba(255, 255, 255, 0.045),
+            rgba(255, 255, 255, 0.015)
         );
 
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    border:
+        1px solid rgba(255, 255, 255, 0.07);
+
+    box-shadow:
+        0 25px 70px rgba(0, 0, 0, 0.25);
 }
 
 .empty-icon {
-    width: 64px;
-    height: 64px;
+    width: 62px;
+    height: 62px;
 
     display: flex;
+
     align-items: center;
     justify-content: center;
 
-    margin-bottom: 20px;
+    margin-bottom: 18px;
 
-    border-radius: 20px;
+    border-radius: 18px;
 
     background:
-        linear-gradient(
-            145deg,
-            rgba(59, 130, 246, 0.18),
-            rgba(37, 99, 235, 0.06)
-        );
+        rgba(37, 99, 235, 0.10);
 
-    border: 1px solid rgba(59, 130, 246, 0.18);
+    border:
+        1px solid rgba(59, 130, 246, 0.20);
 
-    font-size: 28px;
-
-    box-shadow:
-        0 0 35px rgba(37, 99, 235, 0.10);
+    font-size: 27px;
 }
 
 .empty-results h3 {
     font-size: 22px;
+
     margin-bottom: 8px;
 }
 
 .empty-results p {
-    max-width: 500px;
-
-    color: #7f8b9e;
+    color: #64748b;
 
     font-size: 14px;
+
+    max-width: 500px;
 }
 
 /* =========================================================
@@ -678,39 +650,37 @@ select option {
    ========================================================= */
 
 .ai-results-header {
-    position: relative;
-
     display: flex;
+
     align-items: center;
 
     gap: 18px;
 
-    margin-bottom: 35px;
+    margin-bottom: 30px;
 
-    padding: 26px 28px;
+    padding: 25px;
 
-    border-radius: 22px;
+    border-radius: 20px;
 
     background:
         linear-gradient(
             135deg,
-            rgba(19, 29, 48, 0.95),
-            rgba(10, 15, 25, 0.95)
+            rgba(37, 99, 235, 0.12),
+            rgba(255, 255, 255, 0.025)
         );
 
-    border: 1px solid rgba(59, 130, 246, 0.18);
-
-    box-shadow:
-        0 20px 60px rgba(0, 0, 0, 0.22);
+    border:
+        1px solid rgba(59, 130, 246, 0.18);
 }
 
 .ai-results-icon {
-    flex: 0 0 auto;
-
     width: 58px;
     height: 58px;
 
+    flex-shrink: 0;
+
     display: flex;
+
     align-items: center;
     justify-content: center;
 
@@ -723,8 +693,6 @@ select option {
             #1d4ed8
         );
 
-    color: white;
-
     font-size: 25px;
 
     box-shadow:
@@ -732,9 +700,10 @@ select option {
 }
 
 .results-label {
-    color: #5f9cff;
+    color: #60a5fa;
 
     font-size: 11px;
+
     font-weight: 900;
 
     letter-spacing: 2px;
@@ -743,54 +712,50 @@ select option {
 }
 
 .ai-results-header h2 {
-    font-size: clamp(26px, 4vw, 38px);
+    font-size: 34px;
 
-    letter-spacing: -1.2px;
+    letter-spacing: -1px;
 
-    line-height: 1.15;
-
-    margin-bottom: 4px;
+    line-height: 1.2;
 }
 
 .ai-results-header p:last-child {
-    color: #7f8b9e;
+    color: #64748b;
 
     font-size: 14px;
 }
 
 /* =========================================================
-   RECOMMENDATION LIST
+   RECOMMENDATIONS
    ========================================================= */
 
 .recommendations-list {
     display: flex;
+
     flex-direction: column;
 
-    gap: 20px;
+    gap: 18px;
 }
-
-/* =========================================================
-   GENERAL RECOMMENDATION CARD
-   ========================================================= */
 
 .recommendation-card {
     position: relative;
 
     overflow: hidden;
 
-    border-radius: 24px;
+    border-radius: 22px;
 
     background:
         linear-gradient(
             145deg,
-            rgba(16, 22, 33, 0.98),
-            rgba(8, 12, 19, 0.98)
+            rgba(20, 27, 40, 0.96),
+            rgba(8, 12, 18, 0.96)
         );
 
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    border:
+        1px solid rgba(255, 255, 255, 0.07);
 
     box-shadow:
-        0 20px 65px rgba(0, 0, 0, 0.25);
+        0 25px 70px rgba(0, 0, 0, 0.28);
 }
 
 .recommendation-card::before {
@@ -798,8 +763,8 @@ select option {
 
     position: absolute;
 
-    top: 0;
     left: 0;
+    top: 0;
 
     width: 100%;
     height: 2px;
@@ -808,64 +773,39 @@ select option {
         linear-gradient(
             90deg,
             transparent,
-            rgba(59, 130, 246, 0.75),
+            #3b82f6,
             transparent
         );
 
-    opacity: 0.5;
+    opacity: 0.55;
 }
 
 .product-content {
-    padding: 28px 32px 32px;
-}
-
-.rank {
-    position: absolute;
-
-    top: 25px;
-    left: 28px;
-
-    font-size: 13px;
-    font-weight: 900;
-
-    color: #667386;
-
-    letter-spacing: 1px;
+    padding: 30px;
 }
 
 /* =========================================================
-   BEST MATCH CARD
+   BEST MATCH
    ========================================================= */
 
 .top-recommendation {
-    min-height: 390px;
-
     background:
         radial-gradient(
-            circle at 90% 0%,
-            rgba(37, 99, 235, 0.18),
-            transparent 34%
+            circle at 100% 0%,
+            rgba(37, 99, 235, 0.17),
+            transparent 35%
         ),
         linear-gradient(
             145deg,
-            rgba(18, 28, 46, 0.98),
-            rgba(8, 12, 20, 0.98)
+            rgba(18, 30, 50, 0.98),
+            rgba(8, 12, 19, 0.98)
         );
 
     border-color:
         rgba(59, 130, 246, 0.25);
 
     box-shadow:
-        0 30px 90px rgba(0, 0, 0, 0.30),
-        0 0 60px rgba(37, 99, 235, 0.06);
-}
-
-.top-recommendation .rank {
-    color: #72a8ff;
-}
-
-.top-recommendation .product-content {
-    padding-top: 72px;
+        0 30px 90px rgba(0, 0, 0, 0.35);
 }
 
 .top-badge {
@@ -874,10 +814,7 @@ select option {
     top: 20px;
     right: 22px;
 
-    display: inline-flex;
-    align-items: center;
-
-    padding: 8px 13px;
+    padding: 7px 12px;
 
     border-radius: 999px;
 
@@ -887,29 +824,58 @@ select option {
     border:
         1px solid rgba(96, 165, 250, 0.25);
 
-    color: #8bbcff;
+    color: #93c5fd;
 
-    font-size: 11px;
+    font-size: 10px;
+
     font-weight: 900;
 
-    letter-spacing: 0.7px;
+    letter-spacing: 0.8px;
+}
+
+.top-recommendation .product-content {
+    padding-top: 68px;
 }
 
 /* =========================================================
-   PRODUCT TOP LINE
+   RANK
+   ========================================================= */
+
+.rank {
+    position: absolute;
+
+    top: 25px;
+    left: 28px;
+
+    color: #64748b;
+
+    font-size: 13px;
+
+    font-weight: 900;
+
+    letter-spacing: 1px;
+}
+
+.top-recommendation .rank {
+    color: #60a5fa;
+}
+
+/* =========================================================
+   PRODUCT TITLE
    ========================================================= */
 
 .product-top-line {
     display: flex;
 
     align-items: flex-start;
+
     justify-content: space-between;
 
     gap: 20px;
 }
 
 .product-top-line h3 {
-    font-size: clamp(23px, 4vw, 34px);
+    font-size: 30px;
 
     line-height: 1.15;
 
@@ -923,19 +889,21 @@ select option {
 }
 
 .brand {
-    display: inline-flex;
+    display: inline-block;
 
     margin-top: 8px;
 
-    padding: 5px 10px;
+    padding: 4px 9px;
 
     border-radius: 7px;
 
-    background: rgba(255, 255, 255, 0.05);
+    background:
+        rgba(255, 255, 255, 0.05);
 
-    color: #8e9aae;
+    color: #94a3b8;
 
-    font-size: 11px;
+    font-size: 10px;
+
     font-weight: 800;
 
     text-transform: uppercase;
@@ -948,27 +916,27 @@ select option {
    ========================================================= */
 
 .match-score {
-    flex: 0 0 auto;
+    flex-shrink: 0;
 
-    min-width: 86px;
+    min-width: 82px;
 
-    padding: 9px 12px;
+    padding: 8px 10px;
 
     border-radius: 12px;
 
+    text-align: center;
+
     background:
-        rgba(59, 130, 246, 0.08);
+        rgba(37, 99, 235, 0.08);
 
     border:
         1px solid rgba(59, 130, 246, 0.18);
-
-    text-align: center;
 }
 
 .match-score span {
     display: block;
 
-    color: #738197;
+    color: #64748b;
 
     font-size: 9px;
 
@@ -982,13 +950,11 @@ select option {
 .match-score strong {
     display: block;
 
-    margin-top: 1px;
+    color: #60a5fa;
 
-    color: #70a8ff;
+    font-size: 20px;
 
-    font-size: 21px;
-
-    line-height: 1;
+    line-height: 1.2;
 
     font-weight: 900;
 }
@@ -1002,7 +968,7 @@ select option {
 
     color: #ffffff;
 
-    font-size: clamp(27px, 5vw, 40px);
+    font-size: 38px;
 
     line-height: 1;
 
@@ -1012,60 +978,54 @@ select option {
 }
 
 .secondary-recommendation .main-price {
-    font-size: 27px;
+    font-size: 28px;
 }
 
 .price-source {
-    display: inline-flex;
-    align-items: center;
+    display: inline-block;
 
     margin-top: 9px;
 
-    padding: 6px 10px;
+    padding: 5px 9px;
 
     border-radius: 7px;
 
-    background: rgba(255, 255, 255, 0.035);
+    background:
+        rgba(255, 255, 255, 0.035);
 
-    color: #68768a;
+    color: #64748b;
 
     font-size: 11px;
 }
 
 .price-source strong {
-    margin-left: 4px;
-
-    color: #9aa8bc;
+    color: #94a3b8;
 }
 
 /* =========================================================
-   WHY OPITECH
+   WHY
    ========================================================= */
 
 .why {
-    margin-top: 28px;
+    margin-top: 25px;
 
-    padding: 19px 20px;
+    padding: 18px 20px;
 
-    border-radius: 15px;
+    border-radius: 14px;
 
     background:
-        linear-gradient(
-            135deg,
-            rgba(59, 130, 246, 0.09),
-            rgba(37, 99, 235, 0.025)
-        );
+        rgba(37, 99, 235, 0.07);
 
     border-left:
-        3px solid rgba(59, 130, 246, 0.65);
+        3px solid #3b82f6;
 }
 
 .why h4 {
     margin-bottom: 7px;
 
-    color: #79adff;
+    color: #60a5fa;
 
-    font-size: 12px;
+    font-size: 11px;
 
     text-transform: uppercase;
 
@@ -1075,7 +1035,7 @@ select option {
 }
 
 .why p {
-    color: #c1c9d6;
+    color: #cbd5e1;
 
     font-size: 14px;
 
@@ -1083,19 +1043,19 @@ select option {
 }
 
 /* =========================================================
-   STRENGTHS / TRADEOFFS
+   STRENGTHS + TRADEOFFS
    ========================================================= */
 
 .strengths,
 .tradeoffs {
-    margin-top: 22px;
+    margin-top: 20px;
 }
 
 .strengths h4,
 .tradeoffs h4 {
-    margin-bottom: 11px;
+    margin-bottom: 10px;
 
-    font-size: 12px;
+    font-size: 11px;
 
     text-transform: uppercase;
 
@@ -1105,11 +1065,11 @@ select option {
 }
 
 .strengths h4 {
-    color: #79c99b;
+    color: #86efac;
 }
 
 .tradeoffs h4 {
-    color: #d4a66a;
+    color: #fbbf24;
 }
 
 .strengths ul,
@@ -1125,17 +1085,15 @@ select option {
 
 .strengths li,
 .tradeoffs li {
-    padding: 7px 11px;
+    padding: 6px 10px;
 
     border-radius: 999px;
 
     font-size: 11px;
-
-    line-height: 1.35;
 }
 
 .strengths li {
-    color: #9fe0ba;
+    color: #a7f3d0;
 
     background:
         rgba(34, 197, 94, 0.07);
@@ -1145,24 +1103,23 @@ select option {
 }
 
 .tradeoffs li {
-    color: #e0bd8d;
+    color: #fde68a;
 
     background:
-        rgba(245, 158, 11, 0.06);
+        rgba(245, 158, 11, 0.07);
 
     border:
-        1px solid rgba(245, 158, 11, 0.12);
+        1px solid rgba(245, 158, 11, 0.13);
 }
 
 /* =========================================================
-   SECONDARY RECOMMENDATIONS
+   SECONDARY CARDS
    ========================================================= */
 
 .secondary-recommendation {
     transition:
         transform 0.2s ease,
-        border-color 0.2s ease,
-        box-shadow 0.2s ease;
+        border-color 0.2s ease;
 }
 
 .secondary-recommendation:hover {
@@ -1170,13 +1127,9 @@ select option {
 
     border-color:
         rgba(59, 130, 246, 0.22);
-
-    box-shadow:
-        0 25px 70px rgba(0, 0, 0, 0.32);
 }
 
 .secondary-recommendation .product-content {
-    padding-top: 31px;
     padding-left: 75px;
 }
 
@@ -1186,12 +1139,10 @@ select option {
 
 .about-section {
     padding: 100px 7%;
-
-    background: #070a10;
 }
 
 .about-card {
-    width: min(800px, 100%);
+    max-width: 800px;
 
     margin: auto;
 
@@ -1204,23 +1155,22 @@ select option {
     background:
         linear-gradient(
             145deg,
-            rgba(16, 22, 33, 0.95),
-            rgba(9, 13, 20, 0.95)
+            rgba(255, 255, 255, 0.045),
+            rgba(255, 255, 255, 0.015)
         );
 
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    border:
+        1px solid rgba(255, 255, 255, 0.07);
 }
 
 .about-card h2 {
-    margin-bottom: 13px;
-
     font-size: 32px;
 
-    letter-spacing: -1px;
+    margin-bottom: 12px;
 }
 
 .about-card p {
-    color: #8b97a9;
+    color: #94a3b8;
 
     font-size: 15px;
 
@@ -1232,4 +1182,121 @@ select option {
    ========================================================= */
 
 footer {
-    pad
+    padding: 45px 7%;
+
+    text-align: center;
+
+    background: #030507;
+
+    border-top:
+        1px solid rgba(255, 255, 255, 0.06);
+}
+
+footer .logo {
+    margin-bottom: 8px;
+}
+
+footer > p {
+    color: #64748b;
+
+    font-size: 13px;
+
+    margin-bottom: 5px;
+}
+
+footer .copyright {
+    color: #475569;
+
+    font-size: 11px;
+
+    margin-top: 15px;
+}
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 800px) {
+
+    .header {
+        padding: 0 5%;
+    }
+
+    .option-grid {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
+    .recommend-section,
+    .results-section,
+    .about-section {
+        padding-left: 5%;
+        padding-right: 5%;
+    }
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+    .header {
+        height: 66px;
+
+        padding: 0 20px;
+    }
+
+    .header nav {
+        gap: 14px;
+    }
+
+    .header nav a {
+        font-size: 12px;
+    }
+
+    .hero {
+        min-height: 590px;
+
+        padding:
+            80px 20px;
+    }
+
+    .hero h1 {
+        font-size:
+            clamp(40px, 12vw, 58px);
+
+        letter-spacing: -2.5px;
+    }
+
+    .hero p {
+        font-size: 15px;
+    }
+
+    .recommend-section {
+        padding:
+            75px 20px;
+    }
+
+    .section-heading h2 {
+        font-size: 34px;
+    }
+
+    .form-card {
+        padding: 22px 18px;
+
+        border-radius: 20px;
+    }
+
+    .option-grid {
+        grid-template-columns:
+            repeat(2, 1fr);
+
+        gap: 9px;
+    }
+
+    .option {
+        min-height: 74px;
+    }
+
+    .checkbox
