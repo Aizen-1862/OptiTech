@@ -2,628 +2,72 @@
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+    <title>OPITECH — Smart Tech Recommendations</title>
 
-    <title>OPITECH — Find Your Perfect Tech</title>
-
-    <link rel="stylesheet" href="style.css">
-
+    <link rel="stylesheet" href="style.css?v=4">
 </head>
 
 <body>
 
-<!-- HEADER -->
+    <!-- HEADER -->
+    <header class="header">
 
-<header class="header">
-
-    <div class="logo">
-        <span>OPI</span>TECH
-    </div>
-
-    <nav>
-
-        <a href="#home">
-            Home
-        </a>
-
-        <a href="#recommend">
-            Find Tech
-        </a>
-
-        <a href="#about">
-            About
-        </a>
-
-    </nav>
-
-</header>
-
-
-<!-- HERO -->
-
-<section id="home" class="hero">
-
-    <div class="hero-content">
-
-        <div class="badge">
-            🟠 Smart Tech Recommendations
+        <div class="logo">
+            <span>OPI</span>TECH
         </div>
 
-        <h1>
+        <nav>
+            <a href="#home">Home</a>
+            <a href="#recommend">Find Tech</a>
+            <a href="#about">About</a>
+        </nav>
 
-            Find the tech that's
-
-            <span>
-                right for you.
-            </span>
-
-        </h1>
-
-        <p>
-
-            Tell OPITECH your budget, needs and preferences.
-            We'll help you find technology that fits you.
-
-        </p>
-
-        <a
-            href="#recommend"
-            class="primary-button"
-        >
-
-            Find My Tech →
-
-        </a>
-
-    </div>
-
-</section>
+    </header>
 
 
-<!-- RECOMMENDATION FORM -->
+    <!-- HERO -->
+    <section id="home" class="hero">
 
-<section
-    id="recommend"
-    class="recommend-section"
->
+        <div class="hero-content">
 
-    <div class="section-heading">
-
-        <p class="small-title">
-            OPITECH MATCH
-        </p>
-
-        <h2>
-            What are you looking for?
-        </h2>
-
-        <p>
-            Give us a few details and we'll calculate your best matches.
-        </p>
-
-    </div>
-
-
-    <div class="form-card">
-
-
-        <!-- PRODUCT TYPE -->
-
-        <div class="form-group">
-
-            <label>
-                What are you buying?
-            </label>
-
-
-            <div class="option-grid">
-
-
-                <button
-                    class="option active"
-                    data-type="phone"
-                >
-
-                    📱
-
-                    <span>
-                        Phone
-                    </span>
-
-                </button>
-
-
-                <button
-                    class="option"
-                    data-type="laptop"
-                >
-
-                    💻
-
-                    <span>
-                        Laptop
-                    </span>
-
-                </button>
-
-
-                <button
-                    class="option"
-                    data-type="pc"
-                >
-
-                    🎮
-
-                    <span>
-                        Gaming PC
-                    </span>
-
-                </button>
-
-
-                <button
-                    class="option"
-                    data-type="audio"
-                >
-
-                    🎧
-
-                    <span>
-                        Audio
-                    </span>
-
-                </button>
-
-
-                <button
-                    class="option"
-                    data-type="tv"
-                >
-
-                    📺
-
-                    <span>
-                        TV
-                    </span>
-
-                </button>
-
-
-                <button
-                    class="option"
-                    data-type="accessories"
-                >
-
-                    ⌨️
-
-                    <span>
-                        Accessories
-                    </span>
-
-                </button>
-
-
+            <div class="badge">
+                ⚡ Smart Tech Recommendations
             </div>
 
-        </div>
-
-
-
-        <!-- COUNTRY -->
-
-        <div class="form-group">
-
-            <label for="country">
-                Your country
-            </label>
-
-
-            <select id="country">
-
-                <option value="India">
-                    🇮🇳 India
-                </option>
-
-                <option value="United States">
-                    🇺🇸 United States
-                </option>
-
-                <option value="United Kingdom">
-                    🇬🇧 United Kingdom
-                </option>
-
-                <option value="Canada">
-                    🇨🇦 Canada
-                </option>
-
-                <option value="Australia">
-                    🇦🇺 Australia
-                </option>
-
-                <option value="Germany">
-                    🇩🇪 Germany
-                </option>
-
-                <option value="France">
-                    🇫🇷 France
-                </option>
-
-                <option value="United Arab Emirates">
-                    🇦🇪 UAE
-                </option>
-
-                <option value="Singapore">
-                    🇸🇬 Singapore
-                </option>
-
-                <option value="Other">
-                    🌎 Other
-                </option>
-
-            </select>
-
-        </div>
-
-
-
-        <!-- CURRENCY -->
-
-        <div class="form-group">
-
-            <label for="currency">
-                Currency
-            </label>
-
-
-            <select id="currency">
-
-                <option value="INR">
-                    🇮🇳 INR — Indian Rupee (₹)
-                </option>
-
-                <option value="USD">
-                    🇺🇸 USD — US Dollar ($)
-                </option>
-
-                <option value="GBP">
-                    🇬🇧 GBP — British Pound (£)
-                </option>
-
-                <option value="CAD">
-                    🇨🇦 CAD — Canadian Dollar (C$)
-                </option>
-
-                <option value="AUD">
-                    🇦🇺 AUD — Australian Dollar (A$)
-                </option>
-
-                <option value="EUR">
-                    🇪🇺 EUR — Euro (€)
-                </option>
-
-                <option value="AED">
-                    🇦🇪 AED — UAE Dirham
-                </option>
-
-                <option value="SGD">
-                    🇸🇬 SGD — Singapore Dollar
-                </option>
-
-            </select>
-
-        </div>
-
-
-
-        <!-- BUDGET -->
-
-        <div class="form-group">
-
-            <label for="budget">
-                Your maximum budget
-            </label>
-
-
-            <div class="budget-input">
-
-                <span id="currencySymbol">
-                    ₹
-                </span>
-
-                <input
-                    type="number"
-                    id="budget"
-                    placeholder="Example: 30000"
-                    min="1"
-                >
-
-            </div>
-
-        </div>
-
-
-
-        <!-- USES -->
-
-        <div class="form-group">
-
-            <label>
-                What will you use it for?
-            </label>
-
-
-            <div class="checkbox-grid">
-
-
-                <label class="check-option">
-
-                    <input
-                        type="checkbox"
-                        value="gaming"
-                    >
-
-                    🎮 Gaming
-
-                </label>
-
-
-                <label class="check-option">
-
-                    <input
-                        type="checkbox"
-                        value="camera"
-                    >
-
-                    📷 Camera
-
-                </label>
-
-
-                <label class="check-option">
-
-                    <input
-                        type="checkbox"
-                        value="performance"
-                    >
-
-                    ⚡ Performance
-
-                </label>
-
-
-                <label class="check-option">
-
-                    <input
-                        type="checkbox"
-                        value="editing"
-                    >
-
-                    🎬 Editing
-
-                </label>
-
-
-                <label class="check-option">
-
-                    <input
-                        type="checkbox"
-                        value="programming"
-                    >
-
-                    💻 Programming
-
-                </label>
-
-
-                <label class="check-option">
-
-                    <input
-                        type="checkbox"
-                        value="battery"
-                    >
-
-                    🔋 Battery
-
-                </label>
-
-
-                <label class="check-option">
-
-                    <input
-                        type="checkbox"
-                        value="display"
-                    >
-
-                    🖥️ Display
-
-                </label>
-
-
-                <label class="check-option">
-
-                    <input
-                        type="checkbox"
-                        value="portability"
-                    >
-
-                    🎒 Portability
-
-                </label>
-
-
-            </div>
-
-        </div>
-
-
-
-        <!-- PRIORITIES -->
-
-        <div class="form-group">
-
-            <label>
-                What matters most?
-            </label>
-
-
-            <select id="priority">
-
-                <option value="balanced">
-                    Balanced
-                </option>
-
-                <option value="performance">
-                    Performance
-                </option>
-
-                <option value="gaming">
-                    Gaming
-                </option>
-
-                <option value="camera">
-                    Camera
-                </option>
-
-                <option value="battery">
-                    Battery
-                </option>
-
-                <option value="display">
-                    Display
-                </option>
-
-                <option value="value">
-                    Value for money
-                </option>
-
-            </select>
-
-        </div>
-
-
-
-        <!-- BRAND -->
-
-        <div class="form-group">
-
-            <label for="brand">
-
-                Preferred brand
-                <span>(optional)</span>
-
-            </label>
-
-
-            <select id="brand">
-
-                <option value="any">
-                    No preference
-                </option>
-
-                <option value="apple">
-                    Apple
-                </option>
-
-                <option value="samsung">
-                    Samsung
-                </option>
-
-                <option value="oneplus">
-                    OnePlus
-                </option>
-
-                <option value="xiaomi">
-                    Xiaomi
-                </option>
-
-                <option value="realme">
-                    Realme
-                </option>
-
-                <option value="asus">
-                    ASUS
-                </option>
-
-                <option value="lenovo">
-                    Lenovo
-                </option>
-
-                <option value="hp">
-                    HP
-                </option>
-
-                <option value="acer">
-                    Acer
-                </option>
-
-            </select>
-
-        </div>
-
-
-
-        <!-- BUTTON -->
-
-        <button
-            id="findButton"
-            class="find-button"
-            onclick="testOPITECHAI()"
-        >
-
-            🔍 Find My Best Matches
-
-        </button>
-
-
-    </div>
-
-</section>
-
-
-
-<!-- RESULTS -->
-
-<section
-    id="results"
-    class="results-section"
->
-
-    <div class="section-heading">
-
-        <p class="small-title">
-            YOUR RESULTS
-        </p>
-
-        <h2>
-            OPITECH Matches
-        </h2>
-
-        <p id="resultDescription">
-            Your recommendations will appear here.
-        </p>
-
-    </div>
-
-
-    <div
-        id="resultsContainer"
-        class="results-container"
-    >
-
-        <div class="empty-results">
-
-            <div class="empty-icon">
-                🔎
-            </div>
-
-            <h3>
-                Ready when you are.
-            </h3>
+            <h1>
+                Find the tech that's
+                <span>right for you.</span>
+            </h1>
 
             <p>
+                Tell OPITECH your budget, needs and preferences.
+                We'll help you discover devices that actually match your needs.
+            </p>
 
-                Enter your preferences above and
+            <a href="#recommend" class="primary-button">
+                Find My Tech →
+            </a>
+
+        </div>
+
+    </section>
+
+
+    <!-- RECOMMENDER -->
+    <section id="recommend" class="recommend-section">
+
+        <div class="section-heading">
+
+            <p class="small-title">
+                OPITECH FINDER
+            </p>
+
+            <h2>
+                Build your recommendation.
+            </h2>
+
+            <p>
+                Tell us what you're looking for and OPITECH will find
