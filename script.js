@@ -119,81 +119,10 @@ function formatPrice(price, currency) {
 }
 
 
-function safeUrl(url) {
-
-    if (!url) return "";
-
-    try {
-
-        const parsed = new URL(url);
-
-        if (
-            parsed.protocol === "http:" ||
-            parsed.protocol === "https:"
-        ) {
-            return parsed.href;
-        }
-
-    } catch {
-        return "";
-    }
-
-    return "";
-}
-
-
-function marketplaceCard(
-    name,
-    item,
-    currency
-) {
-
-    if (!item) return "";
-
-    const price =
-        formatPrice(
-            item.price,
-            currency
-        );
-
-    const url =
-        safeUrl(item.url);
-
-    return `
-        <div class="marketplace">
-
-            <div class="marketplace-info">
-
-                <strong>
-                    ${escapeHtml(name)}
-                </strong>
-
-                <span>
-                    ${escapeHtml(price)}
-                </span>
-
-            </div>
-
-            ${
-                url
-                    ? `
-                        <a
-                            class="buy-button"
-                            href="${escapeHtml(url)}"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
-                            View Product ↗
-                        </a>
-                    `
-                    : ""
-            }
-
-        </div>
-    `;
-
-}
-
+/* =====================================================
+   RESULTS
+   Images and marketplace links intentionally removed.
+   ===================================================== */
 
 function renderRecommendations(data) {
 
@@ -245,11 +174,6 @@ function renderRecommendations(data) {
     container.innerHTML = list.map(
         (product, index) => {
 
-            const image =
-                safeUrl(
-                    product.imageUrl
-                );
-
             const strengths =
                 Array.isArray(
                     product.strengths
@@ -274,27 +198,6 @@ function renderRecommendations(data) {
                     <div class="rank">
                         #${product.rank || index + 1}
                     </div>
-
-
-                    ${
-                        image
-                            ? `
-                                <div class="product-image-container">
-
-                                    <img
-                                        class="product-image"
-                                        src="${escapeHtml(image)}"
-                                        alt="${escapeHtml(
-                                            product.name ||
-                                            "Product"
-                                        )}"
-                                        loading="lazy"
-                                    >
-
-                                </div>
-                            `
-                            : ""
-                    }
 
 
                     <div class="product-content">
@@ -362,30 +265,12 @@ function renderRecommendations(data) {
                                             ${escapeHtml(
                                                 product.matchScore
                                             )}%
-
                                         </strong>
 
                                     </div>
                                 `
                                 : ""
                         }
-
-
-                        <div class="marketplaces">
-
-                            ${marketplaceCard(
-                                "Amazon India",
-                                product.amazon,
-                                currency
-                            )}
-
-                            ${marketplaceCard(
-                                "Flipkart",
-                                product.flipkart,
-                                currency
-                            )}
-
-                        </div>
 
 
                         ${
@@ -537,7 +422,6 @@ async function testOPITECHAI() {
             ),
 
         budget:
-
             budget,
 
         uses:
