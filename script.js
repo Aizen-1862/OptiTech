@@ -1,29 +1,14 @@
-/* =========================================================
-   OPITECH - FRONTEND JAVASCRIPT
-   Groq + Tavily Backend
-========================================================= */
-
-
-/* =========================================================
-   BACKEND
-========================================================= */
-
-const BACKEND_URL = "https://opitech-backend.onrender.com";
-
-
-/* =========================================================
-   GLOBAL VARIABLES
-========================================================= */
+const BACKEND_URL =
+    "https://opitech-backend.onrender.com";
 
 let selectedType = "Phone";
 
 
-/* =========================================================
-   CURRENCY SYMBOLS
-========================================================= */
+// =====================================
+// CURRENCY
+// =====================================
 
 const currencySymbols = {
-
     INR: "₹",
     USD: "$",
     GBP: "£",
@@ -32,170 +17,71 @@ const currencySymbols = {
     EUR: "€",
     AED: "د.إ",
     SGD: "S$"
-
 };
 
 
-/* =========================================================
-   PAGE INITIALIZATION
-========================================================= */
+const currencySelect =
+    document.getElementById("currency");
 
-document.addEventListener("DOMContentLoaded", () => {
-
-    console.log("🚀 OPITECH frontend loaded");
-
-    setupProductTypeButtons();
-
-    setupCurrency();
-
-    setupFindButton();
-
-});
+const currencySymbol =
+    document.getElementById("currencySymbol");
 
 
-/* =========================================================
-   PRODUCT TYPE BUTTONS
-========================================================= */
+if (currencySelect) {
 
-function setupProductTypeButtons() {
+    currencySelect.addEventListener(
+        "change",
+        () => {
 
-    const options =
-        document.querySelectorAll(".option");
+            const currency =
+                currencySelect.value;
 
-    options.forEach(option => {
+            if (currencySymbol) {
+                currencySymbol.textContent =
+                    currencySymbols[currency] ||
+                    currency;
+            }
+        }
+    );
+}
 
-        option.addEventListener("click", () => {
 
-            options.forEach(item => {
-                item.classList.remove("active");
-            });
+// =====================================
+// PRODUCT TYPE
+// =====================================
 
-            option.classList.add("active");
+document
+    .querySelectorAll(".option")
+    .forEach(button => {
 
-            selectedType =
-                option.dataset.type ||
-                option.textContent.trim();
+        button.addEventListener(
+            "click",
+            () => {
 
-            console.log(
-                "📱 Selected product:",
-                selectedType
-            );
+                document
+                    .querySelectorAll(".option")
+                    .forEach(item =>
+                        item.classList.remove("active")
+                    );
 
-        });
+                button.classList.add("active");
 
+                selectedType =
+                    button.dataset.type ||
+                    button.textContent.trim();
+
+                console.log(
+                    "Selected product:",
+                    selectedType
+                );
+            }
+        );
     });
 
-}
 
-
-/* =========================================================
-   CURRENCY
-========================================================= */
-
-function setupCurrency() {
-
-    const currency =
-        document.getElementById("currency");
-
-    const symbol =
-        document.getElementById("currencySymbol");
-
-    if (!currency) {
-        return;
-    }
-
-    function updateCurrencySymbol() {
-
-        const value =
-            currency.value;
-
-        if (symbol) {
-
-            symbol.textContent =
-                currencySymbols[value] ||
-                value;
-
-        }
-
-    }
-
-    currency.addEventListener(
-        "change",
-        updateCurrencySymbol
-    );
-
-    updateCurrencySymbol();
-
-}
-
-
-/* =========================================================
-   FIND BUTTON
-========================================================= */
-
-function setupFindButton() {
-
-    const button =
-        document.getElementById("findButton");
-
-    if (!button) {
-
-        console.warn(
-            "⚠️ Find button not found"
-        );
-
-        return;
-    }
-
-    /*
-       Remove old inline behavior if necessary.
-       Your HTML may already contain onclick.
-       This listener still works safely.
-    */
-
-    button.addEventListener(
-        "click",
-        testOPITECHAI
-    );
-
-}
-
-
-/* =========================================================
-   GET SELECTED USES
-========================================================= */
-
-function getSelectedUses() {
-
-    const checkboxes =
-        document.querySelectorAll(
-            '.checkbox-grid input[type="checkbox"]:checked'
-        );
-
-    return Array.from(checkboxes)
-        .map(checkbox => {
-
-            /*
-               Prefer value attribute.
-               Fall back to label text.
-            */
-
-            return (
-                checkbox.value ||
-                checkbox.dataset.use ||
-                checkbox.parentElement?.textContent?.trim() ||
-                ""
-            ).trim();
-
-        })
-        .filter(Boolean);
-
-}
-
-
-/* =========================================================
-   GET VALUE SAFELY
-========================================================= */
+// =====================================
+// HELPERS
+// =====================================
 
 function getValue(id, fallback = "") {
 
@@ -206,35 +92,204 @@ function getValue(id, fallback = "") {
         return fallback;
     }
 
-    return element.value?.trim() || fallback;
-
+    return element.value ?? fallback;
 }
 
 
-/* =========================================================
-   MAIN OPITECH AI FUNCTION
-========================================================= */
+function getSelectedUses() {
 
-async function testOPITECHAI() {
+    return Array.from(
+        document.querySelectorAll(
+            '.checkbox-grid input[type="checkbox"]:checked'
+        )
+    ).map(input =>
+        input.value ||
+        input.dataset.value ||
+        input.nextElementSibling?.textContent?.trim() ||
+        ""
+    ).filter(Boolean);
+}
 
-    console.log(
-        "🚀 OPITECH AI search started"
+
+function escapeHtml(value) {
+
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+
+function formatPrice(price, currency) {
+
+    if (
+        price === null ||
+        price === undefined ||
+        price === "" ||
+        !Number.isFinite(Number(price))
+    ) {
+        return "Price unavailable";
+    }
+
+    const symbol =
+        currencySymbols[currency] ||
+        currency ||
+        "₹";
+
+    return (
+        symbol +
+        Number(price).toLocaleString("en-IN")
     );
+}
 
 
-    /* =====================================================
-       GET USER PREFERENCES
-    ===================================================== */
+function safeUrl(url) {
 
-    const productType =
-        selectedType ||
-        getValue("productType", "Phone");
+    if (!url) {
+        return "";
+    }
 
-    const country =
-        getValue(
-            "country",
-            "India"
+    try {
+
+        const parsed =
+            new URL(url);
+
+        if (
+            parsed.protocol === "http:" ||
+            parsed.protocol === "https:"
+        ) {
+            return parsed.href;
+        }
+
+    } catch (error) {
+        return "";
+    }
+
+    return "";
+}
+
+
+// =====================================
+// MARKETPLACE CARD
+// =====================================
+
+function marketplaceCard(
+    marketplaceName,
+    marketplace,
+    currency
+) {
+
+    if (!marketplace) {
+        return "";
+    }
+
+    const url =
+        safeUrl(marketplace.url);
+
+    const price =
+        marketplace.price
+            ? formatPrice(
+                marketplace.price,
+                currency
+            )
+            : "Price unavailable";
+
+
+    if (!url) {
+
+        return `
+            <div class="marketplace">
+                <strong>
+                    ${escapeHtml(marketplaceName)}
+                </strong>
+
+                <span>
+                    ${escapeHtml(price)}
+                </span>
+            </div>
+        `;
+    }
+
+
+    return `
+        <div class="marketplace">
+
+            <div class="marketplace-info">
+
+                <strong>
+                    ${escapeHtml(marketplaceName)}
+                </strong>
+
+                <span>
+                    ${escapeHtml(price)}
+                </span>
+
+            </div>
+
+            <a
+                href="${escapeHtml(url)}"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="buy-button"
+            >
+                View Product ↗
+            </a>
+
+        </div>
+    `;
+}
+
+
+// =====================================
+// RENDER RECOMMENDATIONS
+// =====================================
+
+function renderRecommendations(data) {
+
+    const container =
+        document.getElementById(
+            "results"
+        ) ||
+        document.getElementById(
+            "recommendations"
         );
+
+
+    if (!container) {
+        console.error(
+            "Results container not found."
+        );
+
+        return;
+    }
+
+
+    const recommendations =
+        Array.isArray(data.recommendations)
+            ? data.recommendations
+            : [];
+
+
+    if (!recommendations.length) {
+
+        container.innerHTML = `
+            <div class="error-message">
+                <h3>
+                    No suitable products found 😕
+                </h3>
+
+                <p>
+                    Try increasing your budget
+                    or changing your preferences.
+                </p>
+            </div>
+        `;
+
+        return;
+    }
+
 
     const currency =
         getValue(
@@ -242,832 +297,521 @@ async function testOPITECHAI() {
             "INR"
         );
 
-    const budget =
-        getValue(
-            "budget",
-            ""
-        );
 
-    const priority =
-        getValue(
-            "priority",
-            "balanced"
-        );
+    container.innerHTML = `
 
-    const brand =
-        getValue(
-            "brand",
-            "any"
-        );
+        <div class="results-header">
 
-    const uses =
-        getSelectedUses();
+            <h2>
+                Your Best Matches
+            </h2>
 
+            <p>
+                Live Amazon India + Flipkart
+                search completed.
+            </p>
 
-    /* =====================================================
-       VALIDATION
-    ===================================================== */
+        </div>
 
-    if (!budget) {
+        ${recommendations
+            .map((product, index) => {
 
-        showError(
-            "Please enter your budget first."
-        );
-
-        return;
-
-    }
+                const rank =
+                    product.rank ||
+                    index + 1;
 
 
-    /* =====================================================
-       REQUEST OBJECT
-    ===================================================== */
-
-    const preferences = {
-
-        productType,
-        country,
-        currency,
-        budget,
-        uses,
-        priority,
-        brand
-
-    };
+                const image =
+                    safeUrl(
+                        product.imageUrl
+                    );
 
 
-    console.log(
-        "📤 Sending preferences:",
-        preferences
-    );
+                const mainPrice =
+                    product.price
+                        ? formatPrice(
+                            product.price,
+                            currency
+                        )
+                        : "Price unavailable";
 
 
-    /* =====================================================
-       BUTTON LOADING STATE
-    ===================================================== */
+                const strengths =
+                    Array.isArray(
+                        product.strengths
+                    )
+                        ? product.strengths
+                        : [];
+
+
+                const tradeoffs =
+                    Array.isArray(
+                        product.tradeoffs
+                    )
+                        ? product.tradeoffs
+                        : [];
+
+
+                return `
+
+                    <article
+                        class="recommendation-card"
+                    >
+
+                        <div class="rank">
+                            #${rank}
+                        </div>
+
+
+                        ${
+                            image
+                                ? `
+                                    <div
+                                        class="product-image-container"
+                                    >
+                                        <img
+                                            src="${escapeHtml(image)}"
+                                            alt="${escapeHtml(product.name)}"
+                                            class="product-image"
+                                            loading="lazy"
+                                            onerror="this.parentElement.style.display='none'"
+                                        >
+                                    </div>
+                                `
+                                : ""
+                        }
+
+
+                        <div class="product-content">
+
+                            <h3>
+                                ${escapeHtml(
+                                    product.name ||
+                                    "Recommended product"
+                                )}
+                            </h3>
+
+
+                            ${
+                                product.brand
+                                    ? `
+                                        <div class="brand">
+                                            ${escapeHtml(
+                                                product.brand
+                                            )}
+                                        </div>
+                                    `
+                                    : ""
+                            }
+
+
+                            <div class="main-price">
+                                ${escapeHtml(
+                                    mainPrice
+                                )}
+                            </div>
+
+
+                            ${
+                                product.priceSource
+                                    ? `
+                                        <div class="price-source">
+                                            Price checked from:
+                                            <strong>
+                                                ${escapeHtml(
+                                                    product.priceSource
+                                                )}
+                                            </strong>
+                                        </div>
+                                    `
+                                    : ""
+                            }
+
+
+                            ${
+                                product.matchScore
+                                    ? `
+                                        <div class="match-score">
+                                            Match:
+                                            <strong>
+                                                ${escapeHtml(
+                                                    product.matchScore
+                                                )}%
+                                            </strong>
+                                        </div>
+                                    `
+                                    : ""
+                            }
+
+
+                            <div class="marketplaces">
+
+                                ${marketplaceCard(
+                                    "Amazon India",
+                                    product.amazon,
+                                    currency
+                                )}
+
+                                ${marketplaceCard(
+                                    "Flipkart",
+                                    product.flipkart,
+                                    currency
+                                )}
+
+                            </div>
+
+
+                            ${
+                                product.why
+                                    ? `
+                                        <div class="why">
+                                            <h4>
+                                                Why this pick?
+                                            </h4>
+
+                                            <p>
+                                                ${escapeHtml(
+                                                    product.why
+                                                )}
+                                            </p>
+                                        </div>
+                                    `
+                                    : ""
+                            }
+
+
+                            ${
+                                strengths.length
+                                    ? `
+                                        <div class="strengths">
+
+                                            <h4>
+                                                👍 Strengths
+                                            </h4>
+
+                                            <ul>
+                                                ${strengths
+                                                    .map(
+                                                        item =>
+                                                            `<li>${escapeHtml(item)}</li>`
+                                                    )
+                                                    .join("")
+                                                }
+                                            </ul>
+
+                                        </div>
+                                    `
+                                    : ""
+                            }
+
+
+                            ${
+                                tradeoffs.length
+                                    ? `
+                                        <div class="tradeoffs">
+
+                                            <h4>
+                                                ⚠️ Trade-offs
+                                            </h4>
+
+                                            <ul>
+                                                ${tradeoffs
+                                                    .map(
+                                                        item =>
+                                                            `<li>${escapeHtml(item)}</li>`
+                                                    )
+                                                    .join("")
+                                                }
+                                            </ul>
+
+                                        </div>
+                                    `
+                                    : ""
+                            }
+
+                        </div>
+
+                    </article>
+
+                `;
+            })
+            .join("")
+        }
+
+
+        <div class="price-disclaimer">
+
+            ⚠️ Prices and availability can change.
+            OPITECH uses current web-search evidence
+            from Amazon India and Flipkart.
+
+        </div>
+
+    `;
+}
+
+
+// =====================================
+// MAIN AI FUNCTION
+// =====================================
+
+async function testOPITECHAI() {
 
     const button =
-        document.getElementById("findButton");
-
-    const originalButtonText =
-        button?.innerHTML ||
-        "🔍 Find My Best Matches";
+        document.getElementById(
+            "findButton"
+        );
 
 
     if (button) {
 
         button.disabled = true;
 
-        button.innerHTML =
-            "⏳ Finding the best matches...";
-
+        button.textContent =
+            "⏳ Checking Amazon & Flipkart...";
     }
 
 
-    /* =====================================================
-       SHOW LOADING
-    ===================================================== */
+    const container =
+        document.getElementById(
+            "results"
+        ) ||
+        document.getElementById(
+            "recommendations"
+        );
 
-    showLoading();
 
+    if (container) {
 
-    /* =====================================================
-       CALL BACKEND
-    ===================================================== */
+        container.innerHTML = `
+
+            <div class="loading">
+
+                <h3>
+                    🔎 OPITECH is searching...
+                </h3>
+
+                <p>
+                    Checking current Amazon India
+                    and Flipkart prices.
+                </p>
+
+                <p>
+                    This may take a few seconds.
+                </p>
+
+            </div>
+
+        `;
+    }
+
 
     try {
+
+        const budget =
+            getValue("budget");
+
+
+        const payload = {
+
+            productType:
+                selectedType,
+
+            country:
+                getValue(
+                    "country",
+                    "India"
+                ),
+
+            currency:
+                getValue(
+                    "currency",
+                    "INR"
+                ),
+
+            budget:
+                budget,
+
+            uses:
+                getSelectedUses(),
+
+            priority:
+                getValue(
+                    "priority",
+                    "balanced"
+                ),
+
+            brand:
+                getValue(
+                    "brand",
+                    "any"
+                )
+        };
+
+
+        console.log(
+            "Sending OPITECH preferences:",
+            payload
+        );
+
 
         const response =
             await fetch(
                 `${BACKEND_URL}/api/recommend`,
                 {
-
                     method: "POST",
 
                     headers: {
-
                         "Content-Type":
                             "application/json"
-
                     },
 
                     body:
                         JSON.stringify(
-                            preferences
+                            payload
                         )
-
                 }
             );
 
-
-        console.log(
-            "📡 Backend HTTP status:",
-            response.status
-        );
-
-
-        /* =================================================
-           READ RESPONSE
-        ================================================= */
 
         const rawText =
             await response.text();
 
 
-        console.log(
-            "📥 Raw backend response:",
-            rawText
-        );
-
-
         let data;
-
 
         try {
 
             data =
                 JSON.parse(rawText);
 
-        } catch {
+        } catch (error) {
 
             throw new Error(
-                "Backend returned an invalid response."
+                `Backend returned invalid data: ${rawText.substring(0, 300)}`
             );
-
         }
 
-
-        /* =================================================
-           HANDLE BACKEND ERROR
-        ================================================= */
 
         if (!response.ok) {
 
-            console.error(
-                "❌ Backend error:",
-                data
-            );
-
             throw new Error(
-                data.details ||
                 data.error ||
+                data.details ||
                 `Backend error ${response.status}`
             );
-
         }
 
 
-        /* =================================================
-           GET RECOMMENDATIONS
-        ================================================= */
-
-        const recommendations =
-            data.recommendations ||
-            data.result;
-
-
-        if (
-            !Array.isArray(
-                recommendations
-            )
-        ) {
+        if (!data.success) {
 
             throw new Error(
-                "AI returned no recommendations."
+                data.error ||
+                "Recommendation request failed."
             );
-
-        }
-
-
-        if (
-            recommendations.length === 0
-        ) {
-
-            throw new Error(
-                "No suitable products were found."
-            );
-
         }
 
 
         console.log(
-            "✅ Recommendations received:",
-            recommendations
+            "OPITECH result:",
+            data
         );
 
 
-        /* =================================================
-           DISPLAY RESULTS
-        ================================================= */
-
-        displayRecommendations(
-            recommendations,
-            preferences
+        renderRecommendations(
+            data
         );
 
 
     } catch (error) {
 
         console.error(
-            "❌ OPITECH AI failed:",
+            "OPITECH frontend error:",
             error
         );
 
 
-        showError(
-            error.message ||
-            "Something went wrong while finding recommendations."
-        );
+        if (container) {
+
+            container.innerHTML = `
+
+                <div class="error-message">
+
+                    <h3>
+                        ❌ OPITECH couldn't get recommendations
+                    </h3>
+
+                    <p>
+                        ${escapeHtml(
+                            error.message ||
+                            "Something went wrong."
+                        )}
+                    </p>
+
+                    <p>
+                        Please try again in a few seconds.
+                    </p>
+
+                </div>
+
+            `;
+        }
 
 
     } finally {
-
-        /* =================================================
-           RESTORE BUTTON
-        ================================================= */
 
         if (button) {
 
             button.disabled = false;
 
-            button.innerHTML =
-                originalButtonText;
-
+            button.textContent =
+                "🔍 Find My Best Matches";
         }
-
     }
-
 }
 
 
-/* =========================================================
-   LOADING SCREEN
-========================================================= */
-
-function showLoading() {
-
-    let container =
-        document.getElementById(
-            "results"
-        );
-
-
-    if (!container) {
-
-        container =
-            document.querySelector(
-                ".results"
-            );
-
-    }
-
-
-    if (!container) {
-
-        console.warn(
-            "⚠️ Results container not found"
-        );
-
-        return;
-
-    }
-
-
-    container.innerHTML = `
-
-        <div class="opitech-loading">
-
-            <div class="loading-spinner"></div>
-
-            <h2>
-                OPITECH AI is searching...
-            </h2>
-
-            <p>
-                Checking current products,
-                prices and specifications.
-            </p>
-
-        </div>
-
-    `;
-
-
-    container.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-    });
-
-}
-
-
-/* =========================================================
-   DISPLAY ERROR
-========================================================= */
-
-function showError(message) {
-
-    let container =
-        document.getElementById(
-            "results"
-        );
-
-
-    if (!container) {
-
-        container =
-            document.querySelector(
-                ".results"
-            );
-
-    }
-
-
-    if (!container) {
-
-        alert(message);
-
-        return;
-
-    }
-
-
-    container.innerHTML = `
-
-        <div class="opitech-error">
-
-            <div class="error-icon">
-                ⚠️
-            </div>
-
-            <h2>
-                AI connection failed
-            </h2>
-
-            <p>
-                ${escapeHTML(message)}
-            </p>
-
-            <button
-                class="retry-button"
-                onclick="testOPITECHAI()"
-            >
-                🔄 Try Again
-            </button>
-
-        </div>
-
-    `;
-
-
-    container.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-    });
-
-}
-
-
-/* =========================================================
-   DISPLAY RECOMMENDATIONS
-========================================================= */
-
-function displayRecommendations(
-    recommendations,
-    preferences
-) {
-
-    let container =
-        document.getElementById(
-            "results"
-        );
-
-
-    if (!container) {
-
-        container =
-            document.querySelector(
-                ".results"
-            );
-
-    }
-
-
-    if (!container) {
-
-        console.error(
-            "❌ Results container not found"
-        );
-
-        return;
-
-    }
-
-
-    const currencySymbol =
-        currencySymbols[
-            preferences.currency
-        ] ||
-        preferences.currency ||
-        "₹";
-
-
-    let html = `
-
-        <div class="recommendations-header">
-
-            <h2>
-                🎯 Your OPITECH Matches
-            </h2>
-
-            <p>
-                Based on your
-                ${escapeHTML(
-                    preferences.productType
-                )}
-                requirements
-            </p>
-
-        </div>
-
-        <div class="recommendations-grid">
-
-    `;
-
-
-    recommendations.forEach(
-        (product, index) => {
-
-            html +=
-                createProductCard(
-                    product,
-                    index,
-                    currencySymbol
-                );
-
-        }
-    );
-
-
-    html += `
-
-        </div>
-
-    `;
-
-
-    container.innerHTML =
-        html;
-
-
-    container.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-    });
-
-
-    console.log(
-        "🎉 Results displayed"
-    );
-
-}
-
-
-/* =========================================================
-   CREATE PRODUCT CARD
-========================================================= */
-
-function createProductCard(
-    product,
-    index,
-    currencySymbol
-) {
-
-    const rank =
-        Number(product.rank) ||
-        index + 1;
-
-
-    const name =
-        product.name ||
-        "Unknown Product";
-
-
-    let price =
-        product.price ||
-        "Price unavailable";
-
-
-    /*
-       If backend returns a numeric price,
-       format it with currency.
-    */
-
-    if (
-        typeof price === "number"
-    ) {
-
-        price =
-            currencySymbol +
-            price.toLocaleString(
-                "en-IN"
-            );
-
-    }
-
-
-    const priceSource =
-        product.priceSource ||
-        "Web search";
-
-
-    const matchScore =
-        Number(
-            product.matchScore
-        ) || 0;
-
-
-    const why =
-        product.why ||
-        "Matches your requirements.";
-
-
-    const strengths =
-        Array.isArray(
-            product.strengths
-        )
-            ? product.strengths
-            : [];
-
-
-    const tradeoffs =
-        Array.isArray(
-            product.tradeoffs
-        )
-            ? product.tradeoffs
-            : [];
-
-
-    let strengthsHTML = "";
-
-
-    strengths
-        .slice(0, 3)
-        .forEach(strength => {
-
-            strengthsHTML += `
-
-                <li>
-                    <span>✓</span>
-                    ${escapeHTML(
-                        strength
-                    )}
-                </li>
-
-            `;
-
-        });
-
-
-    let tradeoffsHTML = "";
-
-
-    tradeoffs
-        .slice(0, 2)
-        .forEach(tradeoff => {
-
-            tradeoffsHTML += `
-
-                <li>
-                    <span>•</span>
-                    ${escapeHTML(
-                        tradeoff
-                    )}
-                </li>
-
-            `;
-
-        });
-
-
-    return `
-
-        <article
-            class="product-card"
-            data-rank="${rank}"
-        >
-
-            <div class="product-card-top">
-
-                <div class="rank-badge">
-                    #${rank}
-                </div>
-
-                <div class="match-score">
-                    ${matchScore}%
-                    Match
-                </div>
-
-            </div>
-
-
-            <h3 class="product-name">
-                ${escapeHTML(name)}
-            </h3>
-
-
-            <div class="product-price">
-                ${escapeHTML(
-                    String(price)
-                )}
-            </div>
-
-
-            <div class="price-source">
-                Price source:
-                ${escapeHTML(
-                    String(priceSource)
-                )}
-            </div>
-
-
-            <div class="product-why">
-
-                <h4>
-                    Why OPITECH picked it
-                </h4>
-
-                <p>
-                    ${escapeHTML(why)}
-                </p>
-
-            </div>
-
-
-            ${
-                strengths.length
-                    ? `
-
-                    <div class="product-strengths">
-
-                        <h4>
-                            Strengths
-                        </h4>
-
-                        <ul>
-                            ${strengthsHTML}
-                        </ul>
-
-                    </div>
-
-                    `
-                    : ""
-            }
-
-
-            ${
-                tradeoffs.length
-                    ? `
-
-                    <div class="product-tradeoffs">
-
-                        <h4>
-                            Trade-offs
-                        </h4>
-
-                        <ul>
-                            ${tradeoffsHTML}
-                        </ul>
-
-                    </div>
-
-                    `
-                    : ""
-            }
-
-
-        </article>
-
-    `;
-
-}
-
-
-/* =========================================================
-   ESCAPE HTML
-========================================================= */
-
-function escapeHTML(value) {
-
-    if (
-        value === null ||
-        value === undefined
-    ) {
-
-        return "";
-
-    }
-
-
-    return String(value)
-
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-
-        .replace(
-            /</g,
-            "&lt;"
-        )
-
-        .replace(
-            />/g,
-            "&gt;"
-        )
-
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-
-        .replace(
-            /'/g,
-            "&#039;"
-        );
-
-}
-
-
-/* =========================================================
-   BACKEND CONNECTION TEST
-========================================================= */
+// =====================================
+// BACKEND TEST
+// =====================================
 
 async function checkOPITECHBackend() {
 
     try {
-
-        console.log(
-            "🔎 Checking OPITECH backend..."
-        );
-
 
         const response =
             await fetch(
                 BACKEND_URL
             );
 
-
         const data =
             await response.json();
 
-
         console.log(
-            "✅ OPITECH backend:",
+            "OPITECH backend:",
             data
         );
 
-
-        return true;
-
+        return data;
 
     } catch (error) {
 
         console.error(
-            "❌ Backend unavailable:",
+            "Backend check failed:",
             error
         );
 
-
-        return false;
-
+        return null;
     }
-
 }
 
 
-/* =========================================================
-   OPTIONAL BACKEND TEST
-========================================================= */
-
-window.checkOPITECHBackend =
-    checkOPITECHBackend;
-
-
-/* =========================================================
-   MAKE MAIN FUNCTION AVAILABLE TO HTML
-========================================================= */
+// =====================================
+// GLOBAL FUNCTIONS
+// =====================================
 
 window.testOPITECHAI =
     testOPITECHAI;
 
-
-/* =========================================================
-   INITIAL BACKEND CHECK
-========================================================= */
-
-setTimeout(() => {
-
-    checkOPITECHBackend();
-
-}, 1000);
+window.checkOPITECHBackend =
+    checkOPITECHBackend;
