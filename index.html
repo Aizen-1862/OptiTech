@@ -1,73 +1,566 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
+<!DOCTYPE html><html lang="en"><head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>OPITECH — Smart Tech Recommendations</title>
 
-    <title>OPITECH — Smart Tech Recommendations</title>
+<link rel="stylesheet" href="style.css?v=5">
 
-    <link rel="stylesheet" href="style.css?v=4">
-</head>
+</head><body><!-- HEADER -->
+<header class="header">
 
-<body>
+    <div class="logo">
+        <span>OPI</span>TECH
+    </div>
 
-    <!-- HEADER -->
-    <header class="header">
+    <nav>
+        <a href="#home">Home</a>
+        <a href="#recommend">Find Tech</a>
+        <a href="#about">About</a>
+    </nav>
 
-        <div class="logo">
-            <span>OPI</span>TECH
+</header>
+
+
+<!-- HERO -->
+<section id="home" class="hero">
+
+    <div class="hero-content">
+
+        <div class="badge">
+            ⚡ Smart Tech Recommendations
         </div>
 
-        <nav>
-            <a href="#home">Home</a>
-            <a href="#recommend">Find Tech</a>
-            <a href="#about">About</a>
-        </nav>
+        <h1>
+            Find the tech that's
+            <span>right for you.</span>
+        </h1>
 
-    </header>
+        <p>
+            Tell OPITECH your budget, needs and preferences.
+            We'll help you discover devices that actually match your needs.
+        </p>
+
+        <a href="#recommend" class="primary-button">
+            Find My Tech →
+        </a>
+
+    </div>
+
+</section>
 
 
-    <!-- HERO -->
-    <section id="home" class="hero">
+<!-- RECOMMENDER -->
+<section id="recommend" class="recommend-section">
 
-        <div class="hero-content">
+    <div class="section-heading">
 
-            <div class="badge">
-                ⚡ Smart Tech Recommendations
+        <p class="small-title">
+            OPITECH FINDER
+        </p>
+
+        <h2>
+            Build your recommendation.
+        </h2>
+
+        <p>
+            Tell us what you're looking for and OPITECH will find
+            the best matches for you.
+        </p>
+
+    </div>
+
+
+    <div class="form-card">
+
+
+        <!-- PRODUCT TYPE -->
+        <div class="form-group">
+
+            <label>
+                What are you looking for?
+            </label>
+
+            <div class="option-grid">
+
+                <button
+                    type="button"
+                    class="option active"
+                    data-type="Phone"
+                >
+                    📱
+                    <span>Phone</span>
+                </button>
+
+                <button
+                    type="button"
+                    class="option"
+                    data-type="Laptop"
+                >
+                    💻
+                    <span>Laptop</span>
+                </button>
+
+                <button
+                    type="button"
+                    class="option"
+                    data-type="Tablet"
+                >
+                    📲
+                    <span>Tablet</span>
+                </button>
+
+                <button
+                    type="button"
+                    class="option"
+                    data-type="TV"
+                >
+                    📺
+                    <span>TV</span>
+                </button>
+
+                <button
+                    type="button"
+                    class="option"
+                    data-type="Headphones"
+                >
+                    🎧
+                    <span>Headphones</span>
+                </button>
+
+                <button
+                    type="button"
+                    class="option"
+                    data-type="Speaker"
+                >
+                    🔊
+                    <span>Speaker</span>
+                </button>
+
             </div>
 
-            <h1>
-                Find the tech that's
-                <span>right for you.</span>
-            </h1>
+        </div>
 
-            <p>
-                Tell OPITECH your budget, needs and preferences.
-                We'll help you discover devices that actually match your needs.
-            </p>
 
-            <a href="#recommend" class="primary-button">
-                Find My Tech →
-            </a>
+        <!-- COUNTRY -->
+        <div class="form-group">
+
+            <label>
+                Country
+            </label>
+
+            <select id="country">
+
+                <option value="India" selected>
+                    🇮🇳 India
+                </option>
+
+                <option value="United States">
+                    🇺🇸 United States
+                </option>
+
+                <option value="United Kingdom">
+                    🇬🇧 United Kingdom
+                </option>
+
+                <option value="Canada">
+                    🇨🇦 Canada
+                </option>
+
+                <option value="Australia">
+                    🇦🇺 Australia
+                </option>
+
+                <option value="Germany">
+                    🇩🇪 Germany
+                </option>
+
+                <option value="United Arab Emirates">
+                    🇦🇪 UAE
+                </option>
+
+                <option value="Singapore">
+                    🇸🇬 Singapore
+                </option>
+
+            </select>
 
         </div>
 
-    </section>
+
+        <!-- CURRENCY -->
+        <div class="form-group">
+
+            <label>
+                Currency
+            </label>
+
+            <select id="currency">
+
+                <option value="INR" selected>
+                    INR — Indian Rupee
+                </option>
+
+                <option value="USD">
+                    USD — US Dollar
+                </option>
+
+                <option value="GBP">
+                    GBP — British Pound
+                </option>
+
+                <option value="CAD">
+                    CAD — Canadian Dollar
+                </option>
+
+                <option value="AUD">
+                    AUD — Australian Dollar
+                </option>
+
+                <option value="EUR">
+                    EUR — Euro
+                </option>
+
+                <option value="AED">
+                    AED — UAE Dirham
+                </option>
+
+                <option value="SGD">
+                    SGD — Singapore Dollar
+                </option>
+
+            </select>
+
+        </div>
 
 
-    <!-- RECOMMENDER -->
-    <section id="recommend" class="recommend-section">
+        <!-- BUDGET -->
+        <div class="form-group">
 
-        <div class="section-heading">
+            <label>
+                What's your budget?
+            </label>
 
-            <p class="small-title">
-                OPITECH FINDER
-            </p>
+            <div class="budget-input">
 
-            <h2>
-                Build your recommendation.
-            </h2>
+                <span id="currencySymbol">
+                    ₹
+                </span>
+
+                <input
+                    type="number"
+                    id="budget"
+                    placeholder="Enter your maximum budget"
+                    min="1"
+                    inputmode="numeric"
+                >
+
+            </div>
+
+        </div>
+
+
+        <!-- USES -->
+        <div class="form-group">
+
+            <label>
+                What will you use it for?
+                <span>(Choose all that apply)</span>
+            </label>
+
+            <div class="checkbox-grid">
+
+                <label class="check-option">
+                    <input
+                        type="checkbox"
+                        value="gaming"
+                    >
+                    🎮 Gaming
+                </label>
+
+                <label class="check-option">
+                    <input
+                        type="checkbox"
+                        value="performance"
+                    >
+                    ⚡ Performance
+                </label>
+
+                <label class="check-option">
+                    <input
+                        type="checkbox"
+                        value="camera"
+                    >
+                    📸 Camera
+                </label>
+
+                <label class="check-option">
+                    <input
+                        type="checkbox"
+                        value="battery"
+                    >
+                    🔋 Battery life
+                </label>
+
+                <label class="check-option">
+                    <input
+                        type="checkbox"
+                        value="study"
+                    >
+                    📚 Study
+                </label>
+
+                <label class="check-option">
+                    <input
+                        type="checkbox"
+                        value="work"
+                    >
+                    💼 Work
+                </label>
+
+                <label class="check-option">
+                    <input
+                        type="checkbox"
+                        value="video editing"
+                    >
+                    🎬 Video editing
+                </label>
+
+                <label class="check-option">
+                    <input
+                        type="checkbox"
+                        value="content creation"
+                    >
+                    🎥 Content creation
+                </label>
+
+                <label class="check-option">
+                    <input
+                        type="checkbox"
+                        value="music"
+                    >
+                    🎵 Music
+                </label>
+
+                <label class="check-option">
+                    <input
+                        type="checkbox"
+                        value="everyday use"
+                    >
+                    🌐 Everyday use
+                </label>
+
+            </div>
+
+        </div>
+
+
+        <!-- PRIORITY -->
+        <div class="form-group">
+
+            <label>
+                What's most important to you?
+            </label>
+
+            <select id="priority">
+
+                <option value="balanced" selected>
+                    ⚖️ Balanced
+                </option>
+
+                <option value="performance">
+                    ⚡ Performance
+                </option>
+
+                <option value="gaming">
+                    🎮 Gaming
+                </option>
+
+                <option value="camera">
+                    📸 Camera
+                </option>
+
+                <option value="battery">
+                    🔋 Battery
+                </option>
+
+                <option value="value">
+                    💰 Best value
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- BRAND -->
+        <div class="form-group">
+
+            <label>
+                Preferred brand
+                <span>(Optional)</span>
+            </label>
+
+            <select id="brand">
+
+                <option value="any" selected>
+                    Any brand
+                </option>
+
+                <option value="Xiaomi">
+                    Xiaomi
+                </option>
+
+                <option value="POCO">
+                    POCO
+                </option>
+
+                <option value="Redmi">
+                    Redmi
+                </option>
+
+                <option value="Samsung">
+                    Samsung
+                </option>
+
+                <option value="Apple">
+                    Apple
+                </option>
+
+                <option value="OnePlus">
+                    OnePlus
+                </option>
+
+                <option value="Realme">
+                    Realme
+                </option>
+
+                <option value="Motorola">
+                    Motorola
+                </option>
+
+                <option value="vivo">
+                    vivo
+                </option>
+
+                <option value="OPPO">
+                    OPPO
+                </option>
+
+                <option value="ASUS">
+                    ASUS
+                </option>
+
+                <option value="Lenovo">
+                    Lenovo
+                </option>
+
+                <option value="HP">
+                    HP
+                </option>
+
+                <option value="Dell">
+                    Dell
+                </option>
+
+                <option value="Acer">
+                    Acer
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- FIND BUTTON -->
+        <button
+            id="findButton"
+            class="find-button"
+            type="button"
+        >
+            🔍 Find My Best Matches
+        </button>
+
+
+    </div>
+
+</section>
+
+
+<!-- RESULTS -->
+<section
+    id="results"
+    class="results-section"
+>
+
+    <div class="results-container">
+
+        <div
+            id="resultsContainer"
+            class="empty-results"
+        >
+
+            <div class="empty-icon">
+                🤖
+            </div>
+
+            <h3>
+                Your recommendations will appear here
+            </h3>
 
             <p>
-                Tell us what you're looking for and OPITECH will find
+                Tell OPITECH what you need and
+                click "Find My Best Matches".
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ABOUT -->
+<section
+    id="about"
+    class="about-section"
+>
+
+    <div class="about-card">
+
+        <h2>
+            Why OPITECH?
+        </h2>
+
+        <p>
+            OPITECH combines your budget, preferences,
+            use cases and current marketplace information
+            to help you find technology that actually
+            fits your needs.
+        </p>
+
+    </div>
+
+</section>
+
+
+<!-- FOOTER -->
+<footer>
+
+    <div class="logo">
+        <span>OPI</span>TECH
+    </div>
+
+    <p>
+        Smart technology recommendations.
+    </p>
+
+    <p class="copyright">
+        © 2026 OPITECH. All rights reserved.
+    </p>
+
+</footer>
+
+
+<!-- JAVASCRIPT -->
+<script src="script.js?v=5"></script>
+
+</body></html>
