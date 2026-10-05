@@ -1,7 +1,15 @@
 const BACKEND_URL =
     "https://opitech-backend.onrender.com";
 
+let selectedType = "Phone";
+
+
+// =====================================
+// CURRENCY
+// =====================================
+
 const currencySymbols = {
+
     INR: "₹",
     USD: "$",
     GBP: "£",
@@ -10,140 +18,244 @@ const currencySymbols = {
     EUR: "€",
     AED: "د.إ",
     SGD: "S$"
+
 };
 
-let selectedType = "Phone";
+
+const currencySelect =
+    document.getElementById("currency");
 
 
-// ==============================
+const currencySymbol =
+    document.getElementById("currencySymbol");
+
+
+if (currencySelect) {
+
+    currencySelect.addEventListener(
+        "change",
+        () => {
+
+            const currency =
+                currencySelect.value;
+
+            if (currencySymbol) {
+
+                currencySymbol.textContent =
+                    currencySymbols[currency] ||
+                    currency;
+
+            }
+
+        }
+    );
+
+}
+
+
+// =====================================
+// PRODUCT TYPE
+// =====================================
+
+document
+    .querySelectorAll(".option")
+    .forEach(button => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                document
+                    .querySelectorAll(".option")
+                    .forEach(item =>
+                        item.classList.remove(
+                            "active"
+                        )
+                    );
+
+
+                button.classList.add(
+                    "active"
+                );
+
+
+                selectedType =
+                    button.dataset.type ||
+                    button.textContent.trim();
+
+
+                console.log(
+                    "Selected product:",
+                    selectedType
+                );
+
+            }
+        );
+
+    });
+
+
+// =====================================
 // HELPERS
-// ==============================
+// =====================================
 
-function getValue(id, fallback = "") {
+function getValue(
+    id,
+    fallback = ""
+) {
 
     const element =
         document.getElementById(id);
 
+
     if (!element) {
+
         return fallback;
+
     }
 
+
     return element.value ?? fallback;
+
+}
+
+
+function getSelectedUses() {
+
+    return Array.from(
+
+        document.querySelectorAll(
+            '.checkbox-grid input[type="checkbox"]:checked'
+        )
+
+    )
+        .map(
+            input =>
+                input.value ||
+                input.dataset.value ||
+                input.nextElementSibling?.textContent?.trim() ||
+                ""
+        )
+
+        .filter(Boolean);
+
 }
 
 
 function escapeHtml(value) {
 
     return String(value ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+
+        .replace(
+            /</g,
+            "&lt;"
+        )
+
+        .replace(
+            />/g,
+            "&gt;"
+        )
+
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+
+function formatPrice(
+    price,
+    currency
+) {
+
+    if (
+
+        price === null ||
+        price === undefined ||
+        price === "" ||
+        !Number.isFinite(
+            Number(price)
+        )
+
+    ) {
+
+        return "Price unavailable";
+
+    }
+
+
+    const symbol =
+        currencySymbols[currency] ||
+        currency ||
+        "₹";
+
+
+    return (
+
+        symbol +
+
+        Number(price)
+            .toLocaleString("en-IN")
+
+    );
+
 }
 
 
 function safeUrl(url) {
 
     if (!url) {
+
         return "";
+
     }
+
 
     try {
 
         const parsed =
             new URL(url);
 
+
         if (
+
             parsed.protocol === "http:" ||
             parsed.protocol === "https:"
+
         ) {
+
             return parsed.href;
+
         }
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
         return "";
+
     }
+
 
     return "";
+
 }
 
 
-function formatPrice(
-    price,
-    currency = "INR"
-) {
-
-    if (
-        price === null ||
-        price === undefined ||
-        price === "" ||
-        !Number.isFinite(Number(price))
-    ) {
-
-        return "Price unavailable";
-    }
-
-    const symbol =
-        currencySymbols[currency] ||
-        currency;
-
-    return (
-        symbol +
-        " " +
-        Number(price).toLocaleString(
-            "en-IN"
-        )
-    );
-}
-
-
-// ==============================
-// NAVIGATION
-// ==============================
-
-function start() {
-
-    const finder =
-        document.getElementById(
-            "finder"
-        );
-
-    if (finder) {
-
-        finder.scrollIntoView({
-            behavior: "smooth"
-        });
-    }
-}
-
-window.start = start;
-
-
-function selectCategory(type) {
-
-    selectedType = type;
-
-    const category =
-        document.getElementById(
-            "category"
-        );
-
-    if (category) {
-        category.value = type;
-    }
-
-    start();
-}
-
-window.selectCategory =
-    selectCategory;
-
-
-// ==============================
+// =====================================
 // MARKETPLACE CARD
-// ==============================
+// =====================================
 
 function marketplaceCard(
     marketplaceName,
@@ -152,19 +264,53 @@ function marketplaceCard(
 ) {
 
     if (!marketplace) {
+
         return "";
+
     }
+
 
     const url =
         safeUrl(
             marketplace.url
         );
 
+
     const price =
-        formatPrice(
-            marketplace.price,
-            currency
-        );
+        marketplace.price
+
+            ? formatPrice(
+                marketplace.price,
+                currency
+            )
+
+            : "Price unavailable";
+
+
+    if (!url) {
+
+        return `
+
+            <div class="marketplace">
+
+                <strong>
+                    ${escapeHtml(
+                        marketplaceName
+                    )}
+                </strong>
+
+                <span>
+                    ${escapeHtml(
+                        price
+                    )}
+                </span>
+
+            </div>
+
+        `;
+
+    }
+
 
     return `
 
@@ -179,63 +325,76 @@ function marketplaceCard(
                 </strong>
 
                 <span>
-                    ${escapeHtml(price)}
+                    ${escapeHtml(
+                        price
+                    )}
                 </span>
 
             </div>
 
-            ${
-                url
-                    ? `
-                        <a
-                            class="buy-button"
-                            href="${escapeHtml(url)}"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
-                            View Product ↗
-                        </a>
-                    `
-                    : ""
-            }
+
+            <a
+
+                href="${escapeHtml(url)}"
+
+                target="_blank"
+
+                rel="noopener noreferrer"
+
+                class="buy-button"
+
+            >
+
+                View Product ↗
+
+            </a>
 
         </div>
 
     `;
+
 }
 
 
-// ==============================
-// RENDER RESULTS
-// ==============================
+// =====================================
+// RENDER RECOMMENDATIONS
+// =====================================
 
-function renderRecommendations(data) {
+function renderRecommendations(
+    data
+) {
 
     const container =
         document.getElementById(
-            "result"
+            "results"
+        ) ||
+        document.getElementById(
+            "recommendations"
         );
 
-    if (!container) {
-        return;
-    }
 
-    container.classList.remove(
-        "hidden"
-    );
+    if (!container) {
+
+        console.error(
+            "Results container not found."
+        );
+
+        return;
+
+    }
 
 
     const recommendations =
         Array.isArray(
             data.recommendations
         )
+
             ? data.recommendations
+
             : [];
 
 
-    if (
-        recommendations.length === 0
-    ) {
+    if (!recommendations.length) {
 
         container.innerHTML = `
 
@@ -246,8 +405,10 @@ function renderRecommendations(data) {
                 </h3>
 
                 <p>
+
                     Try increasing your budget
                     or changing your preferences.
+
                 </p>
 
             </div>
@@ -255,12 +416,15 @@ function renderRecommendations(data) {
         `;
 
         return;
+
     }
 
 
     const currency =
-        data.currency ||
-        "INR";
+        getValue(
+            "currency",
+            "INR"
+        );
 
 
     container.innerHTML = `
@@ -272,38 +436,62 @@ function renderRecommendations(data) {
             </h2>
 
             <p>
-                OPITECH found these products
-                for your requirements.
+
+                Live Amazon India + Flipkart
+                search completed.
+
             </p>
 
         </div>
 
 
         ${recommendations
+
             .map(
-                (product, index) => {
+                (
+                    product,
+                    index
+                ) => {
 
                     const rank =
                         product.rank ||
                         index + 1;
+
 
                     const image =
                         safeUrl(
                             product.imageUrl
                         );
 
+
+                    const mainPrice =
+                        product.price
+
+                            ? formatPrice(
+                                product.price,
+                                currency
+                            )
+
+                            : "Price unavailable";
+
+
                     const strengths =
                         Array.isArray(
                             product.strengths
                         )
+
                             ? product.strengths
+
                             : [];
+
 
                     const tradeoffs =
                         Array.isArray(
                             product.tradeoffs
                         )
+
                             ? product.tradeoffs
+
                             : [];
 
 
@@ -312,6 +500,7 @@ function renderRecommendations(data) {
                         <article
                             class="recommendation-card"
                         >
+
 
                             <div class="rank">
 
@@ -322,6 +511,7 @@ function renderRecommendations(data) {
 
                             ${
                                 image
+
                                     ? `
 
                                         <div
@@ -329,28 +519,36 @@ function renderRecommendations(data) {
                                         >
 
                                             <img
-                                                class="product-image"
+
                                                 src="${escapeHtml(
                                                     image
                                                 )}"
+
                                                 alt="${escapeHtml(
-                                                    product.name ||
-                                                    "Recommended product"
+                                                    product.name
                                                 )}"
+
+                                                class="product-image"
+
                                                 loading="lazy"
+
                                                 onerror="this.parentElement.style.display='none'"
+
                                             >
 
                                         </div>
 
                                     `
+
                                     : ""
+
                             }
 
 
                             <div
                                 class="product-content"
                             >
+
 
                                 <h3>
 
@@ -364,6 +562,7 @@ function renderRecommendations(data) {
 
                                 ${
                                     product.brand
+
                                         ? `
 
                                             <div class="brand">
@@ -375,7 +574,9 @@ function renderRecommendations(data) {
                                             </div>
 
                                         `
+
                                         : ""
+
                                 }
 
 
@@ -384,10 +585,7 @@ function renderRecommendations(data) {
                                 >
 
                                     ${escapeHtml(
-                                        formatPrice(
-                                            product.price,
-                                            currency
-                                        )
+                                        mainPrice
                                     )}
 
                                 </div>
@@ -395,6 +593,7 @@ function renderRecommendations(data) {
 
                                 ${
                                     product.priceSource
+
                                         ? `
 
                                             <div
@@ -414,12 +613,15 @@ function renderRecommendations(data) {
                                             </div>
 
                                         `
+
                                         : ""
+
                                 }
 
 
                                 ${
                                     product.matchScore
+
                                         ? `
 
                                             <div
@@ -439,7 +641,9 @@ function renderRecommendations(data) {
                                             </div>
 
                                         `
+
                                         : ""
+
                                 }
 
 
@@ -447,23 +651,35 @@ function renderRecommendations(data) {
                                     class="marketplaces"
                                 >
 
-                                    ${marketplaceCard(
-                                        "Amazon India",
-                                        product.amazon,
-                                        currency
-                                    )}
 
                                     ${marketplaceCard(
-                                        "Flipkart",
-                                        product.flipkart,
+
+                                        "Amazon India",
+
+                                        product.amazon,
+
                                         currency
+
                                     )}
+
+
+                                    ${marketplaceCard(
+
+                                        "Flipkart",
+
+                                        product.flipkart,
+
+                                        currency
+
+                                    )}
+
 
                                 </div>
 
 
                                 ${
                                     product.why
+
                                         ? `
 
                                             <div
@@ -471,8 +687,11 @@ function renderRecommendations(data) {
                                             >
 
                                                 <h4>
+
                                                     Why this pick?
+
                                                 </h4>
+
 
                                                 <p>
 
@@ -485,12 +704,15 @@ function renderRecommendations(data) {
                                             </div>
 
                                         `
+
                                         : ""
+
                                 }
 
 
                                 ${
                                     strengths.length
+
                                         ? `
 
                                             <div
@@ -498,23 +720,23 @@ function renderRecommendations(data) {
                                             >
 
                                                 <h4>
+
                                                     👍 Strengths
+
                                                 </h4>
+
 
                                                 <ul>
 
                                                     ${strengths
+
                                                         .map(
                                                             item =>
-                                                                `
-                                                                <li>
-                                                                    ${escapeHtml(
-                                                                        item
-                                                                    )}
-                                                                </li>
-                                                                `
+                                                                `<li>${escapeHtml(item)}</li>`
                                                         )
+
                                                         .join("")
+
                                                     }
 
                                                 </ul>
@@ -522,12 +744,15 @@ function renderRecommendations(data) {
                                             </div>
 
                                         `
+
                                         : ""
+
                                 }
 
 
                                 ${
                                     tradeoffs.length
+
                                         ? `
 
                                             <div
@@ -535,23 +760,23 @@ function renderRecommendations(data) {
                                             >
 
                                                 <h4>
+
                                                     ⚠️ Trade-offs
+
                                                 </h4>
+
 
                                                 <ul>
 
                                                     ${tradeoffs
+
                                                         .map(
                                                             item =>
-                                                                `
-                                                                <li>
-                                                                    ${escapeHtml(
-                                                                        item
-                                                                    )}
-                                                                </li>
-                                                                `
+                                                                `<li>${escapeHtml(item)}</li>`
                                                         )
+
                                                         .join("")
+
                                                     }
 
                                                 </ul>
@@ -559,10 +784,14 @@ function renderRecommendations(data) {
                                             </div>
 
                                         `
+
                                         : ""
+
                                 }
 
+
                             </div>
+
 
                         </article>
 
@@ -570,7 +799,9 @@ function renderRecommendations(data) {
 
                 }
             )
+
             .join("")
+
         }
 
 
@@ -578,29 +809,27 @@ function renderRecommendations(data) {
             class="price-disclaimer"
         >
 
-            ⚠️ Prices and availability
-            can change.
+            ⚠️ Prices and availability can change.
+
+            OPITECH uses current web-search evidence
+            from Amazon India and Flipkart.
 
         </div>
 
     `;
+
 }
 
 
-// ==============================
-// MAIN OPITECH AI FUNCTION
-// ==============================
+// =====================================
+// MAIN AI FUNCTION
+// =====================================
 
 async function testOPITECHAI() {
 
     const button =
-        document.querySelector(
-            '#finderForm button[type="submit"]'
-        );
-
-    const container =
         document.getElementById(
-            "result"
+            "findButton"
         );
 
 
@@ -609,15 +838,21 @@ async function testOPITECHAI() {
         button.disabled = true;
 
         button.textContent =
-            "⏳ Checking...";
+            "⏳ Checking Amazon & Flipkart...";
+
     }
 
 
-    if (container) {
-
-        container.classList.remove(
-            "hidden"
+    const container =
+        document.getElementById(
+            "results"
+        ) ||
+        document.getElementById(
+            "recommendations"
         );
+
+
+    if (container) {
 
         container.innerHTML = `
 
@@ -628,79 +863,82 @@ async function testOPITECHAI() {
                 </h3>
 
                 <p>
-                    Finding recommendations
-                    based on your requirements.
+
+                    Checking current Amazon India
+                    and Flipkart prices.
+
                 </p>
 
                 <p>
+
                     This may take a few seconds.
+
                 </p>
 
             </div>
 
         `;
+
     }
-
-
-    const uses =
-        getValue(
-            "uses"
-        )
-        .split(",")
-        .map(
-            item =>
-                item.trim()
-        )
-        .filter(Boolean);
-
-
-    const payload = {
-
-        productType:
-            getValue(
-                "category",
-                "Phone"
-            ),
-
-        country:
-            "India",
-
-        currency:
-            "INR",
-
-        budget:
-            getValue(
-                "budget"
-            ),
-
-        uses:
-            uses,
-
-        priority:
-            getValue(
-                "priorities",
-                "balanced"
-            ),
-
-        brand:
-            getValue(
-                "preferences",
-                "any"
-            )
-    };
-
-
-    console.log(
-        "Sending OPITECH preferences:",
-        payload
-    );
 
 
     try {
 
+        const budget =
+            getValue(
+                "budget"
+            );
+
+
+        const payload = {
+
+            productType:
+                selectedType,
+
+            country:
+                getValue(
+                    "country",
+                    "India"
+                ),
+
+            currency:
+                getValue(
+                    "currency",
+                    "INR"
+                ),
+
+            budget:
+                budget,
+
+            uses:
+                getSelectedUses(),
+
+            priority:
+                getValue(
+                    "priority",
+                    "balanced"
+                ),
+
+            brand:
+                getValue(
+                    "brand",
+                    "any"
+                )
+
+        };
+
+
+        console.log(
+            "Sending OPITECH preferences:",
+            payload
+        );
+
+
         const response =
             await fetch(
+
                 `${BACKEND_URL}/api/recommend`,
+
                 {
 
                     method: "POST",
@@ -718,6 +956,7 @@ async function testOPITECHAI() {
                         )
 
                 }
+
             );
 
 
@@ -735,30 +974,47 @@ async function testOPITECHAI() {
                     rawText
                 );
 
-        } catch {
+        }
+
+        catch (error) {
 
             throw new Error(
-                "Backend returned invalid data."
+
+                `Backend returned invalid data: ${rawText.substring(
+                    0,
+                    300
+                )}`
+
             );
+
         }
 
 
         if (!response.ok) {
 
             throw new Error(
+
                 data.error ||
+
                 data.details ||
+
                 `Backend error ${response.status}`
+
             );
+
         }
 
 
         if (!data.success) {
 
             throw new Error(
+
                 data.error ||
+
                 "Recommendation request failed."
+
             );
+
         }
 
 
@@ -773,103 +1029,16 @@ async function testOPITECHAI() {
         );
 
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
         console.error(
-            "OPITECH error:",
+            "OPITECH frontend error:",
             error
         );
 
 
         if (container) {
 
-            container.innerHTML = `
-
-                <div
-                    class="error-message"
-                >
-
-                    <h3>
-                        ❌ OPITECH couldn't get recommendations
-                    </h3>
-
-                    <p>
-
-                        ${escapeHtml(
-                            error.message ||
-                            "Something went wrong."
-                        )}
-
-                    </p>
-
-                    <p>
-                        Please try again in a few seconds.
-                    </p>
-
-                </div>
-
-            `;
-        }
-
-    } finally {
-
-        if (button) {
-
-            button.disabled = false;
-
-            button.textContent =
-                "Generate My OPITECH Profile →";
-        }
-    }
-}
-
-window.testOPITECHAI =
-    testOPITECHAI;
-
-
-// ==============================
-// FORM SETUP
-// ==============================
-
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
-
-        const category =
-            document.getElementById(
-                "category"
-            );
-
-
-        if (category) {
-
-            selectedType =
-                category.value;
-
-            category.addEventListener(
-                "change",
-                () => {
-
-                    selectedType =
-                        category.value;
-
-                }
-            );
-        }
-
-
-        const form =
-            document.getElementById(
-                "finderForm"
-            );
-
-
-        if (form) {
-
-            form.addEventListener(
-                "submit",
-                event => {
-
-                    event.preventDefault();
-
-                    testOPITECHAI();
+            contai
