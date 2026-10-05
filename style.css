@@ -1,6 +1,6 @@
 /* =========================================================
-   OPITECH — STYLE
-   Modern AI Results Interface
+   OPITECH — COMPLETE STYLE
+   Old landing/form UI + premium AI results interface
    ========================================================= */
 
 * {
@@ -25,16 +25,16 @@ body {
 
     background:
         radial-gradient(
-            circle at 50% -10%,
-            rgba(37, 99, 235, 0.16),
-            transparent 38%
+            circle at 80% 10%,
+            rgba(37, 99, 235, 0.12),
+            transparent 28%
         ),
-        #05070a;
+        #05070c;
 
-    color: #f8fafc;
+    color: #f5f7fb;
     line-height: 1.6;
+    overflow-x: hidden;
 }
-
 
 /* =========================================================
    HEADER
@@ -43,9 +43,9 @@ body {
 .header {
     position: sticky;
     top: 0;
-    z-index: 100;
+    z-index: 1000;
 
-    height: 72px;
+    height: 76px;
 
     display: flex;
     align-items: center;
@@ -53,8 +53,7 @@ body {
 
     padding: 0 7%;
 
-    background: rgba(5, 7, 10, 0.82);
-
+    background: rgba(5, 7, 12, 0.82);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
 
@@ -62,7 +61,7 @@ body {
 }
 
 .logo {
-    font-size: 24px;
+    font-size: 25px;
     font-weight: 900;
     letter-spacing: -1px;
 }
@@ -77,35 +76,35 @@ body {
 }
 
 .header nav a {
-    color: #94a3b8;
+    color: #aeb7c8;
     text-decoration: none;
     font-size: 14px;
     font-weight: 600;
 
-    transition: 0.2s ease;
+    transition:
+        color 0.2s ease,
+        transform 0.2s ease;
 }
 
 .header nav a:hover {
     color: #ffffff;
+    transform: translateY(-1px);
 }
-
 
 /* =========================================================
    HERO
    ========================================================= */
 
 .hero {
-    min-height: 650px;
+    position: relative;
+    min-height: 700px;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    padding: 100px 20px;
+    padding: 100px 7%;
 
-    text-align: center;
-
-    position: relative;
     overflow: hidden;
 }
 
@@ -114,50 +113,1123 @@ body {
 
     position: absolute;
 
-    width: 600px;
-    height: 600px;
+    width: 520px;
+    height: 520px;
 
-    top: -300px;
-    left: 50%;
-
-    transform: translateX(-50%);
+    top: -180px;
+    right: -120px;
 
     background: rgba(37, 99, 235, 0.18);
 
     filter: blur(100px);
+    border-radius: 50%;
 
+    pointer-events: none;
+}
+
+.hero::after {
+    content: "";
+
+    position: absolute;
+
+    width: 400px;
+    height: 400px;
+
+    bottom: -200px;
+    left: -100px;
+
+    background: rgba(29, 78, 216, 0.10);
+
+    filter: blur(100px);
     border-radius: 50%;
 
     pointer-events: none;
 }
 
 .hero-content {
-    max-width: 850px;
     position: relative;
     z-index: 2;
+
+    max-width: 900px;
+    text-align: center;
 }
 
 .badge {
     display: inline-flex;
     align-items: center;
 
-    padding: 8px 15px;
+    padding: 8px 16px;
 
     margin-bottom: 25px;
 
     border-radius: 999px;
 
-    background: rgba(37, 99, 235, 0.10);
-
+    background: rgba(59, 130, 246, 0.10);
     border: 1px solid rgba(59, 130, 246, 0.25);
 
-    color: #60a5fa;
+    color: #75a9ff;
 
     font-size: 13px;
     font-weight: 700;
+
+    box-shadow:
+        0 0 30px rgba(37, 99, 235, 0.10);
 }
 
 .hero h1 {
     font-size: clamp(45px, 7vw, 82px);
 
-    line-height: 1.
+    line-height: 1.04;
+
+    letter-spacing: -3px;
+
+    font-weight: 900;
+
+    margin-bottom: 25px;
+}
+
+.hero h1 span {
+    display: block;
+
+    background:
+        linear-gradient(
+            90deg,
+            #60a5fa,
+            #2563eb,
+            #93c5fd
+        );
+
+    -webkit-background-clip: text;
+    background-clip: text;
+
+    color: transparent;
+}
+
+.hero p {
+    max-width: 650px;
+
+    margin: 0 auto 35px;
+
+    color: #9aa5b8;
+
+    font-size: 17px;
+}
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+.primary-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 52px;
+
+    padding: 0 25px;
+
+    border-radius: 12px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #3b82f6,
+            #2563eb
+        );
+
+    color: white;
+
+    text-decoration: none;
+
+    font-weight: 800;
+    font-size: 15px;
+
+    box-shadow:
+        0 12px 35px rgba(37, 99, 235, 0.25);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.primary-button:hover {
+    transform: translateY(-3px);
+
+    box-shadow:
+        0 18px 45px rgba(37, 99, 235, 0.35);
+}
+
+/* =========================================================
+   RECOMMENDER SECTION
+   ========================================================= */
+
+.recommend-section {
+    padding: 110px 7%;
+
+    background:
+        linear-gradient(
+            180deg,
+            #070a10 0%,
+            #090c13 100%
+        );
+}
+
+.section-heading {
+    max-width: 760px;
+    margin: 0 auto 45px;
+    text-align: center;
+}
+
+.small-title {
+    color: #4f91ff;
+
+    font-size: 12px;
+    font-weight: 900;
+
+    letter-spacing: 2px;
+
+    margin-bottom: 10px;
+}
+
+.section-heading h2 {
+    font-size: clamp(32px, 5vw, 50px);
+
+    letter-spacing: -1.8px;
+
+    margin-bottom: 12px;
+}
+
+.section-heading > p:last-child {
+    color: #8e99ab;
+    font-size: 16px;
+}
+
+/* =========================================================
+   FORM CARD
+   ========================================================= */
+
+.form-card {
+    width: min(900px, 100%);
+
+    margin: auto;
+
+    padding: clamp(24px, 5vw, 45px);
+
+    border-radius: 24px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(18, 24, 36, 0.96),
+            rgba(9, 13, 21, 0.96)
+        );
+
+    border: 1px solid rgba(255, 255, 255, 0.08);
+
+    box-shadow:
+        0 30px 90px rgba(0, 0, 0, 0.35);
+}
+
+.form-group {
+    margin-bottom: 28px;
+}
+
+.form-group > label {
+    display: block;
+
+    margin-bottom: 12px;
+
+    color: #e9edf5;
+
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.form-group > label span {
+    color: #6f7b8e;
+    font-weight: 500;
+}
+
+/* =========================================================
+   PRODUCT OPTIONS
+   ========================================================= */
+
+.option-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 12px;
+}
+
+.option {
+    min-height: 86px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 5px;
+
+    border-radius: 14px;
+
+    background: #0d121c;
+
+    border: 1px solid rgba(255, 255, 255, 0.07);
+
+    color: #aeb8c8;
+
+    cursor: pointer;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.option:first-line {
+    font-size: 25px;
+}
+
+.option:hover {
+    transform: translateY(-2px);
+
+    border-color: rgba(59, 130, 246, 0.35);
+
+    background: #111827;
+}
+
+.option.active {
+    background:
+        linear-gradient(
+            145deg,
+            rgba(37, 99, 235, 0.20),
+            rgba(30, 64, 175, 0.10)
+        );
+
+    border-color: rgba(59, 130, 246, 0.65);
+
+    color: #ffffff;
+
+    box-shadow:
+        0 0 25px rgba(37, 99, 235, 0.10);
+}
+
+/* =========================================================
+   SELECTS
+   ========================================================= */
+
+select,
+input[type="number"] {
+    width: 100%;
+
+    height: 54px;
+
+    border-radius: 12px;
+
+    border: 1px solid rgba(255, 255, 255, 0.08);
+
+    background: #0d121c;
+
+    color: #eef2f8;
+
+    padding: 0 16px;
+
+    outline: none;
+
+    font-size: 14px;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+select:focus,
+input[type="number"]:focus {
+    border-color: rgba(59, 130, 246, 0.65);
+
+    box-shadow:
+        0 0 0 3px rgba(59, 130, 246, 0.10);
+}
+
+select option {
+    background: #0d121c;
+    color: white;
+}
+
+/* =========================================================
+   BUDGET
+   ========================================================= */
+
+.budget-input {
+    position: relative;
+}
+
+.budget-input span {
+    position: absolute;
+
+    left: 16px;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    color: #60a5fa;
+
+    font-weight: 800;
+
+    pointer-events: none;
+}
+
+.budget-input input {
+    padding-left: 38px;
+}
+
+/* =========================================================
+   CHECKBOXES
+   ========================================================= */
+
+.checkbox-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, 1fr);
+
+    gap: 10px;
+}
+
+.check-option {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    min-height: 50px;
+
+    padding: 0 14px;
+
+    border-radius: 11px;
+
+    background: #0d121c;
+
+    border: 1px solid rgba(255, 255, 255, 0.06);
+
+    color: #aeb7c8;
+
+    cursor: pointer;
+
+    font-size: 13px;
+}
+
+.check-option:hover {
+    border-color: rgba(59, 130, 246, 0.35);
+}
+
+.check-option input {
+    accent-color: #3b82f6;
+}
+
+/* =========================================================
+   FIND BUTTON
+   ========================================================= */
+
+.find-button {
+    width: 100%;
+
+    min-height: 58px;
+
+    border: none;
+
+    border-radius: 14px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #3b82f6
+        );
+
+    color: white;
+
+    font-size: 15px;
+    font-weight: 900;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 15px 40px rgba(37, 99, 235, 0.22);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        opacity 0.2s ease;
+}
+
+.find-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 20px 50px rgba(37, 99, 235, 0.32);
+}
+
+.find-button:disabled {
+    cursor: wait;
+    opacity: 0.75;
+}
+
+/* =========================================================
+   RESULTS SECTION
+   ========================================================= */
+
+.results-section {
+    position: relative;
+
+    padding: 110px 7% 120px;
+
+    background:
+        radial-gradient(
+            circle at 50% 0%,
+            rgba(37, 99, 235, 0.10),
+            transparent 32%
+        ),
+        #05070c;
+}
+
+.results-container {
+    width: min(1100px, 100%);
+    margin: auto;
+}
+
+/* =========================================================
+   EMPTY / LOADING STATE
+   ========================================================= */
+
+.empty-results {
+    min-height: 250px;
+
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    text-align: center;
+
+    padding: 50px 25px;
+
+    border-radius: 24px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(15, 21, 32, 0.92),
+            rgba(8, 11, 18, 0.92)
+        );
+
+    border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.empty-icon {
+    width: 64px;
+    height: 64px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-bottom: 20px;
+
+    border-radius: 20px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(59, 130, 246, 0.18),
+            rgba(37, 99, 235, 0.06)
+        );
+
+    border: 1px solid rgba(59, 130, 246, 0.18);
+
+    font-size: 28px;
+
+    box-shadow:
+        0 0 35px rgba(37, 99, 235, 0.10);
+}
+
+.empty-results h3 {
+    font-size: 22px;
+    margin-bottom: 8px;
+}
+
+.empty-results p {
+    max-width: 500px;
+
+    color: #7f8b9e;
+
+    font-size: 14px;
+}
+
+/* =========================================================
+   AI RESULTS HEADER
+   ========================================================= */
+
+.ai-results-header {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+
+    gap: 18px;
+
+    margin-bottom: 35px;
+
+    padding: 26px 28px;
+
+    border-radius: 22px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(19, 29, 48, 0.95),
+            rgba(10, 15, 25, 0.95)
+        );
+
+    border: 1px solid rgba(59, 130, 246, 0.18);
+
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.22);
+}
+
+.ai-results-icon {
+    flex: 0 0 auto;
+
+    width: 58px;
+    height: 58px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 17px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #1d4ed8
+        );
+
+    color: white;
+
+    font-size: 25px;
+
+    box-shadow:
+        0 10px 35px rgba(37, 99, 235, 0.25);
+}
+
+.results-label {
+    color: #5f9cff;
+
+    font-size: 11px;
+    font-weight: 900;
+
+    letter-spacing: 2px;
+
+    margin-bottom: 3px;
+}
+
+.ai-results-header h2 {
+    font-size: clamp(26px, 4vw, 38px);
+
+    letter-spacing: -1.2px;
+
+    line-height: 1.15;
+
+    margin-bottom: 4px;
+}
+
+.ai-results-header p:last-child {
+    color: #7f8b9e;
+
+    font-size: 14px;
+}
+
+/* =========================================================
+   RECOMMENDATION LIST
+   ========================================================= */
+
+.recommendations-list {
+    display: flex;
+    flex-direction: column;
+
+    gap: 20px;
+}
+
+/* =========================================================
+   GENERAL RECOMMENDATION CARD
+   ========================================================= */
+
+.recommendation-card {
+    position: relative;
+
+    overflow: hidden;
+
+    border-radius: 24px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(16, 22, 33, 0.98),
+            rgba(8, 12, 19, 0.98)
+        );
+
+    border: 1px solid rgba(255, 255, 255, 0.07);
+
+    box-shadow:
+        0 20px 65px rgba(0, 0, 0, 0.25);
+}
+
+.recommendation-card::before {
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 2px;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(59, 130, 246, 0.75),
+            transparent
+        );
+
+    opacity: 0.5;
+}
+
+.product-content {
+    padding: 28px 32px 32px;
+}
+
+.rank {
+    position: absolute;
+
+    top: 25px;
+    left: 28px;
+
+    font-size: 13px;
+    font-weight: 900;
+
+    color: #667386;
+
+    letter-spacing: 1px;
+}
+
+/* =========================================================
+   BEST MATCH CARD
+   ========================================================= */
+
+.top-recommendation {
+    min-height: 390px;
+
+    background:
+        radial-gradient(
+            circle at 90% 0%,
+            rgba(37, 99, 235, 0.18),
+            transparent 34%
+        ),
+        linear-gradient(
+            145deg,
+            rgba(18, 28, 46, 0.98),
+            rgba(8, 12, 20, 0.98)
+        );
+
+    border-color:
+        rgba(59, 130, 246, 0.25);
+
+    box-shadow:
+        0 30px 90px rgba(0, 0, 0, 0.30),
+        0 0 60px rgba(37, 99, 235, 0.06);
+}
+
+.top-recommendation .rank {
+    color: #72a8ff;
+}
+
+.top-recommendation .product-content {
+    padding-top: 72px;
+}
+
+.top-badge {
+    position: absolute;
+
+    top: 20px;
+    right: 22px;
+
+    display: inline-flex;
+    align-items: center;
+
+    padding: 8px 13px;
+
+    border-radius: 999px;
+
+    background:
+        rgba(37, 99, 235, 0.13);
+
+    border:
+        1px solid rgba(96, 165, 250, 0.25);
+
+    color: #8bbcff;
+
+    font-size: 11px;
+    font-weight: 900;
+
+    letter-spacing: 0.7px;
+}
+
+/* =========================================================
+   PRODUCT TOP LINE
+   ========================================================= */
+
+.product-top-line {
+    display: flex;
+
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 20px;
+}
+
+.product-top-line h3 {
+    font-size: clamp(23px, 4vw, 34px);
+
+    line-height: 1.15;
+
+    letter-spacing: -0.8px;
+
+    color: #f8fafc;
+}
+
+.secondary-recommendation .product-top-line h3 {
+    font-size: 22px;
+}
+
+.brand {
+    display: inline-flex;
+
+    margin-top: 8px;
+
+    padding: 5px 10px;
+
+    border-radius: 7px;
+
+    background: rgba(255, 255, 255, 0.05);
+
+    color: #8e9aae;
+
+    font-size: 11px;
+    font-weight: 800;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.8px;
+}
+
+/* =========================================================
+   MATCH SCORE
+   ========================================================= */
+
+.match-score {
+    flex: 0 0 auto;
+
+    min-width: 86px;
+
+    padding: 9px 12px;
+
+    border-radius: 12px;
+
+    background:
+        rgba(59, 130, 246, 0.08);
+
+    border:
+        1px solid rgba(59, 130, 246, 0.18);
+
+    text-align: center;
+}
+
+.match-score span {
+    display: block;
+
+    color: #738197;
+
+    font-size: 9px;
+
+    text-transform: uppercase;
+
+    letter-spacing: 1px;
+
+    font-weight: 800;
+}
+
+.match-score strong {
+    display: block;
+
+    margin-top: 1px;
+
+    color: #70a8ff;
+
+    font-size: 21px;
+
+    line-height: 1;
+
+    font-weight: 900;
+}
+
+/* =========================================================
+   PRICE
+   ========================================================= */
+
+.main-price {
+    margin-top: 22px;
+
+    color: #ffffff;
+
+    font-size: clamp(27px, 5vw, 40px);
+
+    line-height: 1;
+
+    letter-spacing: -1px;
+
+    font-weight: 900;
+}
+
+.secondary-recommendation .main-price {
+    font-size: 27px;
+}
+
+.price-source {
+    display: inline-flex;
+    align-items: center;
+
+    margin-top: 9px;
+
+    padding: 6px 10px;
+
+    border-radius: 7px;
+
+    background: rgba(255, 255, 255, 0.035);
+
+    color: #68768a;
+
+    font-size: 11px;
+}
+
+.price-source strong {
+    margin-left: 4px;
+
+    color: #9aa8bc;
+}
+
+/* =========================================================
+   WHY OPITECH
+   ========================================================= */
+
+.why {
+    margin-top: 28px;
+
+    padding: 19px 20px;
+
+    border-radius: 15px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(59, 130, 246, 0.09),
+            rgba(37, 99, 235, 0.025)
+        );
+
+    border-left:
+        3px solid rgba(59, 130, 246, 0.65);
+}
+
+.why h4 {
+    margin-bottom: 7px;
+
+    color: #79adff;
+
+    font-size: 12px;
+
+    text-transform: uppercase;
+
+    letter-spacing: 1px;
+
+    font-weight: 900;
+}
+
+.why p {
+    color: #c1c9d6;
+
+    font-size: 14px;
+
+    line-height: 1.65;
+}
+
+/* =========================================================
+   STRENGTHS / TRADEOFFS
+   ========================================================= */
+
+.strengths,
+.tradeoffs {
+    margin-top: 22px;
+}
+
+.strengths h4,
+.tradeoffs h4 {
+    margin-bottom: 11px;
+
+    font-size: 12px;
+
+    text-transform: uppercase;
+
+    letter-spacing: 1px;
+
+    font-weight: 900;
+}
+
+.strengths h4 {
+    color: #79c99b;
+}
+
+.tradeoffs h4 {
+    color: #d4a66a;
+}
+
+.strengths ul,
+.tradeoffs ul {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 8px;
+
+    list-style: none;
+}
+
+.strengths li,
+.tradeoffs li {
+    padding: 7px 11px;
+
+    border-radius: 999px;
+
+    font-size: 11px;
+
+    line-height: 1.35;
+}
+
+.strengths li {
+    color: #9fe0ba;
+
+    background:
+        rgba(34, 197, 94, 0.07);
+
+    border:
+        1px solid rgba(34, 197, 94, 0.13);
+}
+
+.tradeoffs li {
+    color: #e0bd8d;
+
+    background:
+        rgba(245, 158, 11, 0.06);
+
+    border:
+        1px solid rgba(245, 158, 11, 0.12);
+}
+
+/* =========================================================
+   SECONDARY RECOMMENDATIONS
+   ========================================================= */
+
+.secondary-recommendation {
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.secondary-recommendation:hover {
+    transform: translateY(-3px);
+
+    border-color:
+        rgba(59, 130, 246, 0.22);
+
+    box-shadow:
+        0 25px 70px rgba(0, 0, 0, 0.32);
+}
+
+.secondary-recommendation .product-content {
+    padding-top: 31px;
+    padding-left: 75px;
+}
+
+/* =========================================================
+   ABOUT
+   ========================================================= */
+
+.about-section {
+    padding: 100px 7%;
+
+    background: #070a10;
+}
+
+.about-card {
+    width: min(800px, 100%);
+
+    margin: auto;
+
+    padding: 45px;
+
+    border-radius: 22px;
+
+    text-align: center;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(16, 22, 33, 0.95),
+            rgba(9, 13, 20, 0.95)
+        );
+
+    border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.about-card h2 {
+    margin-bottom: 13px;
+
+    font-size: 32px;
+
+    letter-spacing: -1px;
+}
+
+.about-card p {
+    color: #8b97a9;
+
+    font-size: 15px;
+
+    line-height: 1.8;
+}
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+footer {
+    pad
