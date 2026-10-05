@@ -738,4 +738,9 @@ async function checkOPITECHBackend() {
 
 
 // ===============================
-// MAKE
+// MAKE FUNCTIONS AVAILABLE
+// ===============================
+
+window.testOPITECHAI = testOPITECHAI;
+
+window.checkOPITECHBackend = checkOPITECHBackend;
