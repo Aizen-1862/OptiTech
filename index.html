@@ -3,17 +3,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#05070c">
-  <meta name="description" content="Find electronics that fit your budget and needs with OPITECH AI.">
+  <meta name="description" content="Discover electronics recommendations tailored to your needs and budget with OPITECH.">
   <title>OPITECH — Find Your Best Tech</title>
-  <link rel="stylesheet" href="style.css?v=12">
-  <script src="script.js?v=12" defer></script>
+  <link rel="stylesheet" href="style.css?v=13">
+  <script src="script.js?v=13" defer></script>
 </head>
 <body>
   <header class="header">
-    <a class="logo" href="#home" aria-label="OPITECH home"><span>OPI</span>TECH</a>
-    <nav aria-label="Main navigation">
+    <a class="logo" href="#home"><span>OPI</span>TECH</a>
+    <nav>
       <a href="#home">Home</a>
       <a href="#find-tech">Find Tech</a>
       <a href="#about">About</a>
@@ -22,97 +22,137 @@
 
   <main>
     <section class="hero" id="home">
-
       <div class="hero-glow"></div>
 
-      <!-- FLOATING TECH OBJECTS: DECORATIVE WEBSITE ELEMENTS -->
-      <div class="tech-float-layer" aria-hidden="true">
+      <!-- LARGE FLOATING HOLOGRAPHIC INTERFACES -->
+      <div class="tech-universe" aria-hidden="true">
 
-        <div class="floating-tech tech-phone">
-          <svg viewBox="0 0 64 90" fill="none">
-            <rect x="8" y="3" width="48" height="84" rx="8" stroke="currentColor" stroke-width="2"/>
-            <rect x="13" y="12" width="38" height="62" rx="3" stroke="currentColor"/>
-            <path d="M25 80h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            <circle cx="32" cy="43" r="10" stroke="currentColor"/>
+        <div class="holo-panel panel-performance">
+          <div class="holo-top"><span>DEVICE PERFORMANCE</span><i></i></div>
+          <div class="holo-number">98.4<span>%</span></div>
+          <div class="holo-caption">SYSTEM EFFICIENCY</div>
+          <div class="holo-chart">
+            <span style="height:35%"></span><span style="height:48%"></span>
+            <span style="height:42%"></span><span style="height:70%"></span>
+            <span style="height:59%"></span><span style="height:83%"></span>
+            <span style="height:72%"></span><span style="height:95%"></span>
+            <span style="height:80%"></span><span style="height:100%"></span>
+          </div>
+          <div class="holo-footer"><span>CPU</span><span>GPU</span><span>AI CORE</span></div>
+        </div>
+
+        <div class="holo-device device-phone">
+          <div class="phone-frame">
+            <div class="phone-camera"></div>
+            <div class="phone-screen">
+              <div class="phone-screen-top">OPI<span>TECH</span></div>
+              <div class="phone-orb"></div>
+              <div class="phone-screen-line long"></div>
+              <div class="phone-screen-line"></div>
+              <div class="phone-screen-bars"><i></i><i></i><i></i><i></i></div>
+              <div class="phone-screen-bottom">SMART DEVICE / 01</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="holo-device device-laptop">
+          <div class="laptop-screen">
+            <div class="laptop-ui-top"><span></span><span></span><span></span></div>
+            <div class="laptop-ui-body">
+              <div class="laptop-sidebar"><i></i><i></i><i></i><i></i></div>
+              <div class="laptop-main-ui">
+                <div class="laptop-ui-title"></div>
+                <div class="laptop-ui-graph"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                <div class="laptop-ui-lines"><i></i><i></i><i></i></div>
+              </div>
+            </div>
+          </div>
+          <div class="laptop-base"></div>
+        </div>
+
+        <div class="holo-panel panel-chip">
+          <div class="chip-label">NEURAL PROCESSOR</div>
+          <svg class="processor-svg" viewBox="0 0 180 180" fill="none">
+            <path d="M90 5V32M90 148V175M5 90H32M148 90H175M30 30L49 49M131 131L150 150M150 30L131 49M49 131L30 150" stroke="currentColor" stroke-width="2"/>
+            <rect x="36" y="36" width="108" height="108" rx="13" stroke="currentColor" stroke-width="2"/>
+            <rect x="52" y="52" width="76" height="76" rx="8" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M68 68H112V112H68zM68 90H112M90 68V112" stroke="currentColor" stroke-width="1.5"/>
+            <circle cx="90" cy="90" r="11" fill="currentColor" fill-opacity=".2" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          <div class="chip-specs"><span>AI</span><span>8 CORE</span><span>5 NM</span></div>
+        </div>
+
+        <div class="holo-panel panel-audio">
+          <div class="audio-title">SPATIAL AUDIO</div>
+          <svg viewBox="0 0 180 120" fill="none" class="audio-svg">
+            <path d="M38 64V49a52 52 0 0 1 104 0v15" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+            <rect x="27" y="58" width="27" height="43" rx="11" stroke="currentColor" stroke-width="3"/>
+            <rect x="126" y="58" width="27" height="43" rx="11" stroke="currentColor" stroke-width="3"/>
+            <path d="M64 75h52M70 84h40M77 93h26" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <div class="audio-wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="audio-caption">IMMERSIVE / 360°</div>
+        </div>
+
+        <div class="holo-panel panel-dashboard">
+          <div class="dashboard-title">LIVE TECH INDEX</div>
+          <div class="dashboard-score"><span>OP</span> 024.8</div>
+          <div class="dashboard-line"><i></i></div>
+          <div class="dashboard-metrics">
+            <span>POWER <b>HIGH</b></span>
+            <span>LATENCY <b>LOW</b></span>
+            <span>STATUS <b>ACTIVE</b></span>
+          </div>
+        </div>
+
+        <div class="holo-panel panel-circuit">
+          <svg viewBox="0 0 240 160" fill="none">
+            <path d="M8 35H68V70H112V22H170V60H232M8 120H45V92H88V137H145V106H194V130H232M112 70V95H160V80H210" stroke="currentColor" stroke-width="2"/>
+            <circle cx="8" cy="35" r="5" stroke="currentColor" stroke-width="2"/>
+            <circle cx="232" cy="60" r="5" stroke="currentColor" stroke-width="2"/>
+            <circle cx="8" cy="120" r="5" stroke="currentColor" stroke-width="2"/>
+            <circle cx="232" cy="130" r="5" stroke="currentColor" stroke-width="2"/>
+            <circle cx="170" cy="22" r="5" stroke="currentColor" stroke-width="2"/>
           </svg>
         </div>
 
-        <div class="floating-tech tech-laptop">
-          <svg viewBox="0 0 100 70" fill="none">
-            <rect x="16" y="5" width="68" height="48" rx="4" stroke="currentColor" stroke-width="2"/>
-            <path d="M5 59h90l-7 6H12z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-            <path d="M25 15h50M25 22h30" stroke="currentColor" stroke-linecap="round"/>
-            <path d="M25 30h17" stroke="currentColor" stroke-linecap="round"/>
+        <!-- Hidden jersey easter egg: number 7, no CR7 text -->
+        <div class="jersey-easter-egg">
+          <svg viewBox="0 0 180 200" fill="none">
+            <defs>
+              <linearGradient id="jerseyGlow" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#93c5fd"/>
+                <stop offset="100%" stop-color="#2563eb"/>
+              </linearGradient>
+            </defs>
+            <path d="M57 18L78 9H102L123 18L169 43L148 79L127 68V182H53V68L32 79L11 43L57 18Z"
+              fill="#0b1425" fill-opacity=".7" stroke="url(#jerseyGlow)" stroke-width="2.5" stroke-linejoin="round"/>
+            <path d="M57 18L70 39H110L123 18M70 39L53 68M110 39L127 68"
+              stroke="currentColor" stroke-opacity=".8" stroke-width="2"/>
+            <path d="M77 11L82 27H98L103 11" stroke="currentColor" stroke-width="2"/>
+            <text x="90" y="125" text-anchor="middle" font-size="76" font-weight="900" fill="url(#jerseyGlow)" stroke="#bfdbfe" stroke-width=".5">7</text>
+            <path d="M67 147H113" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
         </div>
 
-        <div class="floating-tech tech-headphones">
-          <svg viewBox="0 0 80 80" fill="none">
-            <path d="M13 43V35a27 27 0 0 1 54 0v8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-            <rect x="9" y="39" width="16" height="27" rx="7" stroke="currentColor" stroke-width="2"/>
-            <rect x="55" y="39" width="16" height="27" rx="7" stroke="currentColor" stroke-width="2"/>
-          </svg>
-        </div>
-
-        <div class="floating-tech tech-chip">
-          <svg viewBox="0 0 80 80" fill="none">
-            <rect x="17" y="17" width="46" height="46" rx="5" stroke="currentColor" stroke-width="2"/>
-            <rect x="27" y="27" width="26" height="26" rx="2" stroke="currentColor"/>
-            <path d="M25 5v12M40 5v12M55 5v12M25 63v12M40 63v12M55 63v12M5 25h12M5 40h12M5 55h12M63 25h12M63 40h12M63 55h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </div>
-
-        <div class="floating-tech tech-watch">
-          <svg viewBox="0 0 64 90" fill="none">
-            <path d="M22 4h20l4 15H18zM22 86h20l4-15H18z" stroke="currentColor" stroke-width="2"/>
-            <rect x="10" y="19" width="44" height="52" rx="10" stroke="currentColor" stroke-width="2"/>
-            <circle cx="32" cy="45" r="12" stroke="currentColor" stroke-width="2"/>
-            <path d="M32 37v8l6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </div>
-
-        <div class="floating-tech tech-monitor">
-          <svg viewBox="0 0 100 75" fill="none">
-            <rect x="5" y="5" width="90" height="52" rx="5" stroke="currentColor" stroke-width="2"/>
-            <path d="M50 57v10M35 68h30M17 17h66" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            <path d="m22 40 13-11 12 8 18-13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-
-        <div class="floating-tech tech-circuit">
-          <svg viewBox="0 0 100 100" fill="none">
-            <path d="M10 20h25v20h30V15h25M10 75h20V55h25v25h35M65 40v15h20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="10" cy="20" r="4" stroke="currentColor" stroke-width="2"/>
-            <circle cx="90" cy="15" r="4" stroke="currentColor" stroke-width="2"/>
-            <circle cx="10" cy="75" r="4" stroke="currentColor" stroke-width="2"/>
-            <circle cx="90" cy="80" r="4" stroke="currentColor" stroke-width="2"/>
-          </svg>
-        </div>
-
-        <!-- Tiny football easter egg -->
-        <div class="floating-tech tech-football">
-          <svg viewBox="0 0 64 64" fill="none">
-            <circle cx="32" cy="32" r="27" stroke="currentColor" stroke-width="1.5"/>
-            <path d="m32 19 11 8-4 13H25l-4-13zM32 19l-3-10M43 27l11-3M39 40l7 10M25 40l-7 10M21 27 10 24" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-            <path d="m29 9 3-2 3 2-1 4h-4z" stroke="currentColor" stroke-width="1.2"/>
-          </svg>
-          <span>CR7</span>
-        </div>
-
+        <div class="floating-orbit orbit-one"></div>
+        <div class="floating-orbit orbit-two"></div>
+        <div class="floating-orbit orbit-three"></div>
       </div>
-      <!-- END FLOATING TECH OBJECTS -->
+      <!-- END FLOATING INTERFACES -->
 
       <div class="hero-content">
-        <div class="badge">✦ SMART TECH RECOMMENDATIONS</div>
+        <div class="badge"><span class="badge-dot"></span> SMART TECH RECOMMENDATIONS</div>
         <h1>Find the tech<br>that's <span>right for you.</span></h1>
-        <p>Tell us your budget and what matters most. OPITECH helps you discover electronics worth considering.</p>
-        <a class="primary-button" href="#find-tech">Find My Best Match <span>→</span></a>
+        <p>Tell us your budget and what matters most. Discover electronics worth considering without the guesswork.</p>
+        <a class="primary-button" href="#find-tech">Find My Best Matches <span>→</span></a>
         <div class="hero-notes">
           <span>✓ Budget-focused</span>
           <span>✓ Personalised picks</span>
           <span>✓ Marketplace research</span>
         </div>
       </div>
+      <div class="hero-bottom-line"></div>
     </section>
 
     <section class="recommend-section" id="find-tech">
@@ -170,24 +210,24 @@
           <label for="budget">03 — What's your maximum budget?</label>
           <div class="budget-input">
             <span id="currencySymbol">₹</span>
-            <input id="budget" name="budget" type="number" min="1" max="100000000" step="1" placeholder="e.g. 30000" required>
+            <input id="budget" name="budget" type="number" min="1" max="100000000" placeholder="e.g. 30000" required>
           </div>
-          <p class="field-hint">Enter a budget in your selected currency.</p>
+          <p class="field-hint">Enter your budget in the selected currency.</p>
         </div>
 
         <div class="form-group">
           <label>04 — What will you use it for?</label>
           <div class="checkbox-grid">
-            <label class="check-option"><input type="checkbox" name="uses" value="Gaming"> <span>Gaming</span></label>
-            <label class="check-option"><input type="checkbox" name="uses" value="Performance"> <span>Fast performance</span></label>
-            <label class="check-option"><input type="checkbox" name="uses" value="Camera"> <span>Camera and photos</span></label>
-            <label class="check-option"><input type="checkbox" name="uses" value="Battery life"> <span>Battery life</span></label>
-            <label class="check-option"><input type="checkbox" name="uses" value="Study and work"> <span>Study and work</span></label>
-            <label class="check-option"><input type="checkbox" name="uses" value="Video editing"> <span>Video editing</span></label>
-            <label class="check-option"><input type="checkbox" name="uses" value="Display quality"> <span>Display quality</span></label>
-            <label class="check-option"><input type="checkbox" name="uses" value="Portability"> <span>Portability</span></label>
-            <label class="check-option"><input type="checkbox" name="uses" value="Sound quality"> <span>Sound quality</span></label>
-            <label class="check-option"><input type="checkbox" name="uses" value="Everyday use"> <span>Everyday use</span></label>
+            <label class="check-option"><input type="checkbox" name="uses" value="Gaming"><span>Gaming</span></label>
+            <label class="check-option"><input type="checkbox" name="uses" value="Performance"><span>Fast performance</span></label>
+            <label class="check-option"><input type="checkbox" name="uses" value="Camera"><span>Camera and photos</span></label>
+            <label class="check-option"><input type="checkbox" name="uses" value="Battery life"><span>Battery life</span></label>
+            <label class="check-option"><input type="checkbox" name="uses" value="Study and work"><span>Study and work</span></label>
+            <label class="check-option"><input type="checkbox" name="uses" value="Video editing"><span>Video editing</span></label>
+            <label class="check-option"><input type="checkbox" name="uses" value="Display quality"><span>Display quality</span></label>
+            <label class="check-option"><input type="checkbox" name="uses" value="Portability"><span>Portability</span></label>
+            <label class="check-option"><input type="checkbox" name="uses" value="Sound quality"><span>Sound quality</span></label>
+            <label class="check-option"><input type="checkbox" name="uses" value="Everyday use"><span>Everyday use</span></label>
           </div>
         </div>
 
@@ -231,7 +271,7 @@
           <span class="button-label">✦ Find My Best Matches</span>
           <span class="button-arrow">→</span>
         </button>
-        <p class="privacy-note">OPITECH searches marketplace information for your selected category and needs. Listings and prices may change.</p>
+        <p class="privacy-note">Prices and availability can change. Verify the listing details before buying.</p>
       </form>
     </section>
 
@@ -240,7 +280,7 @@
         <div class="section-heading">
           <p class="eyebrow">THE SHORTLIST</p>
           <h2>Your recommendations.</h2>
-          <p>Clear options, useful trade-offs, and a reason for each pick.</p>
+          <p>Three options, useful trade-offs, and a reason for each pick.</p>
         </div>
         <div class="status-panel" id="statusPanel">
           <div class="status-icon">✦</div>
@@ -255,7 +295,7 @@
       <div class="about-card">
         <p class="eyebrow">ABOUT OPITECH</p>
         <h2>Better decisions. Less guesswork.</h2>
-        <p>OPITECH helps you compare electronics around your needs and budget. Recommendations are informational; always double-check a listing's current price, configuration, warranty, and seller before buying.</p>
+        <p>OPITECH helps you compare electronics around your needs and budget. Recommendations are informational. Always double-check the current price, configuration, warranty and seller before buying.</p>
       </div>
     </section>
   </main>
