@@ -18,10 +18,11 @@ app.use(express.json({ limit: "1mb" }));
 app.get("/", (_req, res) => {
   res.json({
     status: "online",
-    message: "OPITECH recommendation backend is running",
+    message: "OPITECH evidence-based recommendation backend",
     marketplaces: ["Amazon India", "Flipkart"],
     recommendationsPerRequest: REQUIRED_COUNT,
     rejectsAccessoriesAndServices: true,
+    relevanceRanking: true,
     fallbackSearchEnabled: true
   });
 });
@@ -83,11 +84,12 @@ function extractPrice(text, productType) {
   for (const pattern of patterns) {
     for (const match of value.matchAll(pattern)) {
       const amount = Number(match[1].replace(/,/g, ""));
-      const start = Math.max(0, match.index - 80);
+      const start = Math.max(0, match.index - 100);
       const end = Math.min(
         value.length,
-        match.index + match[0].length + 80
+        match.index + match[0].length + 100
       );
+
       const context = value.slice(start, end).toLowerCase();
 
       if (
@@ -109,11 +111,6 @@ function extractPrice(text, productType) {
   return null;
 }
 
-/*
- * Block service listings and accessories BEFORE category checks.
- * This prevents a warranty titled "Warranty for Mobile Phones"
- * from being treated as a phone.
- */
 function isAccessoryOrService(title) {
   const text = normalizeText(title);
 
@@ -147,11 +144,15 @@ function isAccessoryOrService(title) {
     /\bspare part\b/,
     /\bremote control\b/,
     /\bwall mount\b/,
-    /\bstand for\b/,
     /\bprotective case\b/,
     /\bkeyboard cover\b/,
     /\bcarrying case\b/,
-    /\brefurbishment service\b/
+    /\brefurbishment service\b/,
+    /\bskin sticker\b/,
+    /\bcompatible with\b/,
+    /\bfor iphone\b/,
+    /\bfor samsung galaxy\b/,
+    /\bfor oneplus\b/
   ];
 
   return blockedPatterns.some(pattern => pattern.test(text));
@@ -193,7 +194,7 @@ function isProductUrl(url, marketplace) {
 function looksLikeGuide(title, content = "") {
   const text = `${title} ${content}`.toLowerCase();
 
-  const patterns = [
+  return [
     /\bbuying guide\b/,
     /\bbuying guides\b/,
     /\bhow to choose\b/,
@@ -204,89 +205,91 @@ function looksLikeGuide(title, content = "") {
     /\bcategory page\b/,
     /\bbest \d+ .* (products|laptops|phones|headphones|tvs?)\b/,
     /\btop \d+ .* (products|laptops|phones|headphones|tvs?)\b/
-  ];
-
-  return patterns.some(pattern => pattern.test(text));
+  ].some(pattern => pattern.test(text));
 }
 
-function matchesCategory(title, productType) {
-  const text = normalizeText(title);
+function categoryFor(productType) {
   const type = normalizeText(productType);
 
-  const categories = {
-    phone: [
-      "smartphone", "mobile phone", "phone",
-      "iphone", "galaxy", "redmi", "poco",
-      "pixel", "oneplus", "realme", "oppo",
-      "vivo", "motorola", "nothing phone"
-    ],
-    laptop: [
-      "laptop", "notebook", "macbook",
-      "thinkpad", "vivobook", "ideapad",
-      "pavilion", "inspiron", "aspire",
-      "latitude", "zenbook", "chromebook"
-    ],
-    tv: [
-      "television", "smart tv", "qled",
-      "oled", "led tv", "google tv", "android tv"
-    ],
-    tablet: [
-      "tablet", "ipad", "galaxy tab",
-      "xiaomi pad", "oneplus pad", "lenovo tab"
-    ],
-    speaker: [
-      "speaker", "soundbar", "bluetooth speaker",
-      "portable speaker"
-    ],
-    headphone: [
-      "headphone", "headset", "earbud",
-      "earbuds", "airpods", "earphones", "tws"
-    ],
-    monitor: [
-      "monitor", "display", "computer screen"
-    ],
-    smartwatch: [
-      "smartwatch", "smart watch",
-      "galaxy watch", "apple watch"
-    ],
-    camera: [
-      "camera", "mirrorless", "dslr", "action camera"
-    ]
-  };
+  if (/phone|mobile/.test(type)) return "phone";
+  if (/laptop|notebook/.test(type)) return "laptop";
+  if (/television|\btv\b/.test(type)) return "tv";
+  if (/tablet|ipad/.test(type)) return "tablet";
+  if (/speaker|soundbar/.test(type)) return "speaker";
 
-  let category = null;
-
-  if (/phone|mobile/.test(type)) category = "phone";
-  else if (/laptop|notebook/.test(type)) category = "laptop";
-  else if (/television|\btv\b/.test(type)) category = "tv";
-  else if (/tablet|ipad/.test(type)) category = "tablet";
-  else if (/speaker|soundbar/.test(type)) category = "speaker";
-  else if (/headphone|earbud|earphone|headset/.test(type)) {
-    category = "headphone";
-  } else if (/monitor|computer screen/.test(type)) {
-    category = "monitor";
-  } else if (/smartwatch|smart watch/.test(type)) {
-    category = "smartwatch";
-  } else if (/camera|dslr|mirrorless/.test(type)) {
-    category = "camera";
+  if (/headphone|earbud|earphone|headset/.test(type)) {
+    return "headphone";
   }
+
+  if (/monitor|computer screen/.test(type)) return "monitor";
+  if (/smartwatch|smart watch/.test(type)) return "smartwatch";
+  if (/camera|dslr|mirrorless/.test(type)) return "camera";
+
+  return null;
+}
+
+const CATEGORY_TERMS = {
+  phone: [
+    "smartphone", "mobile phone", "phone", "iphone",
+    "galaxy", "redmi", "poco", "pixel", "oneplus",
+    "realme", "oppo", "vivo", "motorola",
+    "nothing phone", "cmf phone", "infinix", "tecno",
+    "iqoo", "itel", "lava", "honor", "huawei"
+  ],
+  laptop: [
+    "laptop", "notebook", "macbook", "thinkpad",
+    "vivobook", "ideapad", "pavilion", "inspiron",
+    "aspire", "latitude", "zenbook", "chromebook",
+    "predator", "rog strix", "omen"
+  ],
+  tv: [
+    "television", "smart tv", "qled", "oled",
+    "led tv", "google tv", "android tv"
+  ],
+  tablet: [
+    "tablet", "ipad", "galaxy tab",
+    "xiaomi pad", "oneplus pad", "lenovo tab"
+  ],
+  speaker: [
+    "speaker", "soundbar", "bluetooth speaker",
+    "portable speaker"
+  ],
+  headphone: [
+    "headphone", "headset", "earbud", "earbuds",
+    "airpods", "earphones", "tws"
+  ],
+  monitor: [
+    "monitor", "computer display", "computer screen"
+  ],
+  smartwatch: [
+    "smartwatch", "smart watch", "galaxy watch", "apple watch"
+  ],
+  camera: [
+    "camera", "mirrorless", "dslr", "action camera"
+  ]
+};
+
+function matchesCategory(title, productType) {
+  const category = categoryFor(productType);
 
   if (!category) return true;
 
-  return categories[category].some(term =>
+  const text = normalizeText(title);
+
+  return CATEGORY_TERMS[category].some(term =>
     text.includes(normalizeText(term))
   );
+}
+
+function isAnyBrand(brand) {
+  return !brand ||
+    ["any", "any brand", "other"].includes(normalizeText(brand));
 }
 
 function matchesBrand(title, requestedBrand) {
   const requested = normalizeText(requestedBrand);
 
-  if (
-    !requested ||
-    ["any", "any brand", "other"].includes(requested)
-  ) {
-    return true;
-  }
+  if (isAnyBrand(requested)) return true;
 
   const product = normalizeText(title);
 
@@ -312,7 +315,11 @@ function matchesBrand(title, requestedBrand) {
     huawei: ["huawei"],
     boat: ["boat"],
     sony: ["sony"],
-    smartron: ["smartron"]
+    smartron: ["smartron"],
+    iqoo: ["iqoo"],
+    infinix: ["infinix"],
+    tecno: ["tecno"],
+    lava: ["lava"]
   };
 
   const terms = aliases[requested] || [requested];
@@ -320,21 +327,58 @@ function matchesBrand(title, requestedBrand) {
   return terms.some(term => {
     const normalizedTerm = normalizeText(term);
 
-    if (!normalizedTerm) return false;
-
-    return (` ${product} `).includes(` ${normalizedTerm} `);
+    return normalizedTerm &&
+      (` ${product} `).includes(` ${normalizedTerm} `);
   });
+}
+
+function hasConcreteProductTitle(title, productType) {
+  const text = normalizeText(title);
+  const category = categoryFor(productType);
+
+  if (!text || text.length < 12) return false;
+  if (looksLikeGuide(title)) return false;
+
+  const vagueTitles = [
+    /^best .* phone/,
+    /^top .* phone/,
+    /^mobile phones? under/,
+    /^laptops? under/,
+    /^smartphones? under/,
+    /^latest .* products/
+  ];
+
+  if (vagueTitles.some(pattern => pattern.test(text))) return false;
+
+  // Require a recognizable product family, not just a category keyword.
+  if (
+    category &&
+    !CATEGORY_TERMS[category].some(term =>
+      text.includes(normalizeText(term))
+    )
+  ) {
+    return false;
+  }
+
+  // Avoid listings that are mostly marketing copy with no usable model clue.
+  const words = text.split(" ").filter(Boolean);
+  if (words.length < 3) return false;
+
+  return true;
 }
 
 function validProduct(item, marketplace, input) {
   if (!item || !item.title || !item.url) return false;
 
-  // Reject services/accessories first.
   if (isAccessoryOrService(item.title)) return false;
-
   if (!isProductUrl(item.url, marketplace)) return false;
   if (looksLikeGuide(item.title, item.content)) return false;
+
   if (!matchesCategory(item.title, input.productType || "Phone")) {
+    return false;
+  }
+
+  if (!hasConcreteProductTitle(item.title, input.productType || "Phone")) {
     return false;
   }
 
@@ -388,13 +432,9 @@ async function tavilySearch(query, domain) {
     }));
 }
 
-function isAnyBrand(brand) {
-  return !brand ||
-    ["any", "any brand", "other"].includes(normalizeText(brand));
-}
-
 function makeQueries(input, broaden = false) {
   const type = String(input.productType || "Phone");
+
   const brand = !broaden && !isAnyBrand(input.brand)
     ? String(input.brand)
     : "";
@@ -404,22 +444,22 @@ function makeQueries(input, broaden = false) {
     : "";
 
   const budget = Number(input.budget);
-  const budgetText = `under Rs ${budget}`;
-
   const common = [
     type,
     brand,
     uses,
-    budgetText,
+    `under Rs ${budget}`,
     "India"
   ].filter(Boolean).join(" ");
 
   return [
-    `${common} exact product model current price`,
+    `${common} exact product model price`,
     `${type} ${brand} price Rs ${budget} site:amazon.in/dp`,
     `${type} ${brand} price Rs ${budget} site:flipkart.com`,
-    `${type} ${brand} full model name specifications price India`
-  ].map(query => query.replace(/\s+/g, " ").trim());
+    `${type} ${brand} model specifications price India`
+  ]
+    .map(query => query.replace(/\s+/g, " ").trim())
+    .filter(Boolean);
 }
 
 function deduplicate(items) {
@@ -444,20 +484,14 @@ function deduplicate(items) {
 }
 
 function getPrice(item, productType) {
-  // Prefer a price explicitly present in the product title.
-  return extractPrice(
-    item.title,
-    productType
-  ) ?? extractPrice(
-    item.content,
-    productType
-  );
+  return extractPrice(item.title, productType) ??
+    extractPrice(item.content, productType);
 }
 
 function filterCandidates(items, marketplace, input, strictBrand) {
   const budget = Number(input.budget);
 
-  return deduplicate(items).filter(item => {
+  const candidates = deduplicate(items).filter(item => {
     if (!validProduct(item, marketplace, input)) return false;
 
     if (strictBrand && !matchesBrand(item.title, input.brand)) {
@@ -468,9 +502,17 @@ function filterCandidates(items, marketplace, input, strictBrand) {
 
     return price !== null && price <= budget;
   });
+
+  return candidates;
 }
 
-async function searchMarketplace(queries, marketplace, domain, input, strictBrand) {
+async function searchMarketplace(
+  queries,
+  marketplace,
+  domain,
+  input,
+  strictBrand
+) {
   const results = await Promise.allSettled(
     queries.map(query => tavilySearch(query, domain))
   );
@@ -482,40 +524,254 @@ async function searchMarketplace(queries, marketplace, domain, input, strictBran
   return filterCandidates(combined, marketplace, input, strictBrand);
 }
 
+/*
+ * Evidence-based relevance scoring.
+ * A keyword in a listing is evidence to investigate, not proof that
+ * the device performs at a particular level.
+ */
+function getPriorityKeywords(value) {
+  const text = normalizeText(value);
+
+  if (/gaming|game|gamer/.test(text)) {
+    return [
+      "gaming", "snapdragon", "dimensity", "mediatek",
+      "qualcomm", "processor", "refresh rate",
+      "cooling", "vapor chamber", "gpu", "ram"
+    ];
+  }
+
+  if (/battery|battery life|long lasting/.test(text)) {
+    return [
+      "battery", "mah", "fast charging",
+      "charging", "endurance", "battery life"
+    ];
+  }
+
+  if (/camera|photography|photo|video/.test(text)) {
+    return [
+      "camera", "megapixel", "mp", "ois",
+      "optical image stabilization", "4k", "ultrawide"
+    ];
+  }
+
+  if (/performance|speed|multitask/.test(text)) {
+    return [
+      "processor", "snapdragon", "dimensity",
+      "mediatek", "ram", "performance", "gpu"
+    ];
+  }
+
+  if (/student|study|college|school/.test(text)) {
+    return [
+      "battery", "weight", "ssd", "ram",
+      "keyboard", "display", "warranty"
+    ];
+  }
+
+  if (/display|screen/.test(text)) {
+    return [
+      "amoled", "oled", "lcd", "refresh rate",
+      "resolution", "brightness", "display"
+    ];
+  }
+
+  return [];
+}
+
+function getEvidenceText(item) {
+  return normalizeText(`${item.title || ""} ${item.content || ""}`);
+}
+
+function calculateMatchScore(item, input) {
+  const evidence = getEvidenceText(item);
+  const budget = Number(input.budget);
+  const price = getPrice(item, input.productType || "Phone");
+
+  let score = 35;
+
+  if (price !== null && budget > 0) {
+    const ratio = price / budget;
+
+    if (ratio <= 0.95) score += 8;
+    if (ratio <= 0.80) score += 4;
+    if (ratio > 1) score -= 30;
+  }
+
+  if (matchesBrand(item.title, input.brand)) score += 8;
+
+  const uses = Array.isArray(input.uses) ? input.uses : [];
+  const priority = input.priority ? [input.priority] : [];
+  const preferences = [...uses, ...priority];
+
+  const keywords = new Set(
+    preferences.flatMap(getPriorityKeywords)
+  );
+
+  let hits = 0;
+
+  for (const keyword of keywords) {
+    if (evidence.includes(normalizeText(keyword))) {
+      hits++;
+    }
+  }
+
+  score += Math.min(hits * 4, 24);
+
+  // Listing specificity can improve confidence, but is not proof of truth.
+  if (/\b(8gb|12gb|16gb|256gb|512gb|1tb)\b/.test(evidence)) {
+    score += 3;
+  }
+
+  if (evidence.length > 180) score += 2;
+
+  return Math.max(0, Math.min(100, Math.round(score)));
+}
+
+function modelKey(name) {
+  return normalizeText(name)
+    .replace(/\b(black|white|blue|green|olive|silver|grey|gray|purple|pink|orange)\b/g, "")
+    .replace(/\b(4gb|6gb|8gb|12gb|16gb|128gb|256gb|512gb|1tb|2tb)\b/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function safeEvidencePoints(source, input) {
+  const evidence = getEvidenceText(source);
+  const points = [];
+  const preferences = [
+    ...(Array.isArray(input.uses) ? input.uses : []),
+    input.priority || ""
+  ];
+
+  const mappings = [
+    {
+      label: "Gaming-related details appear in the listing",
+      pattern: /\bgaming\b|\bgpu\b|\bprocessor\b|\bsnapdragon\b|\bdimensity\b|\brefresh rate\b/
+    },
+    {
+      label: "Battery-related details appear in the listing",
+      pattern: /\bbattery\b|\bmah\b|\bfast charging\b|\bbattery life\b/
+    },
+    {
+      label: "Camera-related details appear in the listing",
+      pattern: /\bcamera\b|\bmegapixel\b|\boptical image stabilization\b|\b4k\b/
+    },
+    {
+      label: "Memory or storage details appear in the listing",
+      pattern: /\b(4gb|6gb|8gb|12gb|16gb|128gb|256gb|512gb|1tb)\b/
+    },
+    {
+      label: "Display-related details appear in the listing",
+      pattern: /\bamoled\b|\boled\b|\blcd\b|\brefresh rate\b|\bbrightness\b/
+    }
+  ];
+
+  for (const mapping of mappings) {
+    if (mapping.pattern.test(evidence)) {
+      points.push(mapping.label);
+    }
+  }
+
+  if (points.length === 0) {
+    points.push(
+      "A product listing and usable price were found; verify the full specifications before buying."
+    );
+  }
+
+  const requested = preferences
+    .map(normalizeText)
+    .filter(Boolean);
+
+  if (
+    requested.some(value => /gaming|game/.test(value)) &&
+    !/\bsnapdragon\b|\bdimensity\b|\bprocessor\b|\bgpu\b|\bgaming\b/.test(evidence)
+  ) {
+    points.push(
+      "The available listing evidence does not establish gaming performance."
+    );
+  }
+
+  if (
+    requested.some(value => /battery/.test(value)) &&
+    !/\bbattery\b|\bmah\b|\bbattery life\b/.test(evidence)
+  ) {
+    points.push(
+      "The available listing evidence does not establish battery endurance."
+    );
+  }
+
+  return points.slice(0, 4);
+}
+
+function buildWhy(source, input, brandMatches, alternativesUsed) {
+  const uses = Array.isArray(input.uses) ? input.uses : [];
+  const needs = uses.length ? uses.join(", ") : "your selected preferences";
+
+  if (alternativesUsed && !brandMatches) {
+    return `This is an alternative brand. It passed the available category and budget checks; compare its verified specifications for ${needs} before buying.`;
+  }
+
+  return `This listing passed the available category and budget checks. Compare its verified specifications for ${needs} before deciding.`;
+}
+
+function createRecommendation(
+  source,
+  marketplace,
+  input,
+  alternativesUsed = false
+) {
+  const price = getPrice(source, input.productType || "Phone");
+
+  if (price === null || price > Number(input.budget)) return null;
+
+  const brandMatches = matchesBrand(source.title, input.brand);
+
+  return {
+    name: source.title.trim(),
+    brandMatchesPreference: brandMatches,
+    price,
+    priceSource: marketplace === "amazon"
+      ? "Amazon India search evidence — confirm checkout price"
+      : "Flipkart search evidence — confirm checkout price",
+    marketplace: marketplace === "amazon" ? "Amazon India" : "Flipkart",
+    matchScore: calculateMatchScore(source, input),
+    why: buildWhy(source, input, brandMatches, alternativesUsed),
+    strengths: safeEvidencePoints(source, input),
+    tradeoffs: [
+      "Search snippets may omit specifications or variant details.",
+      "Confirm the exact model, seller, warranty and checkout price before buying."
+    ],
+    imageUrl: null
+  };
+}
+
 async function askGroq(input, amazon, flipkart, alternativesUsed) {
   if (!GROQ_API_KEY) {
     throw new Error("GROQ_API_KEY is missing in Render.");
   }
 
   const systemPrompt = `
-You are OPITECH, an evidence-based electronics recommender.
+You are OPITECH, an electronics candidate ranker.
 
 Return valid JSON only:
 {"recommendations":[...]}
 
-Choose exactly 3 DIFFERENT actual products from the supplied evidence.
-Never recommend warranties, insurance, accessories, services, guides,
-category pages, or subscriptions.
+Choose up to 3 DIFFERENT products from the supplied candidate evidence.
+Do not invent products, prices, URLs, model names or specifications.
+Never select accessories, warranties, services or guide pages.
+Respect the category, budget and selected needs.
+Rank products using only the provided listing evidence.
+Do not make claims about battery endurance, gaming benchmarks,
+processor performance or camera quality unless the supplied evidence
+directly supports the claim.
+Use only the supplied marketplace name and resultIndex.
+Return fewer than 3 if evidence is insufficient.
 
-Never invent prices, specifications, features, models, or URLs.
-Only use the supplied result indices.
-Respect the user's budget and requested product category.
-Prioritize the user's stated uses and priority.
-Prefer the requested brand whenever matching candidates are supplied.
-If alternatives were enabled, clearly identify when a product is from
-a different brand. Do not pretend it matches the requested brand.
-
-Each recommendation must have:
+Each item:
 {
   "marketplace": "amazon" or "flipkart",
-  "resultIndex": 0,
-  "why": "Short explanation",
-  "strengths": ["Evidence-supported points only"],
-  "tradeoffs": ["Evidence-supported limitations only"]
+  "resultIndex": 0
 }
-
-If the evidence is insufficient, return fewer products rather than inventing
-a product. The server will validate every selection.
 `;
 
   const userPrompt = {
@@ -532,12 +788,16 @@ a product. The server will validate every selection.
     amazon: amazon.map((item, resultIndex) => ({
       resultIndex,
       title: item.title,
-      content: item.content
+      content: item.content,
+      priceEvidence: getPrice(item, input.productType || "Phone"),
+      relevanceScore: calculateMatchScore(item, input)
     })),
     flipkart: flipkart.map((item, resultIndex) => ({
       resultIndex,
       title: item.title,
-      content: item.content
+      content: item.content,
+      priceEvidence: getPrice(item, input.productType || "Phone"),
+      relevanceScore: calculateMatchScore(item, input)
     }))
   };
 
@@ -556,7 +816,7 @@ a product. The server will validate every selection.
           { role: "user", content: JSON.stringify(userPrompt) }
         ],
         temperature: 0.1,
-        max_tokens: 2500,
+        max_tokens: 1500,
         response_format: { type: "json_object" }
       })
     },
@@ -595,79 +855,41 @@ a product. The server will validate every selection.
     : [];
 }
 
-function modelKey(name) {
-  return normalizeText(name)
-    .replace(/\b(black|white|blue|green|olive|silver|grey|gray|purple|pink|orange)\b/g, "")
-    .replace(/\b(4gb|6gb|8gb|12gb|16gb|128gb|256gb|512gb|1tb|2tb)\b/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function createRecommendation(source, marketplace, input, aiItem = {}, alternativesUsed = false) {
-  const price = getPrice(source, input.productType || "Phone");
-
-  if (price === null || price > Number(input.budget)) return null;
-
-  const brandMatches = matchesBrand(source.title, input.brand);
-
-  return {
-    name: source.title.trim(),
-    brandMatchesPreference: brandMatches,
-    price,
-    priceSource: marketplace === "amazon"
-      ? "Amazon India search evidence — confirm checkout price"
-      : "Flipkart search evidence — confirm checkout price",
-    marketplace: marketplace === "amazon" ? "Amazon India" : "Flipkart",
-    matchScore: null,
-    why: String(aiItem.why || (
-      alternativesUsed && !brandMatches
-        ? "This is an alternative brand because fewer matching products were found for your selected brand. Check its specifications against your needs."
-        : "This product passed the available product-page, category and budget checks. Confirm the exact model and specifications before buying."
-    )),
-    strengths: Array.isArray(aiItem.strengths)
-      ? aiItem.strengths.slice(0, 4).map(String)
-      : [],
-    tradeoffs: Array.isArray(aiItem.tradeoffs)
-      ? aiItem.tradeoffs.slice(0, 3).map(String)
-      : [],
-    imageUrl: null
-  };
-}
-
-function buildRecommendations(aiItems, amazon, flipkart, input, alternativesUsed) {
+function buildRecommendations(
+  aiItems,
+  amazon,
+  flipkart,
+  input,
+  alternativesUsed
+) {
   const output = [];
   const seenModels = new Set();
   const seenSources = new Set();
 
-  function add(source, marketplace, aiItem = {}, index = -1) {
+  function add(source, marketplace, index) {
     if (!source || !validProduct(source, marketplace, input)) return;
 
-    const keySource = `${marketplace}:${index}`;
-
-    if (index >= 0 && seenSources.has(keySource)) return;
+    const sourceKey = `${marketplace}:${index}`;
+    if (seenSources.has(sourceKey)) return;
 
     const recommendation = createRecommendation(
       source,
       marketplace,
       input,
-      aiItem,
       alternativesUsed
     );
 
     if (!recommendation) return;
 
     const key = modelKey(recommendation.name);
-
     if (!key || seenModels.has(key)) return;
 
     seenModels.add(key);
-
-    if (index >= 0) seenSources.add(keySource);
-
+    seenSources.add(sourceKey);
     output.push(recommendation);
   }
 
-  // AI-ranked results first.
+  // Respect AI ranking when it references valid candidate indices.
   for (const item of Array.isArray(aiItems) ? aiItems : []) {
     const marketplace = ["amazon", "flipkart"].includes(item.marketplace)
       ? item.marketplace
@@ -682,21 +904,42 @@ function buildRecommendations(aiItems, amazon, flipkart, input, alternativesUsed
       continue;
     }
 
-    add(list[index], marketplace, item, index);
+    add(list[index], marketplace, index);
 
     if (output.length === REQUIRED_COUNT) return output;
   }
 
-  // Fill gaps from remaining validated candidates.
-  for (let i = 0; i < amazon.length && output.length < REQUIRED_COUNT; i++) {
-    add(amazon[i], "amazon", {}, i);
+  // Fill any gaps using locally scored candidates.
+  const remaining = [
+    ...amazon.map((item, index) => ({
+      item,
+      marketplace: "amazon",
+      index
+    })),
+    ...flipkart.map((item, index) => ({
+      item,
+      marketplace: "flipkart",
+      index
+    }))
+  ].sort((a, b) =>
+    calculateMatchScore(b.item, input) -
+    calculateMatchScore(a.item, input)
+  );
+
+  for (const candidate of remaining) {
+    if (output.length >= REQUIRED_COUNT) break;
+
+    add(
+      candidate.item,
+      candidate.marketplace,
+      candidate.index
+    );
   }
 
-  for (let i = 0; i < flipkart.length && output.length < REQUIRED_COUNT; i++) {
-    add(flipkart[i], "flipkart", {}, i);
-  }
+  // Final order is based on the calculated evidence score.
+  output.sort((a, b) => b.matchScore - a.matchScore);
 
-  return output;
+  return output.slice(0, REQUIRED_COUNT);
 }
 
 async function collectCandidates(input, strictBrand) {
@@ -719,15 +962,14 @@ async function collectCandidates(input, strictBrand) {
     )
   ]);
 
-  const amazon = results[0].status === "fulfilled"
-    ? results[0].value
-    : [];
-
-  const flipkart = results[1].status === "fulfilled"
-    ? results[1].value
-    : [];
-
-  return { amazon, flipkart };
+  return {
+    amazon: results[0].status === "fulfilled"
+      ? results[0].value
+      : [],
+    flipkart: results[1].status === "fulfilled"
+      ? results[1].value
+      : []
+  };
 }
 
 app.post("/recommendations", async (req, res) => {
@@ -750,8 +992,11 @@ app.post("/recommendations", async (req, res) => {
     const requestedBrand = input.brand || "Any";
     const strictBrand = !isAnyBrand(requestedBrand);
 
-    // Pass 1: search the selected brand, if one was chosen.
-    let { amazon, flipkart } = await collectCandidates(input, strictBrand);
+    let { amazon, flipkart } = await collectCandidates(
+      input,
+      strictBrand
+    );
+
     let alternativesUsed = false;
 
     console.log("OPITECH primary search:", {
@@ -762,8 +1007,6 @@ app.post("/recommendations", async (req, res) => {
       flipkart: flipkart.length
     });
 
-    // Pass 2: broaden to other brands only when needed.
-    // The response explicitly discloses when an alternative is used.
     if (
       strictBrand &&
       amazon.length + flipkart.length < REQUIRED_COUNT
@@ -787,9 +1030,9 @@ app.post("/recommendations", async (req, res) => {
     if (amazon.length + flipkart.length < REQUIRED_COUNT) {
       return res.status(502).json({
         error:
-          `OPITECH found only ${amazon.length + flipkart.length} valid product listings with usable prices. ` +
-          "It will not fill missing recommendations with warranties, accessories, or invented products. " +
-          "Try again, increase the budget, or choose Any brand."
+          `OPITECH found only ${amazon.length + flipkart.length} listings ` +
+          "that passed its available category, URL and price checks. " +
+          "It will not invent missing products. Try again, increase your budget, or choose Any brand."
       });
     }
 
@@ -804,7 +1047,7 @@ app.post("/recommendations", async (req, res) => {
       );
     } catch (aiError) {
       console.error(
-        "OPITECH AI ranking unavailable; using validated candidates:",
+        "OPITECH AI ranking unavailable; using local ranking:",
         aiError.message
       );
     }
@@ -820,8 +1063,8 @@ app.post("/recommendations", async (req, res) => {
     if (recommendations.length !== REQUIRED_COUNT) {
       return res.status(502).json({
         error:
-          `Only ${recommendations.length} distinct products passed the final validation. ` +
-          "Please try again or broaden your filters."
+          `Only ${recommendations.length} distinct listings passed final checks. ` +
+          "Try again or broaden your filters."
       });
     }
 
@@ -838,9 +1081,11 @@ app.post("/recommendations", async (req, res) => {
       recommendationCount: recommendations.length,
       alternativesUsed: usedAlternativeBrand,
       notice: [
-        "Search-result prices may be outdated; confirm the exact model, seller and checkout price.",
+        "Prices come from marketplace search evidence and may be outdated. Confirm the exact variant, seller and checkout price.",
+        "Match scores indicate listing relevance, not verified benchmark results.",
+        "Specifications may be incomplete in search snippets; verify them before buying.",
         usedAlternativeBrand
-          ? `Some results use alternatives to the requested brand: ${requestedBrand}.`
+          ? `Some results are alternatives to ${requestedBrand}.`
           : ""
       ].filter(Boolean).join(" ")
     });
@@ -848,7 +1093,7 @@ app.post("/recommendations", async (req, res) => {
     console.error("OPITECH recommendation error:", error.message);
 
     return res.status(502).json({
-      error: "Could not prepare reliable recommendations. Please try again."
+      error: "Could not prepare recommendations right now. Please try again."
     });
   }
 });
