@@ -2,6 +2,7 @@
 "use strict";
 
 const BACKEND_URL = "https://opitech-backend.onrender.com";
+const REQUIRED_RECOMMENDATIONS = 3;
 
 const currencySymbols = {
   INR: "₹",
@@ -24,10 +25,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const statusPanel = document.getElementById("statusPanel");
   const resultsList = document.getElementById("recommendationsList");
 
-  document.getElementById("year").textContent = new Date().getFullYear();
+  const budgetInput = document.getElementById("budget");
+  const buttonLabel = findButton.querySelector(".button-label");
+
+  document.getElementById("year").textContent =
+    new Date().getFullYear();
 
   function updateCurrencySymbol() {
-    currencySymbol.textContent = currencySymbols[currency.value] || currency.value;
+    currencySymbol.textContent =
+      currencySymbols[currency.value] || currency.value;
   }
 
   currency.addEventListener("change", updateCurrencySymbol);
@@ -42,6 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       button.classList.add("active");
       button.setAttribute("aria-pressed", "true");
+
       selectedType = button.dataset.type || "Phone";
     });
   });
@@ -61,11 +68,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const number = Number(price);
+
     if (!Number.isFinite(number) || number < 0) {
       return "Price unavailable";
     }
 
-    const symbol = currencySymbols[currencyCode] || currencyCode || "₹";
+    const symbol =
+      currencySymbols[currencyCode] || currencyCode || "₹";
+
     return symbol + number.toLocaleString("en-IN", {
       maximumFractionDigits: 2
     });
@@ -73,11 +83,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function showStatus(title, message, isError = false) {
     statusPanel.classList.toggle("error", isError);
+
     statusPanel.innerHTML = `
       <div class="status-icon">${isError ? "!" : "✦"}</div>
       <h3>${escapeHtml(title)}</h3>
       <p>${escapeHtml(message)}</p>
     `;
+
     statusPanel.hidden = false;
   }
 
@@ -100,9 +112,11 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderRecommendation(item, index) {
-    const rank = Number(item.rank) || index + 1;
+    const rank = index + 1;
     const score = Number(item.matchScore);
-    const hasScore = item.matchScore !== null &&
+
+    const hasScore =
+      item.matchScore !== null &&
       item.matchScore !== undefined &&
       item.matchScore !== "" &&
       Number.isFinite(score);
@@ -112,19 +126,25 @@ document.addEventListener("DOMContentLoaded", () => {
       : null;
 
     const price = formatPrice(item.price, currency.value);
+
     const brand = item.brand
       ? `<span class="brand-tag">${escapeHtml(item.brand)}</span>`
       : "";
 
     const matchScore = safeScore === null
       ? ""
-      : `<div class="match-score"><span>Match</span><strong>${safeScore}%</strong></div>`;
+      : `
+        <div class="match-score">
+          <span>Match</span>
+          <strong>${safeScore}%</strong>
+        </div>
+      `;
 
     const source = item.priceSource
       ? `<p class="price-source">Search source: ${escapeHtml(item.priceSource)}</p>`
       : "";
 
-    const topClass = rank === 1 || index === 0 ? "top-recommendation" : "";
+    const topClass = rank === 1 ? "top-recommendation" : "";
 
     return `
       <article class="recommendation-card ${topClass}">
@@ -138,34 +158,80 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
 
         <div class="product-price">${escapeHtml(price)}</div>
+
         ${source}
 
         <div class="why-card">
           <h4>Why this match?</h4>
-          <p>${escapeHtml(item.why || "Review this product's specifications against your needs before choosing.")}</p>
+          <p>${escapeHtml(
+            item.why ||
+            "Review this product's specifications against your needs before choosing."
+          )}</p>
         </div>
 
         <div class="result-details">
-          ${renderList(item.strengths, "strengths", "Potential strengths")}
-          ${renderList(item.tradeoffs, "tradeoffs", "Things to consider")}
+          ${renderList(
+            item.strengths,
+            "strengths",
+            "Potential strengths"
+          )}
+          ${renderList(
+            item.tradeoffs,
+            "tradeoffs",
+            "Things to consider"
+          )}
         </div>
       </article>
     `;
   }
 
+  function getUniqueRecommendations(items) {
+    const seen = new Set();
+    const unique = [];
+
+    for (const item of items) {
+      if (!item || typeof item !== "object") continue;
+
+      const name = String(item.name || "").trim();
+
+      if (!name) continue;
+
+      const normalizedName = name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim();
+
+      if (!normalizedName || seen.has(normalizedName)) {
+        continue;
+      }
+
+      seen.add(normalizedName);
+      unique.push(item);
+    }
+
+    return unique;
+  }
+
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
 
-    const budget = Number(document.getElementById("budget").value);
+    const budget = Number(budgetInput.value);
 
     if (!Number.isFinite(budget) || budget <= 0) {
-      showStatus("Check your budget", "Enter a valid budget greater than zero.", true);
-      document.getElementById("budget").focus();
+      showStatus(
+        "Check your budget",
+        "Enter a valid budget greater than zero.",
+        true
+      );
+
+      budgetInput.focus();
       return;
     }
 
     const uses = Array.from(
-      document.querySelectorAll('.checkbox-grid input[name="uses"]:checked')
+      document.querySelectorAll(
+        '.checkbox-grid input[name="uses"]:checked'
+      )
     ).map((checkbox) => checkbox.value);
 
     const payload = {
@@ -179,71 +245,118 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     findButton.disabled = true;
-    findButton.querySelector(".button-label").textContent = "Searching marketplaces...";
-    resultsList.innerHTML = "";
-    showStatus("Finding your matches", "Searching available marketplace information. This may take a little while.");
+    buttonLabel.textContent = "Searching marketplaces...";
 
-    document.getElementById("results").scrollIntoView({ behavior: "smooth", block: "start" });
+    resultsList.innerHTML = "";
+
+    showStatus(
+      "Finding your 3 matches",
+      "Searching Amazon India and Flipkart for distinct products that fit your preferences."
+    );
+
+    document.getElementById("results").scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+
+    let timeout;
 
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 90000);
 
-      let response;
-      try {
-        response = await fetch(`${BACKEND_URL}/recommendations`, {
+      timeout = setTimeout(() => {
+        controller.abort();
+      }, 90000);
+
+      const response = await fetch(
+        `${BACKEND_URL}/recommendations`,
+        {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json"
+          },
           body: JSON.stringify(payload),
           signal: controller.signal
-        });
-      } finally {
-        clearTimeout(timeout);
-      }
+        }
+      );
 
       const rawText = await response.text();
+
       let data;
 
       try {
         data = JSON.parse(rawText);
       } catch {
-        throw new Error("The backend returned an unreadable response. Check the Render service.");
+        throw new Error(
+          "The backend returned an unreadable response. Check the Render service."
+        );
       }
 
       if (!response.ok) {
-        throw new Error(data.error || `Request failed (${response.status}).`);
+        throw new Error(
+          data.error ||
+          `Request failed (${response.status}).`
+        );
       }
 
-      const recommendations = Array.isArray(data)
+      const rawRecommendations = Array.isArray(data)
         ? data
         : data.recommendations;
 
-      if (!Array.isArray(recommendations) || recommendations.length === 0) {
-        throw new Error(data.error || "No recommendations were returned. Try a different budget or category.");
+      if (!Array.isArray(rawRecommendations)) {
+        throw new Error(
+          "The backend response did not contain a recommendations list."
+        );
+      }
+
+      const recommendations = getUniqueRecommendations(
+        rawRecommendations
+      ).slice(0, REQUIRED_RECOMMENDATIONS);
+
+      // Never claim success when fewer than three distinct products
+      // have actually been returned.
+      if (recommendations.length !== REQUIRED_RECOMMENDATIONS) {
+        throw new Error(
+          `The backend returned ${recommendations.length} distinct products instead of 3. Please try again.`
+        );
       }
 
       resultsList.innerHTML = recommendations
-        .slice(0, 3)
         .map(renderRecommendation)
         .join("");
 
       showStatus(
-        "Your shortlist is ready",
-        "Review the reasons and trade-offs. Confirm the latest price and product configuration before buying."
+        "Your 3 recommendations are ready!",
+        data.notice ||
+          "Compare all three options and confirm the latest product details and prices before buying."
       );
+
     } catch (error) {
       let message = error.message || "Something went wrong.";
 
       if (error.name === "AbortError") {
-        message = "The search took too long. Please try again in a moment.";
-      } else if (message.includes("Failed to fetch")) {
-        message = "Could not reach the backend. Check that the Render service is online and its URL is correct.";
+        message =
+          "The search took too long. Please try again in a moment.";
+      } else if (
+        message.includes("Failed to fetch") ||
+        message.includes("NetworkError")
+      ) {
+        message =
+          "Could not reach the backend. Check that the Render service is online and its URL is correct.";
       }
 
-      showStatus("Couldn't get recommendations", message, true);
+      resultsList.innerHTML = "";
+
+      showStatus(
+        "Couldn't get all 3 recommendations",
+        message,
+        true
+      );
+
     } finally {
+      clearTimeout(timeout);
       findButton.disabled = false;
-      findButton.querySelector(".button-label").textContent = "✦ Find My Best Matches";
+      buttonLabel.textContent = "✦ Find My Best Matches";
     }
   });
 });
