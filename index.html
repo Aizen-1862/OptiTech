@@ -1,310 +1,190 @@
-/* =========================================================
-   OPITECH — COMPLETE STYLE
-   Premium AI Recommendation Interface
-   ========================================================= */
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-html {
-    scroll-behavior: smooth;
-}
-
-body {
-    font-family:
-        Inter,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Roboto,
-        Arial,
-        sans-serif;
-
-    background:
-        radial-gradient(
-            circle at 50% -10%,
-            rgba(37, 99, 235, 0.16),
-            transparent 38%
-        ),
-        #05070a;
-
-    color: #f8fafc;
-    line-height: 1.6;
-}
-
-
-/* =========================================================
-   HEADER
-   ========================================================= */
-
-.header {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-
-    height: 72px;
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    padding: 0 7%;
-
-    background: rgba(5, 7, 10, 0.82);
-
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.logo {
-    font-size: 24px;
-    font-weight: 900;
-    letter-spacing: -1px;
-}
-
-.logo span {
-    color: #3b82f6;
-}
-
-.header nav {
-    display: flex;
-    gap: 30px;
-}
-
-.header nav a {
-    color: #94a3b8;
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 600;
-
-    transition: 0.2s ease;
-}
-
-.header nav a:hover {
-    color: #ffffff;
-}
-
-
-/* =========================================================
-   HERO
-   ========================================================= */
-
-.hero {
-    min-height: 650px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    padding: 100px 20px;
-
-    text-align: center;
-
-    position: relative;
-    overflow: hidden;
-}
-
-.hero::before {
-    content: "";
-
-    position: absolute;
-
-    width: 600px;
-    height: 600px;
-
-    top: -300px;
-    left: 50%;
-
-    transform: translateX(-50%);
-
-    background: rgba(37, 99, 235, 0.18);
-
-    filter: blur(100px);
-
-    border-radius: 50%;
-
-    pointer-events: none;
-}
-
-.hero-content {
-    max-width: 850px;
-
-    position: relative;
-    z-index: 2;
-}
-
-.badge {
-    display: inline-flex;
-    align-items: center;
-
-    padding: 8px 15px;
-
-    margin-bottom: 25px;
-
-    border-radius: 999px;
-
-    background: rgba(37, 99, 235, 0.10);
-
-    border: 1px solid rgba(59, 130, 246, 0.25);
-
-    color: #60a5fa;
-
-    font-size: 13px;
-    font-weight: 700;
-}
-
-.hero h1 {
-    font-size: clamp(45px, 7vw, 82px);
-
-    line-height: 1.02;
-
-    letter-spacing: -4px;
-
-    font-weight: 900;
-
-    margin-bottom: 25px;
-}
-
-.hero h1 span {
-    display: block;
-
-    background:
-        linear-gradient(
-            90deg,
-            #60a5fa,
-            #2563eb,
-            #8b5cf6
-        );
-
-    -webkit-background-clip: text;
-    background-clip: text;
-
-    color: transparent;
-}
-
-.hero p {
-    max-width: 650px;
-
-    margin: 0 auto 35px;
-
-    color: #94a3b8;
-
-    font-size: 17px;
-}
-
-.primary-button {
-    display: inline-flex;
-
-    align-items: center;
-    justify-content: center;
-
-    padding: 15px 25px;
-
-    border-radius: 12px;
-
-    background: #2563eb;
-
-    color: white;
-
-    text-decoration: none;
-
-    font-weight: 800;
-
-    box-shadow:
-        0 10px 35px rgba(37, 99, 235, 0.25);
-
-    transition: 0.25s ease;
-}
-
-.primary-button:hover {
-    transform: translateY(-2px);
-
-    background: #3b82f6;
-
-    box-shadow:
-        0 15px 45px rgba(37, 99, 235, 0.35);
-}
-
-
-/* =========================================================
-   RECOMMENDER
-   ========================================================= */
-
-.recommend-section {
-    padding: 100px 7%;
-}
-
-.section-heading {
-    max-width: 700px;
-
-    margin: 0 auto 50px;
-
-    text-align: center;
-}
-
-.small-title {
-    color: #3b82f6;
-
-    font-size: 12px;
-
-    font-weight: 900;
-
-    letter-spacing: 2px;
-
-    margin-bottom: 10px;
-}
-
-.section-heading h2 {
-    font-size: 42px;
-
-    letter-spacing: -1.5px;
-
-    margin-bottom: 12px;
-}
-
-.section-heading > p:last-child {
-    color: #94a3b8;
-}
-
-
-/* =========================================================
-   FORM
-   ========================================================= */
-
-.form-card {
-    max-width: 850px;
-
-    margin: auto;
-
-    padding: 35px;
-
-    border-radius: 24px;
-
-    background:
-        linear-gradient(
-            145deg,
-            rgba(255, 255, 255, 0.055),
-            rgba(255, 255, 255, 0.018)
-        );
-
-    border: 1px solid rgba(255, 255, 255, 0.08);
-
-    box-shadow:
-        0 30px 80px rgba(0, 0, 0, 0.35);
-
-    backdrop-filter: blur(15px);
-}
-
-.form-group {
-    margin-bottom: 28px;
-}
-
-.form-group > label {
-    display: block;
-
-    margin
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#05070a">
+  <meta name="description" content="Find electronics that fit your budget and needs with OPITECH AI.">
+  <title>OPITECH — Find Your Best Tech</title>
+  <link rel="stylesheet" href="style.css?v=10">
+  <script src="script.js?v=10" defer></script>
+</head>
+<body>
+  <header class="header">
+    <a class="logo" href="#home" aria-label="OPITECH home"><span>OPI</span>TECH</a>
+    <nav aria-label="Main navigation">
+      <a href="#home">Home</a>
+      <a href="#find-tech">Find Tech</a>
+      <a href="#about">About</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="home">
+      <div class="hero-glow"></div>
+      <div class="hero-content">
+        <div class="badge">✦ SMART TECH RECOMMENDATIONS</div>
+        <h1>Find the tech<br>that's <span>right for you.</span></h1>
+        <p>Tell us your budget and what matters most. OPITECH helps you discover electronics worth considering.</p>
+        <a class="primary-button" href="#find-tech">Find My Best Match <span>→</span></a>
+        <div class="hero-notes">
+          <span>✓ Budget-focused</span>
+          <span>✓ Personalised picks</span>
+          <span>✓ Marketplace research</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="recommend-section" id="find-tech">
+      <div class="section-heading">
+        <p class="eyebrow">YOUR NEXT UPGRADE</p>
+        <h2>Let's find your perfect tech.</h2>
+        <p>Choose a category, set your budget, and tell us what you need.</p>
+      </div>
+
+      <form class="form-card" id="recommendationForm">
+        <div class="form-group">
+          <label>01 — What are you shopping for?</label>
+          <div class="option-grid" id="productTypes">
+            <button class="option active" type="button" data-type="Phone" aria-pressed="true"><span class="option-icon">▯</span><span>Phones</span></button>
+            <button class="option" type="button" data-type="Laptop" aria-pressed="false"><span class="option-icon">▱</span><span>Laptops</span></button>
+            <button class="option" type="button" data-type="Tablet" aria-pressed="false"><span class="option-icon">▤</span><span>Tablets</span></button>
+            <button class="option" type="button" data-type="TV" aria-pressed="false"><span class="option-icon">▣</span><span>TVs</span></button>
+            <button class="option" type="button" data-type="Headphones" aria-pressed="false"><span class="option-icon">♫</span><span>Headphones</span></button>
+            <button class="option" type="button" data-type="Speaker" aria-pressed="false"><span class="option-icon">◖</span><span>Speakers</span></button>
+            <button class="option" type="button" data-type="Smartwatch" aria-pressed="false"><span class="option-icon">◷</span><span>Smartwatches</span></button>
+            <button class="option" type="button" data-type="Monitor" aria-pressed="false"><span class="option-icon">▭</span><span>Monitors</span></button>
+            <button class="option" type="button" data-type="Other electronics" aria-pressed="false"><span class="option-icon">✳</span><span>Other tech</span></button>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="country">02 — Shopping country</label>
+            <select id="country" name="country">
+              <option value="India" selected>India</option>
+              <option value="United States">United States</option>
+              <option value="United Kingdom">United Kingdom</option>
+              <option value="Canada">Canada</option>
+              <option value="Australia">Australia</option>
+              <option value="United Arab Emirates">United Arab Emirates</option>
+              <option value="Singapore">Singapore</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="currency">Currency display</label>
+            <select id="currency" name="currency">
+              <option value="INR" selected>INR — ₹</option>
+              <option value="USD">USD — $</option>
+              <option value="GBP">GBP — £</option>
+              <option value="CAD">CAD — C$</option>
+              <option value="AUD">AUD — A$</option>
+              <option value="EUR">EUR — €</option>
+              <option value="AED">AED — د.إ</option>
+              <option value="SGD">SGD — S$</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="budget">03 — What's your maximum budget?</label>
+          <div class="budget-input">
+            <span id="currencySymbol">₹</span>
+            <input id="budget" name="budget" type="number" min="1" max="100000000" step="1" placeholder="e.g. 30000" required>
+          </div>
+          <p class="field-hint">Enter a budget in your selected currency.</p>
+        </div>
+
+        <div class="form-group">
+          <label>04 — What will you use it for?</label>
+          <div class="checkbox-grid">
+            <label class="check-option"><input type="checkbox" name="uses" value="Gaming"> <span>Gaming</span></label>
+            <label class="check-option"><input type="checkbox" name="uses" value="Performance"> <span>Fast performance</span></label>
+            <label class="check-option"><input type="checkbox" name="uses" value="Camera"> <span>Camera and photos</span></label>
+            <label class="check-option"><input type="checkbox" name="uses" value="Battery life"> <span>Battery life</span></label>
+            <label class="check-option"><input type="checkbox" name="uses" value="Study and work"> <span>Study and work</span></label>
+            <label class="check-option"><input type="checkbox" name="uses" value="Video editing"> <span>Video editing</span></label>
+            <label class="check-option"><input type="checkbox" name="uses" value="Display quality"> <span>Display quality</span></label>
+            <label class="check-option"><input type="checkbox" name="uses" value="Portability"> <span>Portability</span></label>
+            <label class="check-option"><input type="checkbox" name="uses" value="Sound quality"> <span>Sound quality</span></label>
+            <label class="check-option"><input type="checkbox" name="uses" value="Everyday use"> <span>Everyday use</span></label>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="priority">05 — Your top priority</label>
+            <select id="priority" name="priority">
+              <option value="Balanced">Balanced overall</option>
+              <option value="Performance">Performance</option>
+              <option value="Value for money">Value for money</option>
+              <option value="Camera">Camera / picture quality</option>
+              <option value="Battery life">Battery life</option>
+              <option value="Gaming">Gaming</option>
+              <option value="Build quality">Build quality</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="brand">06 — Preferred brand</label>
+            <select id="brand" name="brand">
+              <option value="Any">Any brand</option>
+              <option value="Samsung">Samsung</option>
+              <option value="Apple">Apple</option>
+              <option value="Xiaomi">Xiaomi / Redmi</option>
+              <option value="OnePlus">OnePlus</option>
+              <option value="Realme">realme</option>
+              <option value="Motorola">Motorola</option>
+              <option value="Vivo">vivo</option>
+              <option value="OPPO">OPPO</option>
+              <option value="ASUS">ASUS</option>
+              <option value="Lenovo">Lenovo</option>
+              <option value="HP">HP</option>
+              <option value="Dell">Dell</option>
+              <option value="Acer">Acer</option>
+              <option value="Sony">Sony</option>
+              <option value="Other">Other / not listed</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="find-button" id="findButton" type="submit">
+          <span class="button-label">✦ Find My Best Matches</span>
+          <span class="button-arrow">→</span>
+        </button>
+        <p class="privacy-note">OPITECH will search marketplace information for your selected category and needs. Search results and prices may change.</p>
+      </form>
+    </section>
+
+    <section class="results-section" id="results" aria-live="polite">
+      <div class="results-container">
+        <div class="section-heading">
+          <p class="eyebrow">THE SHORTLIST</p>
+          <h2>Your recommendations.</h2>
+          <p>Clear options, useful trade-offs, and a reason for each pick.</p>
+        </div>
+        <div class="status-panel" id="statusPanel">
+          <div class="status-icon">✦</div>
+          <h3>Ready when you are.</h3>
+          <p>Submit your preferences above to discover your best matches.</p>
+        </div>
+        <div class="recommendations-list" id="recommendationsList"></div>
+      </div>
+    </section>
+
+    <section class="about-section" id="about">
+      <div class="about-card">
+        <p class="eyebrow">ABOUT OPITECH</p>
+        <h2>Better decisions. Less guesswork.</h2>
+        <p>OPITECH helps you compare electronics around your needs and budget. Recommendations are informational; always double-check a listing's current price, configuration, warranty, and seller before buying.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <a class="logo" href="#home"><span>OPI</span>TECH</a>
+    <p>Tech choices made clearer.</p>
+    <p class="copyright">© <span id="year"></span> OPITECH. Prices and availability may change.</p>
+  </footer>
+</body>
+</html>
