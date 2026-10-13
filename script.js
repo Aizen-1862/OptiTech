@@ -24,7 +24,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const findButton = document.getElementById("findButton");
   const statusPanel = document.getElementById("statusPanel");
   const resultsList = document.getElementById("recommendationsList");
-
   const budgetInput = document.getElementById("budget");
   const buttonLabel = findButton.querySelector(".button-label");
 
@@ -39,6 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
   currency.addEventListener("change", updateCurrencySymbol);
   updateCurrencySymbol();
 
+  /* Product category selection */
   document.querySelectorAll(".option").forEach((button) => {
     button.addEventListener("click", () => {
       document.querySelectorAll(".option").forEach((option) => {
@@ -81,8 +81,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  /* Status panel, including the animated searching state */
   function showStatus(title, message, isError = false) {
     statusPanel.classList.toggle("error", isError);
+
+    statusPanel.classList.toggle(
+      "is-loading",
+      title === "Finding your 3 matches"
+    );
 
     statusPanel.innerHTML = `
       <div class="status-icon">${isError ? "!" : "✦"}</div>
@@ -212,6 +218,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return unique;
   }
 
+  /* Recommendation form submission */
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
 
@@ -246,7 +253,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     findButton.disabled = true;
     buttonLabel.textContent = "Searching marketplaces...";
-
     resultsList.innerHTML = "";
 
     showStatus(
@@ -281,7 +287,6 @@ document.addEventListener("DOMContentLoaded", () => {
       );
 
       const rawText = await response.text();
-
       let data;
 
       try {
@@ -294,8 +299,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (!response.ok) {
         throw new Error(
-          data.error ||
-          `Request failed (${response.status}).`
+          data.error || `Request failed (${response.status}).`
         );
       }
 
@@ -313,8 +317,6 @@ document.addEventListener("DOMContentLoaded", () => {
         rawRecommendations
       ).slice(0, REQUIRED_RECOMMENDATIONS);
 
-      // Never claim success when fewer than three distinct products
-      // have actually been returned.
       if (recommendations.length !== REQUIRED_RECOMMENDATIONS) {
         throw new Error(
           `The backend returned ${recommendations.length} distinct products instead of 3. Please try again.`
@@ -328,7 +330,7 @@ document.addEventListener("DOMContentLoaded", () => {
       showStatus(
         "Your 3 recommendations are ready!",
         data.notice ||
-          "Compare all three options and confirm the latest product details and prices before buying."
+        "Compare all three options and confirm the latest product details and prices before buying."
       );
 
     } catch (error) {
