@@ -7,13 +7,61 @@
   <meta name="theme-color" content="#05070c">
   <meta name="description" content="Discover electronics recommendations tailored to your needs and budget with OPITECH.">
   <title>OPITECH — Find Your Best Tech</title>
-  <link rel="stylesheet" href="style.css?v=13">
+  <link rel="stylesheet" href="style.css?v=14">
   <script src="script.js?v=13" defer></script>
+
+  <style>
+    /* OPITECH PNG LOGO */
+    .header .logo,
+    footer .logo {
+      display: inline-flex;
+      align-items: center;
+      flex-shrink: 0;
+      text-decoration: none;
+    }
+
+    .brand-logo {
+      display: block;
+      width: 165px;
+      height: 48px;
+      object-fit: contain;
+      object-position: left center;
+    }
+
+    footer .brand-logo {
+      width: 150px;
+      height: 44px;
+    }
+
+    @media (max-width: 600px) {
+      .brand-logo {
+        width: 125px;
+        height: 40px;
+      }
+
+      footer .brand-logo {
+        width: 130px;
+        height: 40px;
+      }
+
+      .header {
+        gap: 12px;
+      }
+
+      .header nav {
+        gap: 12px;
+      }
+    }
+  </style>
 </head>
+
 <body>
   <header class="header">
-    <a class="logo" href="#home"><span>OPI</span>TECH</a>
-    <nav>
+    <a class="logo" href="#home" aria-label="OPITECH Home">
+      <img src="logo.png" alt="OPITECH" class="brand-logo">
+    </a>
+
+    <nav aria-label="Main navigation">
       <a href="#home">Home</a>
       <a href="#find-tech">Find Tech</a>
       <a href="#about">About</a>
@@ -24,7 +72,6 @@
     <section class="hero" id="home">
       <div class="hero-glow"></div>
 
-      <!-- LARGE FLOATING HOLOGRAPHIC INTERFACES -->
       <div class="tech-universe" aria-hidden="true">
 
         <div class="holo-panel panel-performance">
@@ -116,7 +163,6 @@
           </svg>
         </div>
 
-        <!-- Hidden jersey easter egg: number 7, no CR7 text -->
         <div class="jersey-easter-egg">
           <svg viewBox="0 0 180 200" fill="none">
             <defs>
@@ -125,10 +171,8 @@
                 <stop offset="100%" stop-color="#2563eb"/>
               </linearGradient>
             </defs>
-            <path d="M57 18L78 9H102L123 18L169 43L148 79L127 68V182H53V68L32 79L11 43L57 18Z"
-              fill="#0b1425" fill-opacity=".7" stroke="url(#jerseyGlow)" stroke-width="2.5" stroke-linejoin="round"/>
-            <path d="M57 18L70 39H110L123 18M70 39L53 68M110 39L127 68"
-              stroke="currentColor" stroke-opacity=".8" stroke-width="2"/>
+            <path d="M57 18L78 9H102L123 18L169 43L148 79L127 68V182H53V68L32 79L11 43L57 18Z" fill="#0b1425" fill-opacity=".7" stroke="url(#jerseyGlow)" stroke-width="2.5" stroke-linejoin="round"/>
+            <path d="M57 18L70 39H110L123 18M70 39L53 68M110 39L127 68" stroke="currentColor" stroke-opacity=".8" stroke-width="2"/>
             <path d="M77 11L82 27H98L103 11" stroke="currentColor" stroke-width="2"/>
             <text x="90" y="125" text-anchor="middle" font-size="76" font-weight="900" fill="url(#jerseyGlow)" stroke="#bfdbfe" stroke-width=".5">7</text>
             <path d="M67 147H113" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -139,7 +183,6 @@
         <div class="floating-orbit orbit-two"></div>
         <div class="floating-orbit orbit-three"></div>
       </div>
-      <!-- END FLOATING INTERFACES -->
 
       <div class="hero-content">
         <div class="badge"><span class="badge-dot"></span> SMART TECH RECOMMENDATIONS</div>
@@ -152,6 +195,7 @@
           <span>✓ Marketplace research</span>
         </div>
       </div>
+
       <div class="hero-bottom-line"></div>
     </section>
 
@@ -191,6 +235,7 @@
               <option value="Singapore">Singapore</option>
             </select>
           </div>
+
           <div class="form-group">
             <label for="currency">Currency display</label>
             <select id="currency" name="currency">
@@ -244,6 +289,7 @@
               <option value="Build quality">Build quality</option>
             </select>
           </div>
+
           <div class="form-group">
             <label for="brand">06 — Preferred brand</label>
             <select id="brand" name="brand">
@@ -271,6 +317,7 @@
           <span class="button-label">✦ Find My Best Matches</span>
           <span class="button-arrow">→</span>
         </button>
+
         <p class="privacy-note">Prices and availability can change. Verify the listing details before buying.</p>
       </form>
     </section>
@@ -282,11 +329,13 @@
           <h2>Your recommendations.</h2>
           <p>Three options, useful trade-offs, and a reason for each pick.</p>
         </div>
+
         <div class="status-panel" id="statusPanel">
           <div class="status-icon">✦</div>
           <h3>Ready when you are.</h3>
           <p>Submit your preferences above to discover your best matches.</p>
         </div>
+
         <div class="recommendations-list" id="recommendationsList"></div>
       </div>
     </section>
@@ -301,7 +350,10 @@
   </main>
 
   <footer>
-    <a class="logo" href="#home"><span>OPI</span>TECH</a>
+    <a class="logo" href="#home" aria-label="OPITECH Home">
+      <img src="logo.png" alt="OPITECH" class="brand-logo">
+    </a>
+
     <p>Tech choices made clearer.</p>
     <p class="copyright">© <span id="year"></span> OPITECH. Prices and availability may change.</p>
   </footer>
