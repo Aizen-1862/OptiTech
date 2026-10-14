@@ -5,13 +5,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#05070c">
+  <link rel="manifest" href="manifest.json">
   <meta name="description" content="Discover electronics recommendations tailored to your needs and budget with OPITECH.">
   <title>OPITECH — Find Your Best Tech</title>
   <link rel="stylesheet" href="style.css?v=14">
   <script src="script.js?v=13" defer></script>
 
   <style>
-    /* OPITECH JPEG BRAND LOGO */
     .header .logo,
     footer .logo {
       display: inline-flex;
@@ -78,13 +78,20 @@
           <div class="holo-number">98.4<span>%</span></div>
           <div class="holo-caption">SYSTEM EFFICIENCY</div>
           <div class="holo-chart">
-            <span style="height:35%"></span><span style="height:48%"></span>
-            <span style="height:42%"></span><span style="height:70%"></span>
-            <span style="height:59%"></span><span style="height:83%"></span>
-            <span style="height:72%"></span><span style="height:95%"></span>
-            <span style="height:80%"></span><span style="height:100%"></span>
+            <span style="height:35%"></span>
+            <span style="height:48%"></span>
+            <span style="height:42%"></span>
+            <span style="height:70%"></span>
+            <span style="height:59%"></span>
+            <span style="height:83%"></span>
+            <span style="height:72%"></span>
+            <span style="height:95%"></span>
+            <span style="height:80%"></span>
+            <span style="height:100%"></span>
           </div>
-          <div class="holo-footer"><span>CPU</span><span>GPU</span><span>AI CORE</span></div>
+          <div class="holo-footer">
+            <span>CPU</span><span>GPU</span><span>AI CORE</span>
+          </div>
         </div>
 
         <div class="holo-device device-phone">
@@ -95,7 +102,9 @@
               <div class="phone-orb"></div>
               <div class="phone-screen-line long"></div>
               <div class="phone-screen-line"></div>
-              <div class="phone-screen-bars"><i></i><i></i><i></i><i></i></div>
+              <div class="phone-screen-bars">
+                <i></i><i></i><i></i><i></i>
+              </div>
               <div class="phone-screen-bottom">SMART DEVICE / 01</div>
             </div>
           </div>
@@ -103,13 +112,21 @@
 
         <div class="holo-device device-laptop">
           <div class="laptop-screen">
-            <div class="laptop-ui-top"><span></span><span></span><span></span></div>
+            <div class="laptop-ui-top">
+              <span></span><span></span><span></span>
+            </div>
             <div class="laptop-ui-body">
-              <div class="laptop-sidebar"><i></i><i></i><i></i><i></i></div>
+              <div class="laptop-sidebar">
+                <i></i><i></i><i></i><i></i>
+              </div>
               <div class="laptop-main-ui">
                 <div class="laptop-ui-title"></div>
-                <div class="laptop-ui-graph"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-                <div class="laptop-ui-lines"><i></i><i></i><i></i></div>
+                <div class="laptop-ui-graph">
+                  <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+                </div>
+                <div class="laptop-ui-lines">
+                  <i></i><i></i><i></i>
+                </div>
               </div>
             </div>
           </div>
@@ -125,7 +142,9 @@
             <path d="M68 68H112V112H68zM68 90H112M90 68V112" stroke="currentColor" stroke-width="1.5"/>
             <circle cx="90" cy="90" r="11" fill="currentColor" fill-opacity=".2" stroke="currentColor" stroke-width="2"/>
           </svg>
-          <div class="chip-specs"><span>AI</span><span>8 CORE</span><span>5 NM</span></div>
+          <div class="chip-specs">
+            <span>AI</span><span>8 CORE</span><span>5 NM</span>
+          </div>
         </div>
 
         <div class="holo-panel panel-audio">
@@ -136,7 +155,10 @@
             <rect x="126" y="58" width="27" height="43" rx="11" stroke="currentColor" stroke-width="3"/>
             <path d="M64 75h52M70 84h40M77 93h26" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
-          <div class="audio-wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="audio-wave">
+            <i></i><i></i><i></i><i></i><i></i><i></i>
+            <i></i><i></i><i></i><i></i><i></i>
+          </div>
           <div class="audio-caption">IMMERSIVE / 360°</div>
         </div>
 
@@ -184,10 +206,14 @@
       </div>
 
       <div class="hero-content">
-        <div class="badge"><span class="badge-dot"></span> SMART TECH RECOMMENDATIONS</div>
+        <div class="badge">
+          <span class="badge-dot"></span> SMART TECH RECOMMENDATIONS
+        </div>
         <h1>Find the tech<br>that's <span>right for you.</span></h1>
         <p>Tell us your budget and what matters most. Discover electronics worth considering without the guesswork.</p>
-        <a class="primary-button" href="#find-tech">Find My Best Matches <span>→</span></a>
+        <a class="primary-button" href="#find-tech">
+          Find My Best Matches <span>→</span>
+        </a>
         <div class="hero-notes">
           <span>✓ Budget-focused</span>
           <span>✓ Personalised picks</span>
@@ -356,5 +382,15 @@
     <p>Tech choices made clearer.</p>
     <p class="copyright">© <span id="year"></span> OPITECH. Prices and availability may change.</p>
   </footer>
+
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./service-worker.js").catch(error => {
+          console.warn("OPITECH service worker setup failed:", error);
+        });
+      });
+    }
+  </script>
 </body>
 </html>
